@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Common.Configuration;
 using MediaBrowser.Model.Logging;
+using MediaBrowser.Plugins.AniDB.Providers;
 using Moq;
 using NUnit.Framework;
 
@@ -11,35 +12,15 @@ namespace MediaBrowser.Plugins.AniDB.Tests
     public class AniDbTitleMatcherTests
     {
         [Test]
-        public async Task LoadsTitles()
-        {
-            var paths = new Mock<IApplicationPaths>();
-            paths.Setup(p => p.DataPath).Returns("TestData");
-
-            var logger = new Mock<ILogger>();
-
-            var matcher = new AniDbTitleMatcher(paths.Object, logger.Object);
-            await matcher.Load();
-
-            Assert.That(matcher.IsLoaded, Is.True);
-
-            Assert.That(await matcher.FindSeries("CotS"), Is.EqualTo("1"));
-            Assert.That(await matcher.FindSeries("Crest of the Stars"), Is.EqualTo("1"));
-            Assert.That(await matcher.FindSeries("星界の紋章"), Is.EqualTo("1"));
-            Assert.That(await matcher.FindSeries("サザンアイズ"), Is.EqualTo("2"));
-            Assert.That(await matcher.FindSeries("3x3 Eyes"), Is.EqualTo("2"));
-            Assert.That(await matcher.FindSeries("Sazan Eyes"), Is.EqualTo("2"));
-        }
-
-        [Test]
         public async Task LoadsOnFindIfNotLoaded()
         {
-            var paths = new Mock<IApplicationPaths>();
-            paths.Setup(p => p.DataPath).Returns("TestData");
-
             var logger = new Mock<ILogger>();
 
-            var matcher = new AniDbTitleMatcher(paths.Object, logger.Object);
+            var downloader = new Mock<IAniDbTitleDownloader>();
+            downloader.Setup(d => d.Load(It.IsAny<CancellationToken>())).Returns(Task.FromResult(0));
+            downloader.Setup(d => d.TitlesFilePath).Returns("TestData/anidb/titles.xml");
+
+            var matcher = new AniDbTitleMatcher(logger.Object, downloader.Object);
 
             Assert.That(matcher.IsLoaded, Is.False);
 
@@ -54,14 +35,16 @@ namespace MediaBrowser.Plugins.AniDB.Tests
         [Test]
         public async Task ErrorLoggedIfTitlesFileMissing()
         {
-            var paths = new Mock<IApplicationPaths>();
-            paths.Setup(p => p.DataPath).Returns("InvalidPath");
+            var downloader = new Mock<IAniDbTitleDownloader>();
+            downloader.Setup(d => d.Load(It.IsAny<CancellationToken>())).Returns(Task.FromResult(0));
+            downloader.Setup(d => d.TitlesFilePath).Returns("InvalidPath");
 
             var logger = new Mock<ILogger>();
             logger.Setup(l => l.ErrorException("Failed to load AniDB titles", It.IsAny<Exception>())).Verifiable();
 
-            var matcher = new AniDbTitleMatcher(paths.Object, logger.Object);
-            await matcher.Load();
+            var matcher = new AniDbTitleMatcher(logger.Object, downloader.Object);
+
+            await matcher.FindSeries("CotS");
 
             logger.Verify();
         }

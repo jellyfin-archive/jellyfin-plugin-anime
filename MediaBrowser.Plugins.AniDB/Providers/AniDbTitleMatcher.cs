@@ -1,32 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using MediaBrowser.Common.Configuration;
 using MediaBrowser.Model.Logging;
 
-namespace MediaBrowser.Plugins.AniDB
+namespace MediaBrowser.Plugins.AniDB.Providers
 {
-    /// <summary>
-    /// The <see cref="IAniDbTitleMatcher"/> interface defines a type which can match series titles to AniDB IDs.
-    /// </summary>
-    public interface IAniDbTitleMatcher
-    {
-        /// <summary>
-        /// Finds the AniDB for the series with the given title.
-        /// </summary>
-        /// <param name="title">The title of the series to search for.</param>
-        /// <returns>The AniDB ID of the series is found; else <c>null</c>.</returns>
-        Task<string> FindSeries(string title);
-
-        /// <summary>
-        /// Loads series titles from the series.xml file into memory.
-        /// </summary>
-        Task Load();
-    }
-
     /// <summary>
     /// The <see cref="AniDbTitleMatcher"/> class loads series titles from the series.xml file in the application data anidb folder,
     /// and provides the means to search for a the AniDB of a series by series title.
@@ -38,54 +21,47 @@ namespace MediaBrowser.Plugins.AniDB
         /// Gets or sets the global <see cref="IAniDbTitleMatcher"/> instance.
         /// </summary>
         public static IAniDbTitleMatcher DefaultInstance { get; set; }
-
-        private readonly IApplicationPaths _paths;
+        
         private readonly ILogger _logger;
+        private readonly IAniDbTitleDownloader _downloader;
+        private readonly AsyncLock _lock;
 
         private Dictionary<string, string> _titles;
-
+        
         /// <summary>
         /// Creates a new instance of the AniDbTitleMatcher class.
         /// </summary>
-        /// <param name="paths">The application paths.</param>
         /// <param name="logger">The logger.</param>
-        public AniDbTitleMatcher(IApplicationPaths paths, ILogger logger)
+        /// <param name="downloader">The AniDB title downloader.</param>
+        public AniDbTitleMatcher(ILogger logger, IAniDbTitleDownloader downloader)
         {
-            _paths = paths;
             _logger = logger;
+            _downloader = downloader;
+            _lock = new AsyncLock();
         }
 
-        /// <summary>
-        /// Gets the path to the anidb data folder.
-        /// </summary>
-        /// <param name="applicationPaths">The application paths.</param>
-        /// <returns>The path to the anidb data folder.</returns>
-        public static string GetDataPath(IApplicationPaths applicationPaths)
+        public Task<string> FindSeries(string title)
         {
-            return Path.Combine(applicationPaths.DataPath, "anidb");
+            return FindSeries(title, CancellationToken.None);
         }
-
-        /// <summary>
-        /// Gets the path to the titles.xml file.
-        /// </summary>
-        /// <param name="applicationPaths">The application paths.</param>
-        /// <returns>The path to the titles.xml file.</returns>
-        public static string GetTitlesFile(IApplicationPaths applicationPaths)
+        
+        public async Task<string> FindSeries(string title, CancellationToken cancellationToken)
         {
-            var data = GetDataPath(applicationPaths);
-            Directory.CreateDirectory(data);
-
-            return Path.Combine(data, "titles.xml");
-        }
-
-        public async Task<string> FindSeries(string title)
-        {
-            if (!IsLoaded)
+            using (await _lock.LockAsync())
             {
-                await Load().ConfigureAwait(false);
+                if (!IsLoaded)
+                {
+                    await Load(cancellationToken).ConfigureAwait(false);
+                }
             }
 
             string aid;
+            if (_titles.TryGetValue(title, out aid))
+            {
+                return aid;
+            }
+            
+            title = GetComparableName(title);
             if (_titles.TryGetValue(title, out aid))
             {
                 return aid;
@@ -94,12 +70,58 @@ namespace MediaBrowser.Plugins.AniDB
             return null;
         }
 
+        const string Remove = "\"'!`?";
+        const string Spacers = "/,.:;\\(){}[]+-_=–*";  // (there are not actually two - in the they are different char codes)
+
+        internal static string GetComparableName(string name)
+        {
+            name = name.ToLower();
+            name = name.Normalize(NormalizationForm.FormKD);
+            var sb = new StringBuilder();
+            foreach (var c in name)
+            {
+                if ((int)c >= 0x2B0 && (int)c <= 0x0333)
+                {
+                    // skip char modifier and diacritics 
+                }
+                else if (Remove.IndexOf(c) > -1)
+                {
+                    // skip chars we are removing
+                }
+                else if (Spacers.IndexOf(c) > -1)
+                {
+                    sb.Append(" ");
+                }
+                else if (c == '&')
+                {
+                    sb.Append(" and ");
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+            name = sb.ToString();
+            name = name.Replace(", the", "");
+            name = name.Replace("the ", " ");
+            name = name.Replace(" the ", " ");
+
+            string prevName;
+            do
+            {
+                prevName = name;
+                name = name.Replace("  ", " ");
+            } while (name.Length != prevName.Length);
+
+            return name.Trim();
+        }
+
         public bool IsLoaded
         {
             get { return _titles != null; }
         }
         
-        public async Task Load()
+        private async Task Load(CancellationToken cancellationToken)
         {
             if (_titles == null)
             {
@@ -112,6 +134,7 @@ namespace MediaBrowser.Plugins.AniDB
 
             try
             {
+                await _downloader.Load(cancellationToken).ConfigureAwait(false);
                 await ReadTitlesFile().ConfigureAwait(false);
             }
             catch (Exception e)
@@ -119,14 +142,14 @@ namespace MediaBrowser.Plugins.AniDB
                 _logger.ErrorException("Failed to load AniDB titles", e);
             }
         }
-
+        
         private Task ReadTitlesFile()
         {
             return Task.Run(() =>
             {
                 _logger.Debug("Loading AniDB titles");
 
-                var titlesFile = GetTitlesFile(_paths);
+                var titlesFile = _downloader.TitlesFilePath;
 
                 var settings = new XmlReaderSettings
                 {
@@ -161,6 +184,17 @@ namespace MediaBrowser.Plugins.AniDB
                             }
                         }
                     }
+                }
+
+                var comparable = (from pair in _titles
+                                  let comp = GetComparableName(pair.Key)
+                                  where !_titles.ContainsKey(comp)
+                                  select new {Title = comp, Id = pair.Value})
+                                 .ToArray();
+
+                foreach (var pair in comparable)
+                {
+                    _titles[pair.Title] = pair.Id;
                 }
             });
         }

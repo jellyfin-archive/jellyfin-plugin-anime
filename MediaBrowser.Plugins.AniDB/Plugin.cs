@@ -1,16 +1,18 @@
 ﻿using MediaBrowser.Common.Configuration;
+using MediaBrowser.Common.Net;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
+using MediaBrowser.Plugins.AniDB.Providers;
 
 namespace MediaBrowser.Plugins.AniDB
 {
     public class Plugin
         : BasePlugin<PluginConfiguration>
     {
-        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger logger) : base(applicationPaths, xmlSerializer)
+        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger logger, IHttpClient httpClient) : base(applicationPaths, xmlSerializer)
         {
-            AniDbTitleMatcher.DefaultInstance = new AniDbTitleMatcher(applicationPaths, logger);
+            AniDbTitleMatcher.DefaultInstance = new AniDbTitleMatcher(logger, new AniDbTitleDownloader(httpClient, logger, applicationPaths));
         }
 
         public override string Name
