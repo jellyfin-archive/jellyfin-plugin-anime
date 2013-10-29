@@ -29,7 +29,6 @@ namespace MediaBrowser.Plugins.AniDB.Tests
             paths.Setup(p => p.DataPath).Returns("TestData");
 
             var logger = new Mock<ILogger>();
-            var logManager = new Mock<ILogManager>();
 
             var configurationManager = new Mock<IServerConfigurationManager>();
             configurationManager.Setup(c => c.ApplicationPaths).Returns(paths.Object);
@@ -43,7 +42,7 @@ namespace MediaBrowser.Plugins.AniDB.Tests
             
             AniDbTitleMatcher.DefaultInstance = new AniDbTitleMatcher(logger.Object, downloader.Object);
 
-            var provider = new AniDbSeriesProvider(logManager.Object, configurationManager.Object, paths.Object, httpClient);
+            var provider = new AniDbSeriesProvider(logger.Object, configurationManager.Object, paths.Object, httpClient);
 
             var series = new Series
             {
@@ -52,9 +51,9 @@ namespace MediaBrowser.Plugins.AniDB.Tests
 
             var cancellation = new CancellationTokenSource();
 
-            await provider.FetchAsync(series, false, cancellation.Token);
+            var info = await provider.FindSeriesInfo(series, cancellation.Token);
 
-            Assert.That(series.Name, Is.EqualTo("Puella Magi Madoka Magica"));
+            Assert.That(info.Name, Is.EqualTo("Puella Magi Madoka Magica"));
         }
 
         HttpClient CreateHttpClient(bool enableHttpCompression)

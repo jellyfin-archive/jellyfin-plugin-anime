@@ -10,9 +10,9 @@ namespace MediaBrowser.Plugins.AniDB
     public class Plugin
         : BasePlugin<PluginConfiguration>
     {
-        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger logger, IHttpClient httpClient) : base(applicationPaths, xmlSerializer)
+        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger logger) : base(applicationPaths, xmlSerializer)
         {
-            AniDbTitleMatcher.DefaultInstance = new AniDbTitleMatcher(logger, new AniDbTitleDownloader(httpClient, logger, applicationPaths));
+            AniDbTitleMatcher.DefaultInstance = new AniDbTitleMatcher(logger, new AniDbTitleDownloader(logger, applicationPaths));
         }
 
         public override string Name
