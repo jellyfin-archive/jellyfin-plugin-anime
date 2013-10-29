@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Providers\AniDbSeriesImagesProvider.cs" />
     <Compile Include="Providers\AniDbTitleDownloader.cs" />
     <Compile Include="Providers\AniDbTitleMatcher.cs" />
     <Compile Include="AsyncLock.cs" />
@@ -58,6 +59,7 @@
     <Compile Include="PluginConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\AniDbSeriesProvider.cs" />
+    <Compile Include="Providers\ProviderNames.cs" />
     <Compile Include="Providers\SeriesInfo.cs" />
   </ItemGroup>
   <ItemGroup>

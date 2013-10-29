@@ -21,8 +21,6 @@ namespace MediaBrowser.Plugins.AniDB.Providers
 {
     public class AniDbSeriesProvider
     {
-        public const string AniDbProviderId = "AniDB";
-        
         private const string SeriesDataFile = "series.xml";
         private const string SeriesQueryUrl = "http://api.anidb.net:9001/httpapi?request=anime&client={0}&clientver=1&protover=1&aid={1}";
         private const string ClientName = "xbmcscrap"; // pretend to be the xbmc scraper until we can register our own application
@@ -31,6 +29,8 @@ namespace MediaBrowser.Plugins.AniDB.Providers
         private readonly IServerConfigurationManager _configurationManager;
         private readonly IApplicationPaths _appPaths;
         private readonly IHttpClient _httpClient;
+
+        public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(2, 2);
 
         private readonly Dictionary<string, string> _typeMappings = new Dictionary<string, string>
         {
@@ -67,10 +67,11 @@ namespace MediaBrowser.Plugins.AniDB.Providers
             cancellationToken.ThrowIfCancellationRequested();
 
             // find aid
-            var aid = item.GetProviderId(AniDbProviderId);
+            var aid = item.GetProviderId(ProviderNames.AniDb);
             if (string.IsNullOrEmpty(aid))
             {
                 aid = await TitleMatcher.FindSeries(item.Name, cancellationToken);
+                item.SetProviderId(ProviderNames.AniDb, aid);
             }
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -82,7 +83,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers
                 _log.Debug("Identified {0} as AniDB ID {1}", item.Name, aid);
 
                 // download series data if not present
-                var dataPath = Path.Combine(_appPaths.DataPath, "anidb", aid);
+                var dataPath = GetSeriesDataPath(_appPaths, aid);
                 var seriesDataPath = Path.Combine(dataPath, SeriesDataFile);
 
                 if (!File.Exists(seriesDataPath))
@@ -95,6 +96,11 @@ namespace MediaBrowser.Plugins.AniDB.Providers
             }
 
             return series;
+        }
+
+        public static string GetSeriesDataPath(IApplicationPaths paths, string seriesId)
+        {
+            return Path.Combine(paths.DataPath, "anidb", seriesId);
         }
 
         private void FetchSeriesInfo(SeriesInfo series, string seriesDataPath, CancellationToken cancellationToken)
@@ -520,14 +526,14 @@ namespace MediaBrowser.Plugins.AniDB.Providers
             }
         }
 
-        private Task SaveEpsiodeXml(string seriesDataDirectory, string xml)
+        private async Task SaveEpsiodeXml(string seriesDataDirectory, string xml)
         {
             var episodeNumber = ParseEpisodeNumber(xml);
 
             if (episodeNumber != null)
             {
                 var file = Path.Combine(seriesDataDirectory, string.Format("episode-{0}.xml", episodeNumber));
-                return SaveXml(xml, file);
+                await SaveXml(xml, file);
             }
         }
 
