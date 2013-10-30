@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using MediaBrowser.Model.Logging;
 
-namespace MediaBrowser.Plugins.AniDB.Providers
+namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
 {
     /// <summary>
     /// The <see cref="AniDbTitleMatcher"/> class loads series titles from the series.xml file in the application data anidb folder,

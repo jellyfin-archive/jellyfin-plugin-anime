@@ -4,6 +4,7 @@ using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Plugins.AniDB.Providers;
+using MediaBrowser.Plugins.AniDB.Providers.AniDB;
 
 namespace MediaBrowser.Plugins.AniDB
 {

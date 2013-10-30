@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Model.Logging;
 
-namespace MediaBrowser.Plugins.AniDB.Providers
+namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
 {
     /// <summary>
     /// The AniDbTitleDownloader class downloads the anime titles file from AniDB and stores it.

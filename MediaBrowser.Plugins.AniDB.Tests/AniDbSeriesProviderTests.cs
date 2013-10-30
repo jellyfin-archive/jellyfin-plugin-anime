@@ -14,6 +14,7 @@ using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Plugins.AniDB.Providers;
+using MediaBrowser.Plugins.AniDB.Providers.AniDB;
 using Moq;
 using NUnit.Framework;
 
