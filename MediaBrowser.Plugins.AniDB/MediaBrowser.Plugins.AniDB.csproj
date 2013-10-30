@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Providers\AniDbPersonImageProvider.cs" />
     <Compile Include="Providers\AniDbSeriesImagesProvider.cs" />
     <Compile Include="Providers\AniDbTitleDownloader.cs" />
     <Compile Include="Providers\AniDbTitleMatcher.cs" />

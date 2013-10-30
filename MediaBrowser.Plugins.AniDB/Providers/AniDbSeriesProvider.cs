@@ -398,7 +398,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers
             };
         }
 
-        private string ReverseNameOrder(string name)
+        public static string ReverseNameOrder(string name)
         {
             return name.Split(' ').Reverse().Aggregate(string.Empty, (n, part) => n + " " + part).Trim();
         }

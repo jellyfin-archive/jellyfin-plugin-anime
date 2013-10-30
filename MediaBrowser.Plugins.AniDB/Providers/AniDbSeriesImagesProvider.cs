@@ -91,8 +91,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers
 
             if (!string.IsNullOrEmpty(seriesId) && !item.HasImage(ImageType.Primary))
             {
-                string seriesDataDirectory = AniDbSeriesProvider.GetSeriesDataPath(ConfigurationManager.ApplicationPaths,
-                                                                                   seriesId);
+                string seriesDataDirectory = AniDbSeriesProvider.GetSeriesDataPath(ConfigurationManager.ApplicationPaths, seriesId);
                 string seriesDataPath = Path.Combine(seriesDataDirectory, "series.xml");
                 string imageUrl = FindImageUrl(seriesDataPath);
 

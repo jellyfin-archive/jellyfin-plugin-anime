@@ -89,7 +89,12 @@ namespace MediaBrowser.Plugins.AniDB.Providers
                 item.Overview = item.Overview ?? anidb.Description;
 
             if (!item.LockedFields.Contains(MetadataFields.Cast))
-                item.People = SelectCollection(anidb.People, item.People);
+            {
+                var people = SelectCollection(anidb.People, item.People.ToArray());
+                item.People.Clear();
+                foreach (var person in people)
+                    item.AddPerson(person);
+            }
 
             if (!item.LockedFields.Contains(MetadataFields.OfficialRating))
                 item.OfficialRating = item.OfficialRating ?? anidb.ContentRating;
@@ -98,17 +103,27 @@ namespace MediaBrowser.Plugins.AniDB.Providers
                 item.RunTimeTicks = anidb.RunTimeTicks ?? item.RunTimeTicks;
 
             if (!item.LockedFields.Contains(MetadataFields.Genres))
-                item.Genres = SelectCollection(item.Genres, anidb.Genres);
+            {
+                var genres = SelectCollection(item.Genres, anidb.Genres.ToArray());
+                item.Genres.Clear();
+                foreach (var genre in genres)
+                    item.AddGenre(genre);
+            }
 
             if (!item.LockedFields.Contains(MetadataFields.Studios))
-                item.Studios = SelectCollection(anidb.Studios, item.Studios);
+            {
+                var studios = SelectCollection(anidb.Studios, item.Studios.ToArray());
+                item.Studios.Clear();
+                foreach (var studio in studios)
+                    item.AddStudio(studio);
+            }
 
             item.PremiereDate = anidb.StartDate ?? item.PremiereDate;
             item.EndDate = anidb.EndDate ?? item.EndDate;
             item.Status = item.EndDate != null ? SeriesStatus.Ended : SeriesStatus.Continuing;
             item.AirTime = anidb.AirTime ?? item.AirTime;
-            item.AirDays = SelectCollection(anidb.AirDays, item.AirDays);
-
+            item.AirDays = SelectCollection(anidb.AirDays, item.AirDays).ToList();
+            
             if (item.ProductionYear == null && item.PremiereDate != null)
             {
                 item.ProductionYear = item.PremiereDate.Value.Year;
@@ -119,9 +134,9 @@ namespace MediaBrowser.Plugins.AniDB.Providers
             item.VoteCount = mostVoted.VoteCount;
         }
 
-        private List<T> SelectCollection<T>(params List<T>[] items)
+        private IEnumerable<T> SelectCollection<T>(params IEnumerable<T>[] items)
         {
-            return items.FirstOrDefault(l => l != null && l.Count > 0) ?? new List<T>();
+            return items.FirstOrDefault(l => l != null && l.Any()) ?? new List<T>();
         }
 
         private void AddProviders(BaseItem item, Dictionary<string, string> providers)
