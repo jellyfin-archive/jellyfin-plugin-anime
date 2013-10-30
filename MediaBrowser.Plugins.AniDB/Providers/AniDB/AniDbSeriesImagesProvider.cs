@@ -26,7 +26,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
 
         public override MetadataProviderPriority Priority
         {
-            get { return MetadataProviderPriority.Fourth; }
+            get { return MetadataProviderPriority.Fifth; }
         }
 
         public override bool RequiresInternet

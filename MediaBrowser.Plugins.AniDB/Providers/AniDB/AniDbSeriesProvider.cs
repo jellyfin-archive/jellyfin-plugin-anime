@@ -13,13 +13,14 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
 
 namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
 {
-    public class AniDbSeriesProvider
+    public class AniDbSeriesProvider : ISeriesProvider
     {
         private const string SeriesDataFile = "series.xml";
         private const string SeriesQueryUrl = "http://api.anidb.net:9001/httpapi?request=anime&client={0}&clientver=1&protover=1&aid={1}";
@@ -47,7 +48,6 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             _httpClient = httpClient;
 
             TitleMatcher = AniDbTitleMatcher.DefaultInstance;
-            TitlePreference = TitlePreferenceType.Localized;
         }
 
         public IAniDbTitleMatcher TitleMatcher
@@ -56,13 +56,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             set;
         }
 
-        public TitlePreferenceType TitlePreference
-        {
-            get;
-            set;
-        }
-
-        public async Task<SeriesInfo> FindSeriesInfo(BaseItem item, CancellationToken cancellationToken)
+        public async Task<SeriesInfo> FindSeriesInfo(Series item, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -71,12 +65,12 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             if (string.IsNullOrEmpty(aid))
             {
                 aid = await TitleMatcher.FindSeries(item.Name, cancellationToken);
-                item.SetProviderId(ProviderNames.AniDb, aid);
             }
 
             cancellationToken.ThrowIfCancellationRequested();
 
             var series = new SeriesInfo();
+            series.ExternalProviders.Add(ProviderNames.AniDb, aid);
 
             if (!string.IsNullOrEmpty(aid))
             {
@@ -313,50 +307,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
                 }
             }
 
-            if (TitlePreference == TitlePreferenceType.Localized)
-            {
-                var targetLanguage = _configurationManager.Configuration.PreferredMetadataLanguage.ToLower();
-
-                // prefer an official title, else look for a synonym
-                var localized =
-                    titles.FirstOrDefault(t => t.Language == targetLanguage && t.Type == "official") ??
-                    titles.FirstOrDefault(t => t.Language == targetLanguage && t.Type == "synonym");
-
-                if (localized != null)
-                {
-                    return localized.Name;
-                }
-            }
-
-            if (TitlePreference == TitlePreferenceType.Japanese)
-            {
-                // prefer an official title, else look for a synonym
-                var japanese =
-                    titles.FirstOrDefault(t => t.Language == "ja" && t.Type == "official") ??
-                    titles.FirstOrDefault(t => t.Language == "ja" && t.Type == "synonym");
-
-                if (japanese != null)
-                {
-                    return japanese.Name;
-                }
-            }
-
-            // return the main title (romaji)
-            return titles.First(t => t.Type == "main").Name;
-        }
-
-        public enum TitlePreferenceType
-        {
-            Localized,
-            Japanese,
-            JapaneseRomaji,
-        }
-
-        private class Title
-        {
-            public string Language { get; set; }
-            public string Type { get; set; }
-            public string Name { get; set; }
+            return titles.Localize(Configuration.Instance.TitlePreference, _configurationManager.Configuration.PreferredMetadataLanguage).Name;
         }
 
         private void ParseCreators(SeriesInfo series, XmlReader reader)
@@ -537,7 +488,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             }
         }
 
-        private static int? ParseEpisodeNumber(string xml)
+        private static string ParseEpisodeNumber(string xml)
         {
             var settings = new XmlReaderSettings
             {
@@ -564,12 +515,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
                                 var val = reader.ReadElementContentAsString();
                                 if (!string.IsNullOrWhiteSpace(val))
                                 {
-                                    int num;
-                                    if (int.TryParse(val, NumberStyles.Integer, CultureInfo.InvariantCulture,
-                                        out num))
-                                    {
-                                        return num;
-                                    }
+                                    return val;
                                 }
                             }
                             else
@@ -582,6 +528,11 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             }
 
             return null;
+        }
+
+        public bool RequiresInternet
+        {
+            get { return true; }
         }
 
         public bool NeedsRefreshBasedOnCompareDate(BaseItem item, BaseProviderInfo providerInfo)
@@ -612,6 +563,57 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             }
 
             return false;
+        }
+    }
+
+    public enum TitlePreferenceType
+    {
+        Localized,
+        Japanese,
+        JapaneseRomaji,
+    }
+
+    public class Title
+    {
+        public string Language { get; set; }
+        public string Type { get; set; }
+        public string Name { get; set; }
+    }
+
+    public static class TitleExtensions
+    {
+        public static Title Localize(this IEnumerable<Title> titles, TitlePreferenceType preference, string metadataLanguage)
+        {
+            var titlesList = titles as IList<Title> ?? titles.ToList();
+
+            if (preference == TitlePreferenceType.Localized)
+            {
+                // prefer an official title, else look for a synonym
+                var localized =
+                    titlesList.FirstOrDefault(t => t.Language == metadataLanguage && t.Type == "official") ??
+                    titlesList.FirstOrDefault(t => t.Language == metadataLanguage && t.Type == "synonym");
+
+                if (localized != null)
+                {
+                    return localized;
+                }
+            }
+
+            if (preference == TitlePreferenceType.Japanese)
+            {
+                // prefer an official title, else look for a synonym
+                var japanese =
+                    titlesList.FirstOrDefault(t => t.Language == "ja" && t.Type == "official") ??
+                    titlesList.FirstOrDefault(t => t.Language == "ja" && t.Type == "synonym");
+
+                if (japanese != null)
+                {
+                    return japanese;
+                }
+            }
+
+            // return the main title (romaji)
+            return titlesList.FirstOrDefault(t => t.Type == "main") ?? titlesList.FirstOrDefault();
         }
     }
 }

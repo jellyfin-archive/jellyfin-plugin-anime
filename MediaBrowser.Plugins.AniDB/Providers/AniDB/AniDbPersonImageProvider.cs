@@ -119,29 +119,20 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
         private string FetchImageUrl(BaseItem item, string castXml)
         {
             var doc = XDocument.Load(castXml);
-//            var pictures = from character in doc.Element("characters").Descendants("character")
-//                                let seiyuu = character.Element("seiyuu")
-//                                where seiyuu != null && string.Equals(seiyuu.Value, item.Name, StringComparison.OrdinalIgnoreCase)
-//                                let picture = seiyuu.Attribute("picture")
-//                                where picture != null && !string.IsNullOrEmpty(picture.Value)
-//                                select picture.Value;
-//
-//            var pic = pictures.FirstOrDefault();
-//            if (!string.IsNullOrEmpty(pic))
-//            {
-//                return "http://img7.anidb.net/pics/anime/" + pic;
-//            }
 
-            var characters = doc.Element("characters").Descendants("character");
-            foreach (var character in characters)
+            var characters = doc.Element("characters");
+            if (characters != null)
             {
-                var seiyuu = character.Element("seiyuu");
-                if (seiyuu != null && string.Equals(seiyuu.Value, AniDbSeriesProvider.ReverseNameOrder(item.Name), StringComparison.OrdinalIgnoreCase))
+                foreach (var character in characters.Descendants("character"))
                 {
-                    var picture = seiyuu.Attribute("picture");
-                    if (picture != null && !string.IsNullOrEmpty(picture.Value))
+                    var seiyuu = character.Element("seiyuu");
+                    if (seiyuu != null && string.Equals(seiyuu.Value, AniDbSeriesProvider.ReverseNameOrder(item.Name), StringComparison.OrdinalIgnoreCase))
                     {
-                        return "http://img7.anidb.net/pics/anime/" + picture.Value;
+                        var picture = seiyuu.Attribute("picture");
+                        if (picture != null && !string.IsNullOrEmpty(picture.Value))
+                        {
+                            return "http://img7.anidb.net/pics/anime/" + picture.Value;
+                        }
                     }
                 }
             }
