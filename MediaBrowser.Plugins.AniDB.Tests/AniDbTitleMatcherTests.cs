@@ -2,12 +2,11 @@
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Model.Logging;
-using MediaBrowser.Plugins.AniDB.Providers;
-using MediaBrowser.Plugins.AniDB.Providers.AniDB;
+using MediaBrowser.Plugins.Anime.Providers.AniDB;
 using Moq;
 using NUnit.Framework;
 
-namespace MediaBrowser.Plugins.AniDB.Tests
+namespace MediaBrowser.Plugins.Anime.Tests
 {
     [TestFixture]
     public class AniDbTitleMatcherTests

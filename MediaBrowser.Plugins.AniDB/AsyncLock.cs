@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MediaBrowser.Plugins.AniDB
+namespace MediaBrowser.Plugins.Anime
 {
     public class AsyncSemaphore
     {

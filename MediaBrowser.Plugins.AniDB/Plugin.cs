@@ -1,12 +1,10 @@
 ﻿using MediaBrowser.Common.Configuration;
-using MediaBrowser.Common.Net;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
-using MediaBrowser.Plugins.AniDB.Providers;
-using MediaBrowser.Plugins.AniDB.Providers.AniDB;
+using MediaBrowser.Plugins.Anime.Providers.AniDB;
 
-namespace MediaBrowser.Plugins.AniDB
+namespace MediaBrowser.Plugins.Anime
 {
     public class Plugin
         : BasePlugin<PluginConfiguration>

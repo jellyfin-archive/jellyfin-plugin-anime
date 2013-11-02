@@ -12,7 +12,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 
-namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
+namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 {
     /// <summary>
     /// The <see cref="AniDbEpisodeProvider"/> class provides episode metadata from AniDB.

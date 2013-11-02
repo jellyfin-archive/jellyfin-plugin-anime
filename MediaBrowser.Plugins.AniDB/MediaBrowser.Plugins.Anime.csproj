@@ -7,8 +7,8 @@
     <ProjectGuid>{F68223A5-EE1E-444C-89F9-14092AAB987D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MediaBrowser.Plugins.AniDB</RootNamespace>
-    <AssemblyName>MediaBrowser.Plugins.AniDB</AssemblyName>
+    <RootNamespace>MediaBrowser.Plugins.Anime</RootNamespace>
+    <AssemblyName>MediaBrowser.Plugins.Anime</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

@@ -1,6 +1,6 @@
-﻿using MediaBrowser.Plugins.AniDB.Providers.AniDB;
+﻿using MediaBrowser.Plugins.Anime.Providers.AniDB;
 
-namespace MediaBrowser.Plugins.AniDB
+namespace MediaBrowser.Plugins.Anime
 {
     public class Configuration
     {

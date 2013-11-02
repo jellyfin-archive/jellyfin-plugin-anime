@@ -1,24 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Cache;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Implementations.HttpClientManager;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Model.Logging;
-using MediaBrowser.Plugins.AniDB.Providers;
-using MediaBrowser.Plugins.AniDB.Providers.AniDB;
+using MediaBrowser.Plugins.Anime.Providers.AniDB;
 using Moq;
 using NUnit.Framework;
 
-namespace MediaBrowser.Plugins.AniDB.Tests
+namespace MediaBrowser.Plugins.Anime.Tests
 {
     [TestFixture]
     public class AniDbSeriesProviderTests

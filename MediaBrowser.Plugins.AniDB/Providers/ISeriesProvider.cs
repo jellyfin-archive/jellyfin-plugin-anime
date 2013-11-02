@@ -4,7 +4,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 
-namespace MediaBrowser.Plugins.AniDB.Providers
+namespace MediaBrowser.Plugins.Anime.Providers
 {
     public interface ISeriesProvider
     {

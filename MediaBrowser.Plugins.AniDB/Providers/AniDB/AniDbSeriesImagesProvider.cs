@@ -12,7 +12,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
 
-namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
+namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 {
     public class AniDbSeriesImagesProvider : BaseMetadataProvider
     {

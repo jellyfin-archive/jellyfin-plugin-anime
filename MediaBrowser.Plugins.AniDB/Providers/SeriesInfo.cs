@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using MediaBrowser.Controller.Entities;
 
-namespace MediaBrowser.Plugins.AniDB.Providers
+namespace MediaBrowser.Plugins.Anime.Providers
 {
     public class SeriesInfo
     {
