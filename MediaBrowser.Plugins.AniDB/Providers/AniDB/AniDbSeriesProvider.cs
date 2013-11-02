@@ -75,21 +75,27 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             if (!string.IsNullOrEmpty(aid))
             {
                 _log.Debug("Identified {0} as AniDB ID {1}", item.Name, aid);
-
-                // download series data if not present
-                var dataPath = GetSeriesDataPath(_appPaths, aid);
-                var seriesDataPath = Path.Combine(dataPath, SeriesDataFile);
-
-                if (!File.Exists(seriesDataPath))
-                {
-                    await DownloadSeriesData(aid, seriesDataPath, cancellationToken).ConfigureAwait(false);
-                }
+                var seriesDataPath = await GetSeriesData(_appPaths, _httpClient, aid, cancellationToken);
 
                 // load series data and apply to item
                 FetchSeriesInfo(series, seriesDataPath, cancellationToken);
             }
 
             return series;
+        }
+
+        public static async Task<string> GetSeriesData(IApplicationPaths appPaths, IHttpClient httpClient, string seriesId, CancellationToken cancellationToken)
+        {
+            var dataPath = GetSeriesDataPath(appPaths, seriesId);
+            var seriesDataPath = Path.Combine(dataPath, SeriesDataFile);
+
+            // download series data if not present
+            if (!File.Exists(seriesDataPath))
+            {
+                await DownloadSeriesData(seriesId, seriesDataPath, httpClient, cancellationToken).ConfigureAwait(false);
+            }
+
+            return seriesDataPath;
         }
 
         public static string GetSeriesDataPath(IApplicationPaths paths, string seriesId)
@@ -107,7 +113,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
                 ValidationType = ValidationType.None
             };
             
-            using (var streamReader = new StreamReader(seriesDataPath, Encoding.UTF8))
+            using (var streamReader = File.Open(seriesDataPath, FileMode.Open, FileAccess.Read))
             using (var reader = XmlReader.Create(streamReader, settings))
             {
                 reader.MoveToContent();
@@ -354,7 +360,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             return name.Split(' ').Reverse().Aggregate(string.Empty, (n, part) => n + " " + part).Trim();
         }
 
-        private async Task DownloadSeriesData(string aid, string seriesDataPath, CancellationToken cancellationToken)
+        private static async Task DownloadSeriesData(string aid, string seriesDataPath, IHttpClient httpClient, CancellationToken cancellationToken)
         {
             var directory = Path.GetDirectoryName(seriesDataPath);
             if (directory != null)
@@ -371,7 +377,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
                 EnableHttpCompression = false
             };
 
-            using (var stream = await _httpClient.Get(requestOptions).ConfigureAwait(false))
+            using (var stream = await httpClient.Get(requestOptions).ConfigureAwait(false))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var file = File.Open(seriesDataPath, FileMode.Create, FileAccess.Write))
             {
@@ -382,7 +388,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             await ExtractCast(directory, seriesDataPath);
         }
 
-        private void DeleteXmlFiles(string path)
+        private static void DeleteXmlFiles(string path)
         {
             try
             {
@@ -399,7 +405,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             }
         }
 
-        private async Task ExtractEpisodes(string seriesDataDirectory, string seriesDataPath)
+        private static async Task ExtractEpisodes(string seriesDataDirectory, string seriesDataPath)
         {
             var settings = new XmlReaderSettings
             {
@@ -432,7 +438,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             }
         }
 
-        private async Task ExtractCast(string seriesDataDirectory, string seriesDataPath)
+        private static async Task ExtractCast(string seriesDataDirectory, string seriesDataPath)
         {
             var settings = new XmlReaderSettings
             {
@@ -463,7 +469,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             }
         }
 
-        private async Task SaveXml(string xml, string filename)
+        private static async Task SaveXml(string xml, string filename)
         {
             var writerSettings = new XmlWriterSettings
             {
@@ -477,7 +483,7 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             }
         }
 
-        private async Task SaveEpsiodeXml(string seriesDataDirectory, string xml)
+        private static async Task SaveEpsiodeXml(string seriesDataDirectory, string xml)
         {
             var episodeNumber = ParseEpisodeNumber(xml);
 
@@ -589,9 +595,9 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             if (preference == TitlePreferenceType.Localized)
             {
                 // prefer an official title, else look for a synonym
-                var localized =
-                    titlesList.FirstOrDefault(t => t.Language == metadataLanguage && t.Type == "official") ??
-                    titlesList.FirstOrDefault(t => t.Language == metadataLanguage && t.Type == "synonym");
+                var localized = titlesList.FirstOrDefault(t => t.Language == metadataLanguage && t.Type == "main") ??
+                                titlesList.FirstOrDefault(t => t.Language == metadataLanguage && t.Type == "official") ??
+                                titlesList.FirstOrDefault(t => t.Language == metadataLanguage && t.Type == "synonym");
 
                 if (localized != null)
                 {
@@ -602,9 +608,9 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             if (preference == TitlePreferenceType.Japanese)
             {
                 // prefer an official title, else look for a synonym
-                var japanese =
-                    titlesList.FirstOrDefault(t => t.Language == "ja" && t.Type == "official") ??
-                    titlesList.FirstOrDefault(t => t.Language == "ja" && t.Type == "synonym");
+                var japanese = titlesList.FirstOrDefault(t => t.Language == "ja" && t.Type == "main") ??
+                               titlesList.FirstOrDefault(t => t.Language == "ja" && t.Type == "official") ??
+                               titlesList.FirstOrDefault(t => t.Language == "ja" && t.Type == "synonym");
 
                 if (japanese != null)
                 {
@@ -613,7 +619,9 @@ namespace MediaBrowser.Plugins.AniDB.Providers.AniDB
             }
 
             // return the main title (romaji)
-            return titlesList.FirstOrDefault(t => t.Type == "main") ?? titlesList.FirstOrDefault();
+            return titlesList.FirstOrDefault(t => t.Language == "x-jat" && t.Type == "main") ??
+                   titlesList.FirstOrDefault(t => t.Type == "main") ??
+                   titlesList.FirstOrDefault();
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -19,9 +20,9 @@ namespace MediaBrowser.Plugins.AniDB.Providers
         private readonly IEnumerable<IEpisodeProvider> _allProviders;
         private readonly AniDbEpisodeProvider _aniDb;
 
-        public AnimeEpisodeProvider(ILogManager logManager, IServerConfigurationManager configurationManager) : base(logManager, configurationManager)
+        public AnimeEpisodeProvider(ILogManager logManager, IServerConfigurationManager configurationManager, IHttpClient httpClient) : base(logManager, configurationManager)
         {
-            _aniDb = new AniDbEpisodeProvider(configurationManager);
+            _aniDb = new AniDbEpisodeProvider(configurationManager, httpClient);
 
             _allProviders = new[]
             {
