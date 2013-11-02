@@ -64,7 +64,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MediaBrowser.Plugins.AniDB\MediaBrowser.Plugins.Anime.csproj">
+    <ProjectReference Include="..\MediaBrowser.Plugins.Anime\MediaBrowser.Plugins.Anime.csproj">
       <Project>{f68223a5-ee1e-444c-89f9-14092aab987d}</Project>
       <Name>MediaBrowser.Plugins.Anime</Name>
     </ProjectReference>

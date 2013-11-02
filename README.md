@@ -1,7 +1,7 @@
-MediaBrowser.Plugins.AniDB
+MediaBrowser.Plugins.Anime
 ==========================
 
-An AniDB provider for Media Browser 3
+An Anime metadata provider for Media Browser 3
 
 ## Compiling and Testing
 

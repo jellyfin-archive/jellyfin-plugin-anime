@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaBrowser.Plugins.Anime", "MediaBrowser.Plugins.AniDB\MediaBrowser.Plugins.Anime.csproj", "{F68223A5-EE1E-444C-89F9-14092AAB987D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaBrowser.Plugins.Anime", "MediaBrowser.Plugins.Anime\MediaBrowser.Plugins.Anime.csproj", "{F68223A5-EE1E-444C-89F9-14092AAB987D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaBrowser.Plugins.Anime.Tests", "MediaBrowser.Plugins.AniDB.Tests\MediaBrowser.Plugins.Anime.Tests.csproj", "{96568724-B901-4805-9B16-7BDD5142124B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaBrowser.Plugins.Anime.Tests", "MediaBrowser.Plugins.Anime.Tests\MediaBrowser.Plugins.Anime.Tests.csproj", "{96568724-B901-4805-9B16-7BDD5142124B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
