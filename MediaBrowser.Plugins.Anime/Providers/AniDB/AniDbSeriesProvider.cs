@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -9,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Configuration;
@@ -88,9 +90,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         {
             var dataPath = GetSeriesDataPath(appPaths, seriesId);
             var seriesDataPath = Path.Combine(dataPath, SeriesDataFile);
-
-            // download series data if not present
-            if (!File.Exists(seriesDataPath))
+            var fileInfo = new FileInfo(seriesDataPath);
+            
+            // download series data if not present, or out of date
+            if (!fileInfo.Exists || DateTime.UtcNow - fileInfo.LastWriteTimeUtc > TimeSpan.FromDays(7))
             {
                 await DownloadSeriesData(seriesId, seriesDataPath, httpClient, cancellationToken).ConfigureAwait(false);
             }
@@ -187,6 +190,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                             case "resources":
                                 using (var subtree = reader.ReadSubtree())
                                 {
+                                    ParseResources(series, subtree);
                                 }
 
                                 break;
@@ -210,6 +214,32 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
                                 break;
                         }
+                    }
+                }
+            }
+        }
+
+        private void ParseResources(SeriesInfo series, XmlReader reader)
+        {
+            while (reader.Read())
+            {
+                if (reader.NodeType == XmlNodeType.Element && reader.Name == "resource")
+                {
+                    var type = reader.GetAttribute("type");
+
+                    switch (type)
+                    {
+                        case "2":
+                            while (reader.Read())
+                            {
+                                if (reader.NodeType == XmlNodeType.Element && reader.Name == "identifier")
+                                {
+                                    series.ExternalProviders.Add(ProviderNames.MyAnimeList, reader.ReadElementContentAsString());
+                                    break;
+                                }
+                            }
+                            
+                            break;
                     }
                 }
             }

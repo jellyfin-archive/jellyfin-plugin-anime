@@ -41,6 +41,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -54,6 +55,7 @@
     <Compile Include="Providers\AniDB\AniDbTitleDownloader.cs" />
     <Compile Include="Providers\AniDB\AniDbTitleMatcher.cs" />
     <Compile Include="AsyncLock.cs" />
+    <Compile Include="Providers\AniList\AniListSeriesProvider.cs" />
     <Compile Include="Providers\AnimeEpisodeProvider.cs" />
     <Compile Include="Providers\AnimeSeriesProvider.cs" />
     <Compile Include="Providers\AniDB\IAniDbTitleDownloader.cs" />
@@ -66,12 +68,14 @@
     <Compile Include="Providers\EpisodeInfo.cs" />
     <Compile Include="Providers\IEpisodeProvider.cs" />
     <Compile Include="Providers\ISeriesProvider.cs" />
+    <Compile Include="Providers\MyAnimeList\MalSeriesProvider.cs" />
     <Compile Include="Providers\ProviderNames.cs" />
     <Compile Include="Providers\SeriesInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(TargetPath)" "%25MediaBrowserData%25\plugins\" /y</PostBuildEvent>
