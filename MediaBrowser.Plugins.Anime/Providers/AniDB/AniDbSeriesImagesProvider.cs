@@ -99,6 +99,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 {
                     Logger.Debug("Downloading primary image for {0} from {1}", item.Name, imageUrl);
 
+                    await AniDbSeriesProvider.RequestLimiter.Tick();
                     await _providerManager.SaveImage(series, imageUrl, AniDbSeriesProvider.ResourcePool, ImageType.Primary, null, cancellationToken)
                                           .ConfigureAwait(false);
 

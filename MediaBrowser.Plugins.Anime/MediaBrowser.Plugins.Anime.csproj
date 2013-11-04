@@ -71,6 +71,7 @@
     <Compile Include="Providers\MyAnimeList\MalSeriesProvider.cs" />
     <Compile Include="Providers\ProviderNames.cs" />
     <Compile Include="Providers\SeriesInfo.cs" />
+    <Compile Include="RateLimiter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

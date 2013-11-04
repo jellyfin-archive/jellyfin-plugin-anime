@@ -62,6 +62,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
             var client = new WebClient();
 
+            await AniDbSeriesProvider.RequestLimiter.Tick();
+
             using (var stream = await client.OpenReadTaskAsync(TitlesUrl))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var writer = File.Open(titlesFile, FileMode.Create, FileAccess.Write))

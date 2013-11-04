@@ -33,7 +33,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         private readonly IApplicationPaths _appPaths;
         private readonly IHttpClient _httpClient;
 
-        public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(2, 2);
+        // AniDB has very low request rate limits, a minimum of 2 seconds between requests, and an average of 4 seconds between requests
+        public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
+        public static readonly RateLimiter RequestLimiter = new RateLimiter(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromMinutes(5));
 
         private readonly Dictionary<string, string> _typeMappings = new Dictionary<string, string>
         {
@@ -406,6 +408,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 CancellationToken = cancellationToken,
                 EnableHttpCompression = false
             };
+
+            await RequestLimiter.Tick();
 
             using (var stream = await httpClient.Get(requestOptions).ConfigureAwait(false))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
