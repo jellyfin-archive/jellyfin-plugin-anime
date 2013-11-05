@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -23,7 +22,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 {
     public interface IAniListDownloader
     {
-        Task<string> DownloadSeriesPage(string id);
+        Task<FileInfo> DownloadSeriesPage(string id);
+        FileInfo GetCachedSeriesPage(string id);
     }
 
     public class AniListSeriesDownloader : IAniListDownloader
@@ -39,9 +39,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             _logger = logger;
         }
 
-        public async Task<string> DownloadSeriesPage(string id)
+        public async Task<FileInfo> DownloadSeriesPage(string id)
         {
-            var cachedPath = Path.Combine(_appPaths.DataPath, "anilist", id + ".html");
+            var cachedPath = CalculateCacheFilename(id);
             var cached = new FileInfo(cachedPath);
 
             if (!cached.Exists || DateTime.UtcNow - cached.LastWriteTimeUtc > TimeSpan.FromDays(7))
@@ -61,16 +61,25 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                     }
 
                     File.WriteAllText(cachedPath, data, Encoding.UTF8);
-                    return data;
+                    return new FileInfo(cachedPath);
                 }
                 catch (Exception e)
                 {
                     _logger.ErrorException("Failed to download {0}", e, url);
-                    return null;
                 }
             }
 
-            return File.ReadAllText(cachedPath, Encoding.UTF8);
+            return cached;
+        }
+
+        public FileInfo GetCachedSeriesPage(string id)
+        {
+            return new FileInfo(CalculateCacheFilename(id));
+        }
+
+        private string CalculateCacheFilename(string id)
+        {
+            return Path.Combine(_appPaths.DataPath, "anilist", id + ".html");
         }
     }
 
@@ -103,6 +112,18 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
         public bool NeedsRefreshBasedOnCompareDate(BaseItem item, BaseProviderInfo providerInfo)
         {
+            if (!Configuration.Instance.AllowAutomaticMetadataUpdates)
+            {
+                return false;
+            }
+
+            var seriesId = item.GetProviderId(ProviderNames.AniList) ?? item.GetProviderId(ProviderNames.MyAnimeList);
+            if (!string.IsNullOrEmpty(seriesId))
+            {
+                var cached = _downloader.GetCachedSeriesPage(seriesId);
+                return !cached.Exists || (DateTime.UtcNow - cached.LastWriteTimeUtc) > TimeSpan.FromDays(7);
+            }
+
             return false;
         }
 
@@ -116,11 +137,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
             try
             {
-                var data = await _downloader.DownloadSeriesPage(seriesId);
-                if (data == null)
+                var dataFile = await _downloader.DownloadSeriesPage(seriesId);
+                if (!dataFile.Exists)
                 {
                     return new SeriesInfo();
                 }
+
+                var data = File.ReadAllText(dataFile.FullName, Encoding.UTF8);
 
                 var info = new SeriesInfo();
                 ParseTitle(info, data);
@@ -130,7 +153,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 ParseAirDates(info, data);
                 ParseDuration(info, data);
                 ParseRating(info, data);
-
+                
                 return info;
             }
             catch (Exception e)

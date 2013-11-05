@@ -7,10 +7,12 @@ namespace MediaBrowser.Plugins.Anime
         public static readonly Configuration Instance = new Configuration();
 
         public TitlePreferenceType TitlePreference { get; set; }
+        public bool AllowAutomaticMetadataUpdates { get; set; }
 
         public Configuration()
         {
             TitlePreference = TitlePreferenceType.Localized;
+            AllowAutomaticMetadataUpdates = false;
         }
     }
 }

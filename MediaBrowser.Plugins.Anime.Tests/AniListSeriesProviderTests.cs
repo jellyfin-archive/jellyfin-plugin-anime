@@ -11,7 +11,6 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Plugins.Anime.Providers;
 using MediaBrowser.Plugins.Anime.Providers.AniList;
-using MediaBrowser.Plugins.Anime.Providers.MyAnimeList;
 using Moq;
 using NUnit.Framework;
 
@@ -24,7 +23,7 @@ namespace MediaBrowser.Plugins.Anime.Tests
         public async Task TestScrapePage()
         {
             var downloader = new Mock<IAniListDownloader>();
-            downloader.Setup(d => d.DownloadSeriesPage(It.IsAny<string>())).Returns(Task.FromResult(File.ReadAllText("TestData/anilist/9756.html")));
+            downloader.Setup(d => d.DownloadSeriesPage(It.IsAny<string>())).Returns(Task.FromResult(new FileInfo("TestData/anilist/9756.html")));
 
             var logger = new Mock<ILogger>();
 

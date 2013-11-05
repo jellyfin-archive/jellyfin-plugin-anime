@@ -155,6 +155,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         public bool NeedsRefreshBasedOnCompareDate(BaseItem item, BaseProviderInfo providerInfo)
         {
+            if (!Configuration.Instance.AllowAutomaticMetadataUpdates)
+            {
+                return false;
+            }
+
             var episode = (Episode) item;
             string seriesId = episode.Series != null ? episode.Series.GetProviderId(ProviderNames.AniDb) : null;
 

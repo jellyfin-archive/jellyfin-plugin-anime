@@ -577,7 +577,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         public bool NeedsRefreshBasedOnCompareDate(BaseItem item, BaseProviderInfo providerInfo)
         {
-            var seriesId = item.GetProviderId(MetadataProviders.Tvdb);
+            if (!Configuration.Instance.AllowAutomaticMetadataUpdates)
+            {
+                return false;
+            }
+
+            var seriesId = item.GetProviderId(ProviderNames.AniDb);
 
             if (!string.IsNullOrEmpty(seriesId))
             {
