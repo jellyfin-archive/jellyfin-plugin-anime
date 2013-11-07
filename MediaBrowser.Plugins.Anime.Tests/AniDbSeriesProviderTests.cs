@@ -9,6 +9,7 @@ using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Model.Logging;
+using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers.AniDB;
 using Moq;
 using NUnit.Framework;
@@ -37,6 +38,8 @@ namespace MediaBrowser.Plugins.Anime.Tests
             var httpClient = new HttpClientManager(paths.Object, logger.Object, CreateHttpClient);
             
             AniDbTitleMatcher.DefaultInstance = new AniDbTitleMatcher(logger.Object, downloader.Object);
+
+            PluginConfiguration.Instance.TitlePreference = TitlePreferenceType.Localized;
 
             var provider = new AniDbSeriesProvider(logger.Object, configurationManager.Object, paths.Object, httpClient);
 

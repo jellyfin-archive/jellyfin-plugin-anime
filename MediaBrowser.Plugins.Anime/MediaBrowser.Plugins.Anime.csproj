@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Providers\AniDB\AniDbEpisodeProvider.cs" />
     <Compile Include="Providers\AniDB\AniDbPersonImageProvider.cs" />
+    <Compile Include="Providers\AniDB\AniDbPersonInfo.cs" />
     <Compile Include="Providers\AniDB\AniDbSeriesImagesProvider.cs" />
     <Compile Include="Providers\AniDB\AniDbTitleDownloader.cs" />
     <Compile Include="Providers\AniDB\AniDbTitleMatcher.cs" />
@@ -61,10 +62,9 @@
     <Compile Include="Providers\AniDB\IAniDbTitleDownloader.cs" />
     <Compile Include="Providers\AniDB\IAniDbTitleMatcher.cs" />
     <Compile Include="Plugin.cs" />
-    <Compile Include="PluginConfiguration.cs" />
+    <Compile Include="Configuration\PluginConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\AniDB\AniDbSeriesProvider.cs" />
-    <Compile Include="Configuration.cs" />
     <Compile Include="Providers\EpisodeInfo.cs" />
     <Compile Include="Providers\IEpisodeProvider.cs" />
     <Compile Include="Providers\ISeriesProvider.cs" />

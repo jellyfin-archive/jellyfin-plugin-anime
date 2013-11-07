@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace MediaBrowser.Plugins.Anime
@@ -53,8 +52,6 @@ namespace MediaBrowser.Plugins.Anime
             using (await _lock.LockAsync())
             {
                 TimeSpan wait = CalculateWaitDuration();
-                Debug.WriteLine("Waiting for " + wait);
-
                 if (wait.Ticks > 0)
                 {
                     await Task.Delay(wait);
@@ -86,11 +83,8 @@ namespace MediaBrowser.Plugins.Anime
         private void FlushExpiredRecords()
         {
             DateTime now = DateTime.Now;
-            for (int i = _window.Count - 1; i >= 0; i--)
-            {
-                if (now - _window[i] > _timeWindowDuration)
-                    _window.RemoveAt(i);
-            }
+            while (_window.Count > 0 && now - _window[0] > _timeWindowDuration)
+                _window.RemoveAt(0);
         }
     }
 }

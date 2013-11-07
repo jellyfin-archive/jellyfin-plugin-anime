@@ -15,6 +15,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
+using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers.AniDB;
 using MediaBrowser.Plugins.Anime.Providers.MyAnimeList;
 
@@ -112,7 +113,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
         public bool NeedsRefreshBasedOnCompareDate(BaseItem item, BaseProviderInfo providerInfo)
         {
-            if (!Configuration.Instance.AllowAutomaticMetadataUpdates)
+            if (!PluginConfiguration.Instance.AllowAutomaticMetadataUpdates)
             {
                 return false;
             }
@@ -214,7 +215,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 });
             }
 
-            var preferredTitle = titles.Localize(Configuration.Instance.TitlePreference, _configurationManager.Configuration.PreferredMetadataLanguage);
+            var preferredTitle = titles.Localize(PluginConfiguration.Instance.TitlePreference, _configurationManager.Configuration.PreferredMetadataLanguage);
             if (preferredTitle != null)
             {
                 info.Name = preferredTitle.Name;

@@ -9,6 +9,7 @@ using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Model.Logging;
+using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers;
 using MediaBrowser.Plugins.Anime.Providers.AniList;
 using Moq;
@@ -37,7 +38,7 @@ namespace MediaBrowser.Plugins.Anime.Tests
             var series = new Series();
             series.ProviderIds.Add(ProviderNames.MyAnimeList, "9756");
 
-            Configuration.Instance.TitlePreference = Providers.AniDB.TitlePreferenceType.JapaneseRomaji;
+            PluginConfiguration.Instance.TitlePreference = TitlePreferenceType.JapaneseRomaji;
 
             var anilist = new AniListSeriesProvider(downloader.Object, logger.Object, configurationManager.Object);
             var info = await anilist.FindSeriesInfo(series, CancellationToken.None);
