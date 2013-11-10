@@ -24,6 +24,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
     {
         private readonly IServerConfigurationManager _configurationManager;
         private readonly IHttpClient _httpClient;
+        private readonly SeriesIndexSearch _indexSearch;
 
         /// <summary>
         /// Creates a new instance of the <see cref="AniDbEpisodeProvider"/> class.
@@ -33,6 +34,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         {
             _configurationManager = configurationManager;
             _httpClient = httpClient;
+            _indexSearch = new SeriesIndexSearch(configurationManager, httpClient);
         }
 
         public async Task<EpisodeInfo> FindEpisodeInfo(Episode item, CancellationToken cancellationToken)
@@ -52,103 +54,18 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         private async Task<string> FindSeriesFolder(string seriesId, int season, CancellationToken cancellationToken)
         {
-            var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClient, seriesId, cancellationToken);
-
-            if (season > 1)
+            var seriesIndex = await _indexSearch.FindSeriesIndex(seriesId, cancellationToken);
+            var seasonOffset = season - seriesIndex;
+            
+            if (seasonOffset != 0)
             {
-                return await SearchForSequel(seriesDataPath, season - 1, cancellationToken);
+                return await _indexSearch.FindSeriesByRelativeIndex(seriesId, seasonOffset, cancellationToken);// SearchForSequel(seriesDataPath, season - 1, cancellationToken);
             }
 
+            var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClient, seriesId, cancellationToken);
             return Path.GetDirectoryName(seriesDataPath);
         }
-
-        private async Task<string> SearchForSequel(string seriesDataPath, int count, CancellationToken cancellationToken)
-        {
-            var sequelId = FindSequel(seriesDataPath);
-            if (string.IsNullOrEmpty(sequelId))
-                return null;
-
-            var sequelData = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClient, sequelId, cancellationToken);
-            if (ReadType(sequelData) == "TV Series")
-                count--;
-
-            if (count == 0)
-                return Path.GetDirectoryName(sequelData);
-
-            return await SearchForSequel(sequelData, count, cancellationToken);
-        }
-
-        private string ReadType(string sequelData)
-        {
-            var settings = new XmlReaderSettings
-            {
-                CheckCharacters = false,
-                IgnoreProcessingInstructions = true,
-                IgnoreComments = true,
-                ValidationType = ValidationType.None
-            };
-
-            using (var streamReader = File.Open(sequelData, FileMode.Open, FileAccess.Read))
-            using (XmlReader reader = XmlReader.Create(streamReader, settings))
-            {
-                reader.MoveToContent();
-
-                while (reader.Read())
-                {
-                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "type")
-                    {
-                        return reader.ReadElementContentAsString();
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        private string FindSequel(string seriesPath)
-        {
-            var settings = new XmlReaderSettings
-            {
-                CheckCharacters = false,
-                IgnoreProcessingInstructions = true,
-                IgnoreComments = true,
-                ValidationType = ValidationType.None
-            };
-
-            using (var streamReader = File.Open(seriesPath, FileMode.Open, FileAccess.Read))
-            using (XmlReader reader = XmlReader.Create(streamReader, settings))
-            {
-                reader.MoveToContent();
-
-                while (reader.Read())
-                {
-                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "relatedanime")
-                    {
-                        return ReadSequelId(reader.ReadSubtree());
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        private string ReadSequelId(XmlReader reader)
-        {
-            while (reader.Read())
-            {
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "anime")
-                {
-                    var id = reader.GetAttribute("id");
-                    var type = reader.GetAttribute("type");
-
-                    if (type == "Sequel")
-                        return id;
-                }
-            }
-
-            return null;
-        }
-
+        
         public bool RequiresInternet
         {
             get { return false; }

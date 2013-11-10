@@ -19,7 +19,7 @@ namespace MediaBrowser.Plugins.Anime.Configuration
 
         public PluginConfiguration()
         {
-            TitlePreference = TitlePreferenceType.JapaneseRomaji;
+            TitlePreference = TitlePreferenceType.Localized;
             AllowAutomaticMetadataUpdates = false;
         }
 

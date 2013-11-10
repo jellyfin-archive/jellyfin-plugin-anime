@@ -70,11 +70,21 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             var aid = item.GetProviderId(ProviderNames.AniDb);
             if (string.IsNullOrEmpty(aid))
             {
-                aid = await TitleMatcher.FindSeries(item.Name, cancellationToken);
+                var folderName = GetFolderName(item);
+                aid = await TitleMatcher.FindSeries(folderName, cancellationToken);
+
+                if (string.IsNullOrEmpty(aid))
+                {
+                    await TitleMatcher.FindSeries(item.Name, cancellationToken);
+                }
+                else if (AniDbTitleMatcher.GetComparableName(folderName) != AniDbTitleMatcher.GetComparableName(item.Name))
+                {
+                    // tvdb likely has matched a sequel to the first series, so clear some of its (invalid) data
+                    item.Overview = null;
+                    item.Name = folderName;
+                }
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
-
+            
             var series = new SeriesInfo();
             series.ExternalProviders.Add(ProviderNames.AniDb, aid);
 
@@ -88,6 +98,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             }
 
             return series;
+        }
+
+        private string GetFolderName(Series series)
+        {
+            var directory = new DirectoryInfo(series.Path);
+            return directory.Name;
         }
 
         public static async Task<string> GetSeriesData(IApplicationPaths appPaths, IHttpClient httpClient, string seriesId, CancellationToken cancellationToken)

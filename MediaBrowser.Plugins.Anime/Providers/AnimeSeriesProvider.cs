@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,7 +47,11 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
         public override MetadataProviderPriority Priority
         {
-            get { return MetadataProviderPriority.Third; }
+            get
+            {
+                // run after tvdb and imdb
+                return (MetadataProviderPriority)6;
+            }
         }
 
         public override bool RequiresInternet
@@ -89,7 +94,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             // get mal info
             SeriesInfo mal = await _malProvider.FindSeriesInfo(series, cancellationToken);
             AddProviders(series, mal.ExternalProviders);
-
+            
             if (!series.DontFetchMeta)
             {
                 MergeSeriesInfo(series, anidb, anilist, mal);
@@ -104,9 +109,10 @@ namespace MediaBrowser.Plugins.Anime.Providers
             if (!item.LockedFields.Contains(MetadataFields.Name))
                 item.Name = anidb.Name ?? anilist.Name ?? mal.Name ?? item.Name;
 
+            // prefer existing (tvdb) overview, as it is localized
             if (!item.LockedFields.Contains(MetadataFields.Overview))
                 item.Overview = item.Overview ?? anilist.Description ?? mal.Description ?? anidb.Description;
-
+            
             if (!item.LockedFields.Contains(MetadataFields.Cast))
             {
                 IEnumerable<PersonInfo> people = SelectCollection(anidb.People, anilist.People, mal.People, item.People.ToArray());
@@ -119,17 +125,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 item.OfficialRating = item.OfficialRating ?? anidb.ContentRating ?? anilist.ContentRating ?? mal.ContentRating;
 
             if (!item.LockedFields.Contains(MetadataFields.Runtime))
-                item.RunTimeTicks = anidb.RunTimeTicks ?? item.RunTimeTicks ?? anilist.RunTimeTicks ?? mal.RunTimeTicks;
-
-            if (!item.LockedFields.Contains(MetadataFields.Genres))
-            {
-                IEnumerable<string> genres = SelectCollection(mal.Genres, anilist.Genres, item.Genres.ToArray(), anidb.Genres);
-                item.Genres.Clear();
-                foreach (string genre in genres)
-                    item.AddGenre(genre);
-
-                item.AddGenre("Animation");
-            }
+                item.RunTimeTicks = anidb.RunTimeTicks ?? item.RunTimeTicks ?? anilist.RunTimeTicks ?? mal.RunTimeTicks;           
 
             if (!item.LockedFields.Contains(MetadataFields.Studios))
             {
@@ -151,10 +147,27 @@ namespace MediaBrowser.Plugins.Anime.Providers
             }
 
             SeriesInfo mostVoted = (new[] {anidb, mal, anilist}).OrderByDescending(info => info.VoteCount ?? 0).First();
-            if (mostVoted.VoteCount > 0)
+            if (item.CommunityRating == null || item.VoteCount < mostVoted.VoteCount)
             {
                 item.CommunityRating = mostVoted.CommunityRating;
                 item.VoteCount = mostVoted.VoteCount;
+            }
+            
+            if (!item.LockedFields.Contains(MetadataFields.Genres))
+            {
+                // only prefer our own genre descriptions if we are using enlish metadata, as our providers are only available in english
+
+                IEnumerable<string> genres;
+                if (ConfigurationManager.Configuration.PreferredMetadataLanguage == "en")
+                    genres = SelectCollection(mal.Genres, anilist.Genres, item.Genres.ToArray(), anidb.Genres);
+                else
+                    genres = SelectCollection(item.Genres.ToArray(), mal.Genres, anilist.Genres, anidb.Genres);
+
+                item.Genres.Clear();
+                foreach (string genre in genres)
+                    item.AddGenre(genre);
+
+                item.AddGenre("Animation");
             }
         }
 

@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -17,16 +18,18 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
     public class AniDbSeriesImagesProvider : BaseMetadataProvider
     {
         private readonly IProviderManager _providerManager;
+        private readonly SeriesIndexSearch _indexSearch;
 
-        public AniDbSeriesImagesProvider(ILogManager logManager, IServerConfigurationManager configurationManager, IProviderManager providerManager) 
+        public AniDbSeriesImagesProvider(ILogManager logManager, IServerConfigurationManager configurationManager, IProviderManager providerManager, IHttpClient httpClient)
             : base(logManager, configurationManager)
         {
             _providerManager = providerManager;
+            _indexSearch = new SeriesIndexSearch(configurationManager, httpClient);
         }
 
         public override MetadataProviderPriority Priority
         {
-            get { return MetadataProviderPriority.Fifth; }
+            get { return MetadataProviderPriority.Last; }
         }
 
         public override bool RequiresInternet
@@ -74,9 +77,16 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         protected override bool NeedsRefreshInternal(BaseItem item, BaseProviderInfo providerInfo)
         {
-            if (item.HasImage(ImageType.Primary))
+            var id = item.GetProviderId(ProviderNames.AniDb);
+            if (string.IsNullOrEmpty(id))
             {
                 return false;
+            }
+
+            if (item.HasImage(ImageType.Primary))
+            {
+                var seriesIndex = _indexSearch.FindSeriesIndex(id, CancellationToken.None).Result;
+                return seriesIndex != 1;
             }
 
             return base.NeedsRefreshInternal(item, providerInfo);
@@ -89,7 +99,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             var series = (Series) item;
             string seriesId = series.GetProviderId(ProviderNames.AniDb);
 
-            if (!string.IsNullOrEmpty(seriesId) && !item.HasImage(ImageType.Primary))
+
+            if (!string.IsNullOrEmpty(seriesId) && (!item.HasImage(ImageType.Primary) || await TvdbImageIsLikelyWrong(seriesId)))
             {
                 string seriesDataDirectory = AniDbSeriesProvider.GetSeriesDataPath(ConfigurationManager.ApplicationPaths, seriesId);
                 string seriesDataPath = Path.Combine(seriesDataDirectory, "series.xml");
@@ -109,6 +120,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             }
 
             return false;
+        }
+
+        private async Task<bool> TvdbImageIsLikelyWrong(string seriesId)
+        {
+            var seriesIndex = await _indexSearch.FindSeriesIndex(seriesId, CancellationToken.None);
+            return seriesIndex != 0;
         }
 
         private string FindImageUrl(string seriesDataPath)

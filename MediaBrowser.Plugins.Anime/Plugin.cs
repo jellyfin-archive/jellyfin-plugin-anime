@@ -19,7 +19,7 @@ namespace MediaBrowser.Plugins.Anime
 
         public override string Name
         {
-            get { return "AniDB"; }
+            get { return "Anime"; }
         }
     }
 }
