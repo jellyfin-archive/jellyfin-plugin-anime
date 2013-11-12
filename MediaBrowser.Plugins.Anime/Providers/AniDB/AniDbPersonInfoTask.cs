@@ -173,7 +173,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (await ScrapePage((Person) item, cached, cancellationToken).ConfigureAwait(false))
+            if (cached.Exists && await ScrapePage((Person) item, cached, cancellationToken).ConfigureAwait(false))
             {
                 await _library.UpdateItem(item, ItemUpdateType.ImageUpdate, cancellationToken);
             }

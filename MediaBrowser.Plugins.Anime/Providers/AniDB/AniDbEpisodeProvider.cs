@@ -45,7 +45,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             if (string.IsNullOrEmpty(seriesId))
                 return new EpisodeInfo();
 
-            FileInfo xml = GetEpisodeXmlFile(item, await FindSeriesFolder(seriesId, item.ParentIndexNumber ?? 1, cancellationToken));
+            var seriesFolder = await FindSeriesFolder(seriesId, item.ParentIndexNumber ?? 1, cancellationToken);
+            if (string.IsNullOrEmpty(seriesFolder))
+                return new EpisodeInfo();
+
+            FileInfo xml = GetEpisodeXmlFile(item, seriesFolder);
             if (!xml.Exists)
                 return new EpisodeInfo();
 

@@ -59,7 +59,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             if (indexOffset == 0)
                 return Path.GetDirectoryName(relatedData);
 
-            return await FindRelated(relatedData, indexOffset, cancellationToken);
+            return await FindRelated(Path.GetDirectoryName(relatedData), indexOffset, cancellationToken);
         }
 
         private string ReadType(string sequelData)
