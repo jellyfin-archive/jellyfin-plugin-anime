@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -94,7 +93,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 var seriesDataPath = await GetSeriesData(_appPaths, _httpClient, aid, cancellationToken);
 
                 // load series data and apply to item
-                FetchSeriesInfo(series, seriesDataPath, cancellationToken);
+                FetchSeriesInfo(series, seriesDataPath);
             }
 
             return series;
@@ -108,7 +107,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         public static async Task<string> GetSeriesData(IApplicationPaths appPaths, IHttpClient httpClient, string seriesId, CancellationToken cancellationToken)
         {
-            var dataPath = GetSeriesDataPath(appPaths, seriesId);
+            var dataPath = CalculateSeriesDataPath(appPaths, seriesId);
             var seriesDataPath = Path.Combine(dataPath, SeriesDataFile);
             var fileInfo = new FileInfo(seriesDataPath);
             
@@ -121,12 +120,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return seriesDataPath;
         }
 
-        public static string GetSeriesDataPath(IApplicationPaths paths, string seriesId)
+        public static string CalculateSeriesDataPath(IApplicationPaths paths, string seriesId)
         {
             return Path.Combine(paths.DataPath, "anidb", "series", seriesId);
         }
 
-        private void FetchSeriesInfo(SeriesInfo series, string seriesDataPath, CancellationToken cancellationToken)
+        private void FetchSeriesInfo(SeriesInfo series, string seriesDataPath)
         {
             var settings = new XmlReaderSettings
             {

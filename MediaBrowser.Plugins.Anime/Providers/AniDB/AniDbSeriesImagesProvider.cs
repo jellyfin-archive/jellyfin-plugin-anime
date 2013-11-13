@@ -63,7 +63,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
             if (!string.IsNullOrEmpty(seriesId))
             {
-                string imagesXmlPath = Path.Combine(AniDbSeriesProvider.GetSeriesDataPath(ConfigurationManager.ApplicationPaths, seriesId), "series.xml");
+                string imagesXmlPath = Path.Combine(AniDbSeriesProvider.CalculateSeriesDataPath(ConfigurationManager.ApplicationPaths, seriesId), "series.xml");
                 var imagesFileInfo = new FileInfo(imagesXmlPath);
 
                 if (imagesFileInfo.Exists)
@@ -102,7 +102,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
             if (!string.IsNullOrEmpty(seriesId) && (!item.HasImage(ImageType.Primary) || await TvdbImageIsLikelyWrong(seriesId)))
             {
-                string seriesDataDirectory = AniDbSeriesProvider.GetSeriesDataPath(ConfigurationManager.ApplicationPaths, seriesId);
+                string seriesDataDirectory = AniDbSeriesProvider.CalculateSeriesDataPath(ConfigurationManager.ApplicationPaths, seriesId);
                 string seriesDataPath = Path.Combine(seriesDataDirectory, "series.xml");
                 string imageUrl = FindImageUrl(seriesDataPath);
 

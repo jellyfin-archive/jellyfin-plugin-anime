@@ -80,7 +80,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             var sb = new StringBuilder();
             foreach (var c in name)
             {
-                if ((int)c >= 0x2B0 && (int)c <= 0x0333)
+                if (c >= 0x2B0 && c <= 0x0333)
                 {
                     // skip char modifier and diacritics 
                 }

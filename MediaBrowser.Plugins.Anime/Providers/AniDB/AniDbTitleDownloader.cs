@@ -46,7 +46,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             // download titles if we do not already have them, or have not updated for a week
             if (!titlesFileInfo.Exists || (DateTime.UtcNow - titlesFileInfo.LastWriteTimeUtc).TotalDays > 7)
             {
-                await DownloadTitles(titlesFile, cancellationToken).ConfigureAwait(false);
+                await DownloadTitles(titlesFile).ConfigureAwait(false);
             }
         }
 
@@ -55,8 +55,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         /// and saves it to disk.
         /// </summary>
         /// <param name="titlesFile">The destination file name.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        private async Task DownloadTitles(string titlesFile, CancellationToken cancellationToken)
+        private async Task DownloadTitles(string titlesFile)
         {
             _logger.Debug("Downloading new AniDB titles file.");
 

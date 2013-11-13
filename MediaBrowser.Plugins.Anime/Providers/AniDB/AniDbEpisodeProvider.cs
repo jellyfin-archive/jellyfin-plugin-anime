@@ -63,7 +63,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             
             if (seasonOffset != 0)
             {
-                return await _indexSearch.FindSeriesByRelativeIndex(seriesId, seasonOffset, cancellationToken);// SearchForSequel(seriesDataPath, season - 1, cancellationToken);
+                return await _indexSearch.FindSeriesByLogicalRelativeIndex(seriesId, seasonOffset, cancellationToken);// SearchForSequel(seriesDataPath, season - 1, cancellationToken);
             }
 
             var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClient, seriesId, cancellationToken);
@@ -87,7 +87,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
             if (!string.IsNullOrEmpty(seriesId))
             {
-                string seriesDataPath = AniDbSeriesProvider.GetSeriesDataPath(_configurationManager.ApplicationPaths, seriesId);
+                string seriesDataPath = AniDbSeriesProvider.CalculateSeriesDataPath(_configurationManager.ApplicationPaths, seriesId);
                 FileInfo xmlFile = GetEpisodeXmlFile(episode, seriesDataPath);
 
                 if (xmlFile.Exists)

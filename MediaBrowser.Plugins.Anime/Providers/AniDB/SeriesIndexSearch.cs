@@ -1,9 +1,13 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Configuration;
+using System.Linq;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 {
@@ -11,35 +15,130 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
     {
         private readonly IServerConfigurationManager _configurationManager;
         private readonly IHttpClient _httpClient;
+        private readonly Dictionary<string, string[]> _cache;
+        private readonly AsyncLock _lock;
 
         public SeriesIndexSearch(IServerConfigurationManager configurationManager, IHttpClient httpClient)
         {
             _configurationManager = configurationManager;
             _httpClient = httpClient;
+            _cache = new Dictionary<string, string[]>();
+            _lock = new AsyncLock();
         }
 
+        private class SeriesDateId
+        {
+            public string SeriesId { get; set; }
+            public DateTime? Date { get; set; }
+        }
+
+        /// <summary>
+        /// Gets the index of a series among a sequence of prequels/sequels, by air date order.
+        /// The first series is index 1.
+        /// </summary>
+        /// <param name="anidbId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task<int> FindSeriesIndex(string anidbId, CancellationToken cancellationToken)
         {
-            int index = 1;
-            while (true)
+            var sequence = await GetSeriesSequence(anidbId, cancellationToken);
+            return Array.IndexOf(sequence, anidbId) + 1;
+        }
+
+        private async Task<string[]> GetSeriesSequence(string anidbId, CancellationToken cancellationToken)
+        {
+            string[] sequence;
+
+            using (await _lock.LockAsync())
             {
-                anidbId = await FindSeriesByRelativeIndex(anidbId, -1, cancellationToken);
-                if (anidbId != null)
+                if (!_cache.TryGetValue(anidbId, out sequence))
                 {
-                    index++;
+                    sequence = await FindSeriesSequence(anidbId, cancellationToken);
+                    foreach (var series in sequence)
+                    {
+                        _cache.Add(series, sequence);
+                    }
                 }
-                else
+            }
+            return sequence;
+        }
+
+        private async Task<string[]> FindSeriesSequence(string anidbId, CancellationToken cancellationToken)
+        {
+            var items = new List<SeriesDateId>();
+
+            // find prequels
+            var id = anidbId;
+            while (id != null)
+            {
+                id = await FindSeriesByLogicalRelativeIndex(id, -1, cancellationToken);
+                if (id != null)
                 {
-                    break;
+                    var data = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClient, id, cancellationToken);
+                    var date = ReadDate(data);
+
+                    items.Add(new SeriesDateId
+                    {
+                        SeriesId = id,
+                        Date = date
+                    });
                 }
             }
 
-            return index;
+            items.Reverse();
+
+            // read current series
+            var seriesData = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClient, anidbId, cancellationToken);
+            items.Add(new SeriesDateId
+            {
+                SeriesId = anidbId,
+                Date = ReadDate(seriesData)
+            });
+            
+            // find sequels
+            id = anidbId;
+            while (id != null)
+            {
+                id = await FindSeriesByLogicalRelativeIndex(id, 1, cancellationToken);
+                if (id != null)
+                {
+                    var data = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClient, id, cancellationToken);
+                    var date = ReadDate(data);
+
+                    items.Add(new SeriesDateId
+                    {
+                        SeriesId = id,
+                        Date = date
+                    });
+                }
+            }
+
+            // fill in any missing dates, preserving the logical ordering
+            var previousDate = new DateTime(0);
+            foreach (var series in items)
+            {
+                if (series.Date == null)
+                    series.Date = previousDate + TimeSpan.FromSeconds(1);
+
+                previousDate = series.Date.Value;
+            }
+
+            // sort by air date
+            items.Sort((a, b) => a.Date.Value.CompareTo(b.Date.Value));
+            return items.Select(s => s.SeriesId).ToArray();
         }
 
-        public Task<string> FindSeriesByRelativeIndex(string anidbSeriesId, int indexOffset, CancellationToken cancellationToken)
+        /// <summary>
+        /// Finds the path to the data folder of the series at a logical offset from that provided, in terms of
+        /// prequel/sequel series.
+        /// </summary>
+        /// <param name="anidbSeriesId"></param>
+        /// <param name="indexOffset"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<string> FindSeriesByLogicalRelativeIndex(string anidbSeriesId, int indexOffset, CancellationToken cancellationToken)
         {
-            string dataPath = AniDbSeriesProvider.GetSeriesDataPath(_configurationManager.ApplicationPaths, anidbSeriesId);
+            string dataPath = AniDbSeriesProvider.CalculateSeriesDataPath(_configurationManager.ApplicationPaths, anidbSeriesId);
             if (indexOffset == 0)
                 return Task.FromResult(dataPath);
 
@@ -86,6 +185,42 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 }
             }
 
+            return null;
+        }
+
+        private DateTime? ReadDate(string seriesData)
+        {
+            var settings = new XmlReaderSettings
+            {
+                CheckCharacters = false,
+                IgnoreProcessingInstructions = true,
+                IgnoreComments = true,
+                ValidationType = ValidationType.None
+            };
+
+            using (FileStream streamReader = File.Open(seriesData, FileMode.Open, FileAccess.Read))
+            using (XmlReader reader = XmlReader.Create(streamReader, settings))
+            {
+                reader.MoveToContent();
+
+                while (reader.Read())
+                {
+                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "startdate")
+                    {
+                        var val = reader.ReadElementContentAsString();
+
+                        if (!string.IsNullOrWhiteSpace(val))
+                        {
+                            DateTime date;
+                            if (DateTime.TryParse(val, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out date))
+                            {
+                                return date.ToUniversalTime();
+                            }
+                        }
+                    }
+                }
+            }
+            
             return null;
         }
 

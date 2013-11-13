@@ -70,7 +70,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             {
                 try
                 {
-                    string seriesPath = AniDbSeriesProvider.GetSeriesDataPath(ConfigurationManager.ApplicationPaths, series.GetProviderId(ProviderNames.AniDb));
+                    string seriesPath = AniDbSeriesProvider.CalculateSeriesDataPath(ConfigurationManager.ApplicationPaths, series.GetProviderId(ProviderNames.AniDb));
                     AniDbPersonInfo person = TryFindPerson(item.Name, seriesPath);
                     if (person != null)
                     {
@@ -166,7 +166,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 {
                     try
                     {
-                        string seriesPath = AniDbSeriesProvider.GetSeriesDataPath(ConfigurationManager.ApplicationPaths, series.GetProviderId(ProviderNames.AniDb));
+                        string seriesPath = AniDbSeriesProvider.CalculateSeriesDataPath(ConfigurationManager.ApplicationPaths, series.GetProviderId(ProviderNames.AniDb));
                         AniDbPersonInfo person = AniDbPersonProvider.TryFindPerson(item.Name, seriesPath);
                         if (person != null)
                         {
