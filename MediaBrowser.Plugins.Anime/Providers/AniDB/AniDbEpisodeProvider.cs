@@ -63,7 +63,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             
             if (seasonOffset != 0)
             {
-                return await _indexSearch.FindSeriesByLogicalRelativeIndex(seriesId, seasonOffset, cancellationToken);// SearchForSequel(seriesDataPath, season - 1, cancellationToken);
+                var id = await _indexSearch.FindSeriesByRelativeIndex(seriesId, seasonOffset, cancellationToken);
+                return AniDbSeriesProvider.CalculateSeriesDataPath(_configurationManager.ApplicationPaths, id);
             }
 
             var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClient, seriesId, cancellationToken);
