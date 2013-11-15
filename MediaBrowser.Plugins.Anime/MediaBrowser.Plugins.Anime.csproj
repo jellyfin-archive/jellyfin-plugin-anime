@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\AnimeConfigurationPage.cs" />
     <Compile Include="Providers\AniDB\AniDbEpisodeProvider.cs" />
     <Compile Include="Providers\AniDB\AniDbPersonInfoTask.cs" />
     <Compile Include="Providers\AniDB\AniDbPersonProvider.cs" />
@@ -83,7 +84,9 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Configuration\configPage.html" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(TargetPath)" "%25MediaBrowserData%25\plugins\" /y</PostBuildEvent>

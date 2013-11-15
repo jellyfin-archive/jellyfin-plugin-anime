@@ -1,0 +1,84 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Anime Configuration</title>
+</head>
+<body>
+    <div id="animeConfigurationPage" data-role="page" class="page type-interior pluginConfigurationPage">
+        <div data-role="content">
+            <div class="content-primary">
+
+                <form id="animeConfigurationForm">
+                    <ul class="ulForm" data-role="listview">
+                        <li>
+                            <label for="chkAutomaticUpdates">
+                                Allow Automatic Metadata Updates
+                            </label>
+                            <input id="chkAutomaticUpdates" name="chkAutomaticUpdates" type="checkbox" value="automaticUpdates" />
+                        </li>
+                        <li>
+                            <label for="titleLanguage">Title Language:</label>
+                            <select id="titleLanguage" name="titleLanguage">
+                                <option id="optLanguageLocalized" value="localized">Localized</option>
+                                <option id="optLanguageRomaji" value="romaji">Romaji</option>
+                                <option id="optLanguageJapanese" value="japanese">Japanese</option>
+                            </select>
+                        </li>
+                        <li>
+                            <button type="submit" data-theme="b">Save</button>
+                            <button type="button" onclick=" history.back(); ">Cancel</button>
+                        </li>
+                    </ul>
+                </form>
+            </div>
+        </div>
+        
+        <script type="text/javascript">
+            var AnimeConfigurationPage =
+            {
+                pluginUniqueId: "1d0dddf7-1877-4473-8d7b-03f7dac1e559",
+
+                loadConfiguration: function() {
+                    Dashboard.showLoadingMsg();
+
+                    ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).done(function(config) {
+                        var page = $.mobile.activePage;
+
+                        $('#titleLanguage', page).val('JapaneseRomaji');
+                        $('#chkAutomaticUpdates', page).prop('checked', config.AllowAutomaticMetadataUpdates);
+
+                        Dashboard.hideLoadingMsg();
+                    });
+                },
+
+                saveConfiguration: function () {
+                    Dashboard.showLoadingMsg();
+
+                    var page = $.mobile.activePage;
+
+                    ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).done(function (config) {
+
+                        config.TitlePreference = $('#optLanguageLocalized', page).val();
+                        config.AllowAutomaticMetadataUpdates = $('#chkAutomaticUpdates', page).prop('checked');
+
+                        ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).done(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
+                }
+            };
+
+            $('#animeConfigurationPage').on('pageshow', function () {
+                AnimeConfigurationPage.loadConfiguration();
+            });
+
+            $('#animeConfigurationForm').on('submit', function () {
+                AnimeConfigurationPage.saveConfiguration();
+                return false;
+            });
+        </script>
+    </div>
+</body>
+</html>

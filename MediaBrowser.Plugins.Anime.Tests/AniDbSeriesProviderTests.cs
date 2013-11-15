@@ -45,7 +45,8 @@ namespace MediaBrowser.Plugins.Anime.Tests
 
             var series = new Series
             {
-                Name = "Mahou Shoujo Madoka Magica"
+                Name = "Mahou Shoujo Madoka Magica",
+                Path = "TV/Mahou Shoujo Madoka Magica"
             };
 
             var cancellation = new CancellationTokenSource();
