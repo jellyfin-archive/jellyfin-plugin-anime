@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -30,6 +29,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         /// Creates a new instance of the <see cref="AniDbEpisodeProvider"/> class.
         /// </summary>
         /// <param name="configurationManager">The configuration manager.</param>
+        /// <param name="httpClient">The HTTP client.</param>
         public AniDbEpisodeProvider(IServerConfigurationManager configurationManager, IHttpClient httpClient)
         {
             _configurationManager = configurationManager;

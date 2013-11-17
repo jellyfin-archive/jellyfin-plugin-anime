@@ -55,11 +55,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return item is Person;
         }
 
-        public override async Task<bool> FetchAsync(BaseItem item, bool force, CancellationToken cancellationToken)
+        public override Task<bool> FetchAsync(BaseItem item, bool force, CancellationToken cancellationToken)
         {
             if (!string.IsNullOrEmpty(item.GetProviderId(ProviderNames.AniDb)))
-                return false;
-
+                return Task.FromResult(false);
             List<Series> seriesWithPerson = _library.RootFolder
                                                     .RecursiveChildren
                                                     .OfType<Series>()
@@ -89,7 +88,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             }
 
             SetLastRefreshed(item, DateTime.UtcNow);
-            return true;
+            return Task.FromResult(true);
         }
 
         public static AniDbPersonInfo TryFindPerson(string name, string dataPath)

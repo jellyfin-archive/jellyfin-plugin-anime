@@ -13,18 +13,18 @@
                 <form id="animeConfigurationForm">
                     <ul class="ulForm" data-role="listview">
                         <li>
+                            <label for="titleLanguage">Title Language:</label>
+                            <select id="titleLanguage" name="titleLanguage">
+                                <option id="optLanguageLocalized" value="Localized">Localized</option>
+                                <option id="optLanguageRomaji" value="JapaneseRomaji">Romaji</option>
+                                <option id="optLanguageJapanese" value="Japanese">Japanese</option>
+                            </select>
+                        </li>
+                        <li>
                             <label for="chkAutomaticUpdates">
                                 Allow Automatic Metadata Updates
                             </label>
                             <input id="chkAutomaticUpdates" name="chkAutomaticUpdates" type="checkbox" value="automaticUpdates" />
-                        </li>
-                        <li>
-                            <label for="titleLanguage">Title Language:</label>
-                            <select id="titleLanguage" name="titleLanguage">
-                                <option id="optLanguageLocalized" value="localized">Localized</option>
-                                <option id="optLanguageRomaji" value="romaji">Romaji</option>
-                                <option id="optLanguageJapanese" value="japanese">Japanese</option>
-                            </select>
                         </li>
                         <li>
                             <button type="submit" data-theme="b">Save</button>
@@ -46,9 +46,9 @@
                     ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).done(function(config) {
                         var page = $.mobile.activePage;
 
-                        $('#titleLanguage', page).val('JapaneseRomaji');
-                        $('#chkAutomaticUpdates', page).prop('checked', config.AllowAutomaticMetadataUpdates);
-
+                        $('#titleLanguage', page).val(config.TitlePreference).change();
+                        $('#chkAutomaticUpdates', page).checked(config.AllowAutomaticMetadataUpdates).checkboxradio("refresh");
+                        
                         Dashboard.hideLoadingMsg();
                     });
                 },
@@ -60,7 +60,7 @@
 
                     ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).done(function (config) {
 
-                        config.TitlePreference = $('#optLanguageLocalized', page).val();
+                        config.TitlePreference = $('#titleLanguage', page).val();
                         config.AllowAutomaticMetadataUpdates = $('#chkAutomaticUpdates', page).prop('checked');
 
                         ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).done(function (result) {
