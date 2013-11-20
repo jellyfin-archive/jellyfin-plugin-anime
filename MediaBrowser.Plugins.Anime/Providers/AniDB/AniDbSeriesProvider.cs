@@ -27,7 +27,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
     {
         private const string SeriesDataFile = "series.xml";
         private const string SeriesQueryUrl = "http://api.anidb.net:9001/httpapi?request=anime&client={0}&clientver=1&protover=1&aid={1}";
-        private const string ClientName = "xbmcscrap"; // pretend to be the xbmc scraper until we can register our own application
+        private const string ClientName = "mediabrowser";
 
         private readonly ILogger _log;
         private readonly IServerConfigurationManager _configurationManager;
@@ -36,7 +36,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         // AniDB has very low request rate limits, a minimum of 2 seconds between requests, and an average of 4 seconds between requests
         public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
-        public static readonly RateLimiter RequestLimiter = new RateLimiter(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromMinutes(5));
+        public static readonly RateLimiter RequestLimiter = new RateLimiter(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(5));
 
         private readonly Dictionary<string, string> _typeMappings = new Dictionary<string, string>
         {

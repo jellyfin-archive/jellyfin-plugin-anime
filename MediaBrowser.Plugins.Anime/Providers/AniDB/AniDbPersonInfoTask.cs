@@ -24,6 +24,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 {
     public class AniDbPersonInfoTask : IScheduledTask
     {
+        private const bool Enabled = false; // even with 20 minute intervals, this may be causing AniDB IP bans. Disable this until investigated.
+
         private const string PersonUrl = @"http://anidb.net/perl-bin/animedb.pl?show=creator&creatorid={0}";
 
         private static readonly Regex DescriptionRegex = new Regex(@"<div class=""g_bubble desc"">\s*(?<description>.*?)\s*</div>", RegexOptions.Singleline | RegexOptions.Compiled);
@@ -61,12 +63,16 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         private bool RequiresUpdate(Person person)
         {
-            return !string.IsNullOrEmpty(person.GetProviderId(ProviderNames.AniDb)) &&
+            return Enabled &&
+                   !string.IsNullOrEmpty(person.GetProviderId(ProviderNames.AniDb)) &&
                    (string.IsNullOrEmpty(person.PrimaryImagePath) || string.IsNullOrEmpty(person.Overview));
         }
 
         public async Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
         {
+            if (!Enabled)
+                return;
+
             var personInfo = _library.RootFolder
                                      .GetRecursiveChildren()
                                      .SelectMany(c => c.People)
