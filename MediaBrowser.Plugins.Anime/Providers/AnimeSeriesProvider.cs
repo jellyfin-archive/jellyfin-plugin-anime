@@ -85,8 +85,11 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
             // ignore series we can be fairly certain are not anime
             if (SeriesNotAnimated(series))
+            {
+                RemoveProviderIds(series, ProviderNames.AniDb, ProviderNames.AniList, ProviderNames.MyAnimeList);
                 return false;
-            
+            }
+
             // get anidb info
             SeriesInfo anidb = await _aniDbProvider.FindSeriesInfo(series, cancellationToken);
             AddProviders(series, anidb.ExternalProviders);
@@ -106,6 +109,15 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
             SetLastRefreshed(item, DateTime.UtcNow);
             return true;
+        }
+
+        private void RemoveProviderIds(BaseItem item, params string[] ids)
+        {
+            foreach (var id in ids)
+            {
+                if (!string.IsNullOrEmpty(item.GetProviderId(id)))
+                    item.SetProviderId(id, null);
+            }
         }
 
         private bool SeriesNotAnimated(Series series)
