@@ -82,6 +82,10 @@ namespace MediaBrowser.Plugins.Anime.Providers
             cancellationToken.ThrowIfCancellationRequested();
 
             var series = (Series) item;
+
+            // ignore series we can be fairly certain are not anime
+            if (SeriesNotAnimated(series))
+                return false;
             
             // get anidb info
             SeriesInfo anidb = await _aniDbProvider.FindSeriesInfo(series, cancellationToken);
@@ -102,6 +106,16 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
             SetLastRefreshed(item, DateTime.UtcNow);
             return true;
+        }
+
+        private bool SeriesNotAnimated(Series series)
+        {
+            var recognised = !string.IsNullOrEmpty(series.GetProviderId(MetadataProviders.Tvdb)) ||
+                             !string.IsNullOrEmpty(series.GetProviderId(MetadataProviders.Imdb));
+
+            var isEnglishMetadata = string.Equals(ConfigurationManager.Configuration.PreferredMetadataLanguage, "en", StringComparison.OrdinalIgnoreCase);
+
+            return recognised && isEnglishMetadata && !series.Genres.Contains("Animation");
         }
 
         private void MergeSeriesInfo(Series item, SeriesInfo anidb, SeriesInfo anilist, SeriesInfo mal)
