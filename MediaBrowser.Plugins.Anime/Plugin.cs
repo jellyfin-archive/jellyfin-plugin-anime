@@ -14,8 +14,8 @@ namespace MediaBrowser.Plugins.Anime
         {
             AniDbTitleMatcher.DefaultInstance = new AniDbTitleMatcher(logger, new AniDbTitleDownloader(logger, applicationPaths));
 
-            PluginConfiguration.Instance = Configuration;
             Instance = this;
+            PluginConfiguration.Instance = () => Configuration;
         }
 
         public override string Name

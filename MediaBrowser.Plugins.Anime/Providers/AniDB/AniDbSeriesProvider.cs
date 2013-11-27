@@ -362,7 +362,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 }
             }
 
-            return titles.Localize(PluginConfiguration.Instance.TitlePreference, _configurationManager.Configuration.PreferredMetadataLanguage).Name;
+            return titles.Localize(PluginConfiguration.Instance().TitlePreference, _configurationManager.Configuration.PreferredMetadataLanguage).Name;
         }
 
         private void ParseCreators(SeriesInfo series, XmlReader reader)
@@ -679,7 +679,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         public bool NeedsRefreshBasedOnCompareDate(BaseItem item, BaseProviderInfo providerInfo)
         {
-            if (!PluginConfiguration.Instance.AllowAutomaticMetadataUpdates)
+            if (!PluginConfiguration.Instance().AllowAutomaticMetadataUpdates)
             {
                 return false;
             }

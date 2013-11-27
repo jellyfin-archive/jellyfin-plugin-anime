@@ -38,7 +38,12 @@ namespace MediaBrowser.Plugins.Anime.Tests
             var series = new Series();
             series.ProviderIds.Add(ProviderNames.MyAnimeList, "9756");
 
-            PluginConfiguration.Instance.TitlePreference = TitlePreferenceType.JapaneseRomaji;
+            var config = new PluginConfiguration
+            {
+                TitlePreference = TitlePreferenceType.JapaneseRomaji
+            };
+
+            PluginConfiguration.Instance = () => config;
 
             var anilist = new AniListSeriesProvider(downloader.Object, logger.Object, configurationManager.Object);
             var info = await anilist.FindSeriesInfo(series, CancellationToken.None);

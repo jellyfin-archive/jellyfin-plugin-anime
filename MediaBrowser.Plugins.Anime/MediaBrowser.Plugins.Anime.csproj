@@ -57,6 +57,7 @@
     <Compile Include="Providers\AniDB\AniDbPersonInfoTask.cs" />
     <Compile Include="Providers\AniDB\AniDbPersonProvider.cs" />
     <Compile Include="Providers\AniDB\AniDbPersonInfo.cs" />
+    <Compile Include="Providers\AniDB\AniDbSeasonImageProvider.cs" />
     <Compile Include="Providers\AniDB\AniDbSeasonProvider.cs" />
     <Compile Include="Providers\AniDB\AniDbSeriesImagesProvider.cs" />
     <Compile Include="Providers\AniDB\AniDbTitleDownloader.cs" />

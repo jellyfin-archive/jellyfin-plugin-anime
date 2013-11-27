@@ -39,7 +39,12 @@ namespace MediaBrowser.Plugins.Anime.Tests
             
             AniDbTitleMatcher.DefaultInstance = new AniDbTitleMatcher(logger.Object, downloader.Object);
 
-            PluginConfiguration.Instance.TitlePreference = TitlePreferenceType.Localized;
+            var config = new PluginConfiguration
+            {
+                TitlePreference = TitlePreferenceType.Localized
+            };
+
+            PluginConfiguration.Instance = () => config;
 
             var provider = new AniDbSeriesProvider(logger.Object, configurationManager.Object, paths.Object, httpClient);
 

@@ -113,7 +113,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
         public bool NeedsRefreshBasedOnCompareDate(BaseItem item, BaseProviderInfo providerInfo)
         {
-            if (!PluginConfiguration.Instance.AllowAutomaticMetadataUpdates)
+            if (!PluginConfiguration.Instance().AllowAutomaticMetadataUpdates)
             {
                 return false;
             }
@@ -215,7 +215,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 });
             }
 
-            var preferredTitle = titles.Localize(PluginConfiguration.Instance.TitlePreference, _configurationManager.Configuration.PreferredMetadataLanguage);
+            var preferredTitle = titles.Localize(PluginConfiguration.Instance().TitlePreference, _configurationManager.Configuration.PreferredMetadataLanguage);
             if (preferredTitle != null)
             {
                 info.Name = preferredTitle.Name;

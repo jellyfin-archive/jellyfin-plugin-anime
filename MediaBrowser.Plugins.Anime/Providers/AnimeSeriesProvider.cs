@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -81,7 +82,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             cancellationToken.ThrowIfCancellationRequested();
 
             var series = (Series) item;
-
+            
             // get anidb info
             SeriesInfo anidb = await _aniDbProvider.FindSeriesInfo(series, cancellationToken);
             AddProviders(series, anidb.ExternalProviders);

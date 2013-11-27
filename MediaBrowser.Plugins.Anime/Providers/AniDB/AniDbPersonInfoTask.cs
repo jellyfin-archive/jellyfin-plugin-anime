@@ -140,7 +140,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
             bool dataRequested = false;
 
-            if (!cached.Exists || (PluginConfiguration.Instance.AllowAutomaticMetadataUpdates && DateTime.Now - cached.LastWriteTime > TimeSpan.FromDays(30)))
+            if (!cached.Exists || (PluginConfiguration.Instance().AllowAutomaticMetadataUpdates && DateTime.Now - cached.LastWriteTime > TimeSpan.FromDays(30)))
             {
                 string url = string.Format(PersonUrl, id);
 

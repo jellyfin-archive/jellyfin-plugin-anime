@@ -50,7 +50,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 return new EpisodeInfo();
 
             FileInfo xml = GetEpisodeXmlFile(item, seriesFolder);
-            if (!xml.Exists)
+            if (xml == null || !xml.Exists)
                 return new EpisodeInfo();
 
             return ParseEpisodeXml(xml);
@@ -78,7 +78,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         public bool NeedsRefreshBasedOnCompareDate(BaseItem item, BaseProviderInfo providerInfo)
         {
-            if (!PluginConfiguration.Instance.AllowAutomaticMetadataUpdates)
+            if (!PluginConfiguration.Instance().AllowAutomaticMetadataUpdates)
             {
                 return false;
             }
@@ -91,7 +91,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 string seriesDataPath = AniDbSeriesProvider.CalculateSeriesDataPath(_configurationManager.ApplicationPaths, seriesId);
                 FileInfo xmlFile = GetEpisodeXmlFile(episode, seriesDataPath);
 
-                if (xmlFile.Exists)
+                if (xmlFile != null && xmlFile.Exists)
                 {
                     return xmlFile.LastWriteTimeUtc > providerInfo.LastRefreshed;
                 }
@@ -172,7 +172,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                     }
                 }
 
-                string title = titles.Localize(PluginConfiguration.Instance.TitlePreference, _configurationManager.Configuration.PreferredMetadataLanguage).Name;
+                string title = titles.Localize(PluginConfiguration.Instance().TitlePreference, _configurationManager.Configuration.PreferredMetadataLanguage).Name;
                 if (!string.IsNullOrEmpty(title))
                     info.Name = title;
             }

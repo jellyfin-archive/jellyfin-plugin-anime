@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -59,6 +60,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         {
             if (!string.IsNullOrEmpty(item.GetProviderId(ProviderNames.AniDb)))
                 return Task.FromResult(false);
+            
             List<Series> seriesWithPerson = _library.RootFolder
                                                     .RecursiveChildren
                                                     .OfType<Series>()
