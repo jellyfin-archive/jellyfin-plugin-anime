@@ -12,6 +12,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
+using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers.AniDB;
 using MediaBrowser.Plugins.Anime.Providers.AniList;
 using MediaBrowser.Plugins.Anime.Providers.MyAnimeList;
@@ -104,7 +105,10 @@ namespace MediaBrowser.Plugins.Anime.Providers
             
             if (!series.DontFetchMeta)
             {
-                MergeSeriesInfo(series, anidb, anilist, mal);
+                if (force || PluginConfiguration.Instance().AllowAutomaticMetadataUpdates || !item.ResolveArgs.ContainsMetaFileByName("series.xml"))
+                {
+                    MergeSeriesInfo(series, anidb, anilist, mal);
+                }
             }
 
             SetLastRefreshed(item, DateTime.UtcNow);

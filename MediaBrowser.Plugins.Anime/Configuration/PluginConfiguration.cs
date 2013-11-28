@@ -26,6 +26,7 @@ namespace MediaBrowser.Plugins.Anime.Configuration
     {
         public TitlePreferenceType TitlePreference { get; set; }
         public bool AllowAutomaticMetadataUpdates { get; set; }
+        public bool AutoCorrectSeriesPosters { get; set; }
 
         public static Func<PluginConfiguration> Instance { get; set; }
 
@@ -33,6 +34,7 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         {
             TitlePreference = TitlePreferenceType.Localized;
             AllowAutomaticMetadataUpdates = false;
+            AutoCorrectSeriesPosters = true;
         }
     }
 }

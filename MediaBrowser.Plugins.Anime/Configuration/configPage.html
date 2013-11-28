@@ -27,6 +27,12 @@
                             <input id="chkAutomaticUpdates" name="chkAutomaticUpdates" type="checkbox" value="automaticUpdates" />
                         </li>
                         <li>
+                            <label for="chkAutoCorrectSeriesPosters">
+                                Automatically Correct Series Posters
+                            </label>
+                            <input id="chkAutoCorrectSeriesPosters" name="chkAutoCorrectSeriesPosters" type="checkbox" value="correctSeriesPosters" />
+                        </li>
+                        <li>
                             <button type="submit" data-theme="b">Save</button>
                             <button type="button" onclick=" history.back(); ">Cancel</button>
                         </li>
@@ -48,6 +54,7 @@
 
                         $('#titleLanguage', page).val(config.TitlePreference).change();
                         $('#chkAutomaticUpdates', page).checked(config.AllowAutomaticMetadataUpdates).checkboxradio("refresh");
+                        $('#chkAutoCorrectSeriesPosters', page).checked(config.AutoCorrectSeriesPosters).checkboxradio("refresh");
                         
                         Dashboard.hideLoadingMsg();
                     });
@@ -62,6 +69,7 @@
 
                         config.TitlePreference = $('#titleLanguage', page).val();
                         config.AllowAutomaticMetadataUpdates = $('#chkAutomaticUpdates', page).prop('checked');
+                        config.AutoCorrectSeriesPosters = $('#chkAutoCorrectSeriesPosters', page).prop('checked');
 
                         ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).done(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
