@@ -99,8 +99,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
             var series = (Series) item;
             string seriesId = series.GetProviderId(ProviderNames.AniDb);
-
-
+            
             if (!string.IsNullOrEmpty(seriesId) && (!item.HasImage(ImageType.Primary) || await ShouldOverrideImage(seriesId)))
             {
                 string seriesDataDirectory = AniDbSeriesProvider.CalculateSeriesDataPath(ConfigurationManager.ApplicationPaths, seriesId);

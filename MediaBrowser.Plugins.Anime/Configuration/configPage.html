@@ -33,6 +33,9 @@
                             <input id="chkAutoCorrectSeriesPosters" name="chkAutoCorrectSeriesPosters" type="checkbox" value="correctSeriesPosters" />
                         </li>
                         <li>
+                            <div class="ignoreTree" />
+                        </li>
+                        <li>
                             <button type="submit" data-theme="b">Save</button>
                             <button type="button" onclick=" history.back(); ">Cancel</button>
                         </li>
@@ -42,6 +45,62 @@
         </div>
         
         <script type="text/javascript">
+            function createVirtualFolderNode(virtualFolder) {
+                return {
+                    locations: virtualFolder.Locations,
+                    data: virtualFolder.Name,
+                    state: "closed"
+                };
+            }
+            
+            function createFolderNode(folder) {
+                return {
+                    data: folder,
+                    state: "closed"
+                };
+            }
+
+            function loadNode(page, node, callback) {
+                if (node == '-1') {
+                    // load collection virtual folders
+                    ApiClient.getVirtualFolders().done(function(result) {
+                        var virtualFolderNodes = result.map(createVirtualFolderNode);
+                        callback(virtualFolderNodes);
+                    });
+
+                    return;
+                }
+
+                // load virtual folder locations
+                var nodes = node.locations.map(createFolderNode);
+                callback(nodes);
+            }
+
+            var page = $.mobile.activePage;
+            $('.ignoreTree').jstree({
+                "plugins": ["ui", "json_data", "checkbox", "themes"],
+                
+                checkbox: {
+                    real_checkboxes: true,
+                    override_ui: true
+                },
+                
+                data: function(node, callback) {
+                    loadNode(page, node, callback);
+                },
+                
+                json_data: {
+                    data: function (node, callback) {
+                        loadNode(page, node, callback);
+                    }
+                },
+
+                themes: {
+                    theme: 'default',
+                    url: 'thirdparty/jstree1.0fix2/themes/default/style.css?v=' + Dashboard.initialServerVersion
+                }
+            });
+
             var AnimeConfigurationPage =
             {
                 pluginUniqueId: "1d0dddf7-1877-4473-8d7b-03f7dac1e559",

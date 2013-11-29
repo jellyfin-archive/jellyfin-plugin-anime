@@ -9,6 +9,7 @@ using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
@@ -21,14 +22,16 @@ namespace MediaBrowser.Plugins.Anime.Providers
 {
     public class AnimeSeriesProvider : BaseMetadataProvider
     {
+        private readonly ILibraryManager _library;
         private readonly IEnumerable<ISeriesProvider> _allProviders;
         private readonly AniDbSeriesProvider _aniDbProvider;
         private readonly AniListSeriesProvider _aniListProvider;
         private readonly MalSeriesProvider _malProvider;
 
-        public AnimeSeriesProvider(ILogManager logManager, IServerConfigurationManager configurationManager, IApplicationPaths appPaths, IHttpClient httpClient)
+        public AnimeSeriesProvider(ILogManager logManager, ILibraryManager library, IServerConfigurationManager configurationManager, IApplicationPaths appPaths, IHttpClient httpClient)
             : base(logManager, configurationManager)
         {
+            _library = library;
             _aniDbProvider = new AniDbSeriesProvider(logManager.GetLogger("AniDB"), configurationManager, appPaths, httpClient);
             _malProvider = new MalSeriesProvider(new MalSeriesDownloader(appPaths, logManager.GetLogger("MalDownloader")), logManager.GetLogger("MyAnimeList"));
             _aniListProvider = new AniListSeriesProvider(new AniListSeriesDownloader(appPaths, logManager.GetLogger("AniListDownloader")), logManager.GetLogger("AniList"), configurationManager);
@@ -84,8 +87,8 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
             var series = (Series) item;
 
-            // ignore series we can be fairly certain are not anime
-            if (SeriesNotAnimated(series))
+            // ignore series we can be fairly certain are not anime, or that the user has marked as ignored
+            if (SeriesNotAnimated(series) || SeriesIsIgnored(series))
             {
                 RemoveProviderIds(series, ProviderNames.AniDb, ProviderNames.AniList, ProviderNames.MyAnimeList);
                 return false;
@@ -132,6 +135,31 @@ namespace MediaBrowser.Plugins.Anime.Providers
             var isEnglishMetadata = string.Equals(ConfigurationManager.Configuration.PreferredMetadataLanguage, "en", StringComparison.OrdinalIgnoreCase);
 
             return recognised && isEnglishMetadata && !series.Genres.Contains("Animation");
+        }
+
+        private bool SeriesIsIgnored(Series series)
+        {
+            var config = PluginConfiguration.Instance();
+
+            for (var item = series.Parent; item != null; item = item.Parent)
+            {
+                if (!item.IsFolder)
+                    continue;
+
+                if (item.IsVirtualFolder)
+                {
+                    if (item.Parent != null && item.Parent.IsRoot && config.IgnoredVirtualFolders.Contains(item.Name))
+                    {
+                        return true;
+                    }
+                }
+                else if (config.IgnoredPhysicalLocations.Contains(item.Name))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void MergeSeriesInfo(Series item, SeriesInfo anidb, SeriesInfo anilist, SeriesInfo mal)
