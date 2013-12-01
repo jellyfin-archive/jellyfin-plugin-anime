@@ -139,21 +139,32 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
         private bool SeriesIsIgnored(Series series)
         {
+            Debugger.Break();
             var config = PluginConfiguration.Instance();
+
+            var ignoredVirtualFolderLocations = _library.GetDefaultVirtualFolders().Where(vf => config.IgnoredVirtualFolders.Contains(vf.Name))
+                                                        .SelectMany(vf => vf.Locations)
+                                                        .ToList();
 
             for (var item = series.Parent; item != null; item = item.Parent)
             {
                 if (!item.IsFolder)
                     continue;
-
-                if (item.IsVirtualFolder)
+                
+//                if (item.IsVirtualFolder)
+//                {
+//                    if (item.Parent != null && item.Parent.IsRoot && config.IgnoredVirtualFolders.Contains(item.Name))
+//                    {
+//                        return true;
+//                    }
+//                }
+                
+                if (config.IgnoredPhysicalLocations.Contains(item.Path))
                 {
-                    if (item.Parent != null && item.Parent.IsRoot && config.IgnoredVirtualFolders.Contains(item.Name))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
-                else if (config.IgnoredPhysicalLocations.Contains(item.Name))
+
+                if (ignoredVirtualFolderLocations.Contains(item.Path))
                 {
                     return true;
                 }

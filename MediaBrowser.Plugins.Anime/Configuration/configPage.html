@@ -33,7 +33,8 @@
                             <input id="chkAutoCorrectSeriesPosters" name="chkAutoCorrectSeriesPosters" type="checkbox" value="correctSeriesPosters" />
                         </li>
                         <li>
-                            <div class="ignoreTree" />
+                            <label for="ignoreTree">Ignore the following locations:</label>
+                            <div id="ignoreTree" class="ignoreTree" />
                         </li>
                         <li>
                             <button type="submit" data-theme="b">Save</button>
@@ -45,65 +46,12 @@
         </div>
         
         <script type="text/javascript">
-            function createVirtualFolderNode(virtualFolder) {
-                return {
-                    locations: virtualFolder.Locations,
-                    data: virtualFolder.Name,
-                    state: "closed"
-                };
-            }
-            
-            function createFolderNode(folder) {
-                return {
-                    data: folder,
-                    state: "closed"
-                };
-            }
-
-            function loadNode(page, node, callback) {
-                if (node == '-1') {
-                    // load collection virtual folders
-                    ApiClient.getVirtualFolders().done(function(result) {
-                        var virtualFolderNodes = result.map(createVirtualFolderNode);
-                        callback(virtualFolderNodes);
-                    });
-
-                    return;
-                }
-
-                // load virtual folder locations
-                var nodes = node.locations.map(createFolderNode);
-                callback(nodes);
-            }
-
-            var page = $.mobile.activePage;
-            $('.ignoreTree').jstree({
-                "plugins": ["ui", "json_data", "checkbox", "themes"],
-                
-                checkbox: {
-                    real_checkboxes: true,
-                    override_ui: true
-                },
-                
-                data: function(node, callback) {
-                    loadNode(page, node, callback);
-                },
-                
-                json_data: {
-                    data: function (node, callback) {
-                        loadNode(page, node, callback);
-                    }
-                },
-
-                themes: {
-                    theme: 'default',
-                    url: 'thirdparty/jstree1.0fix2/themes/default/style.css?v=' + Dashboard.initialServerVersion
-                }
-            });
-
             var AnimeConfigurationPage =
             {
                 pluginUniqueId: "1d0dddf7-1877-4473-8d7b-03f7dac1e559",
+                
+                virtualFolders: [],
+                physicalFolders: [],
 
                 loadConfiguration: function() {
                     Dashboard.showLoadingMsg();
@@ -115,25 +63,132 @@
                         $('#chkAutomaticUpdates', page).checked(config.AllowAutomaticMetadataUpdates).checkboxradio("refresh");
                         $('#chkAutoCorrectSeriesPosters', page).checked(config.AutoCorrectSeriesPosters).checkboxradio("refresh");
                         
+                        for (var i = 0; i < config.IgnoredVirtualFolders.length; i++) {
+                            config.IgnoredVirtualFolders[i] = config.IgnoredVirtualFolders[i].replace(/\\\\/g, "\\");
+                        }
+                        for (var i = 0; i < config.IgnoredPhysicalLocations.length; i++) {
+                            config.IgnoredPhysicalLocations[i] = config.IgnoredPhysicalLocations[i].replace(/\\\\/g, "\\");
+                        }
+
+                        AnimeConfigurationPage.loadCollectionIgnoreTree(page, config);
+
                         Dashboard.hideLoadingMsg();
                     });
                 },
 
-                saveConfiguration: function () {
+                saveConfiguration: function() {
                     Dashboard.showLoadingMsg();
 
                     var page = $.mobile.activePage;
 
-                    ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).done(function (config) {
+                    ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).done(function(config) {
 
                         config.TitlePreference = $('#titleLanguage', page).val();
                         config.AllowAutomaticMetadataUpdates = $('#chkAutomaticUpdates', page).prop('checked');
                         config.AutoCorrectSeriesPosters = $('#chkAutoCorrectSeriesPosters', page).prop('checked');
+                        
+                        AnimeConfigurationPage.saveCollectionIgnoreTree(config);
 
-                        ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).done(function (result) {
+                        ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).done(function(result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
                         });
                     });
+                },
+
+                createVirtualFolderNode: function (virtualFolder, config) {
+                    var id = AnimeConfigurationPage.virtualFolders.push(virtualFolder.Name) - 1;
+                    
+                    var node = {
+                        attr: {
+                            folderType: "virtual",
+                            folderId: id
+                        },
+                        data: virtualFolder.Name,
+                        state: "closed",
+                        children: virtualFolder.Locations.map(function(location) {
+                            return AnimeConfigurationPage.createFolderNode(location, config);
+                        })
+                    };
+                    
+                    if ($.inArray(virtualFolder.Name, config.IgnoredVirtualFolders) != -1) {
+                        node.attr["class"] = "jstree-checked";
+                    }
+
+                    return node;
+                },
+
+                createFolderNode: function (folder, config) {
+                    var id = AnimeConfigurationPage.physicalFolders.push(folder) - 1;
+
+                    var node = {
+                        attr: {
+                            folderType: "physical",
+                            folderId: id
+                        },
+                        data: folder
+                    };
+
+                    if ($.inArray(folder, config.IgnoredPhysicalLocations) != -1) {
+                        node.attr["class"] = "jstree-checked";
+                    }
+
+                    return node;
+                },
+                
+                loadCollectionIgnoreTree: function (page, config) {
+                    ApiClient.getVirtualFolders().done(function (result) {
+                        var virtualFolderNodes = result
+                            .filter(function(virtualFolder) {
+                                return virtualFolder.CollectionType == "tvshows"
+                            })
+                            .map(function(virtualFolder) {
+                                return AnimeConfigurationPage.createVirtualFolderNode(virtualFolder, config);
+                            });
+                        
+                        $('.ignoreTree').jstree({
+                            "plugins": ["ui", "json_data", "checkbox", "themes"],
+
+                            checkbox: {
+                                real_checkboxes: true,
+                                override_ui: true
+                            },
+
+                            data: virtualFolderNodes,
+
+                            json_data: {
+                                data: virtualFolderNodes
+                            },
+
+                            themes: {
+                                theme: 'default',
+                                url: 'thirdparty/jstree1.0fix2/themes/default/style.css?v=' + Dashboard.initialServerVersion
+                            }
+                        });
+                    });
+                },
+                
+                saveCollectionIgnoreTree: function(config) {
+                    var checked = $('.ignoreTree').jstree("get_checked");
+                    
+                    config.IgnoredVirtualFolders = checked
+                        .filter(function() {
+                            return $(this).attr("folderType") == "virtual";
+                        })
+                        .map(function() {
+                            var id = $(this).attr("folderId");
+                            return AnimeConfigurationPage.virtualFolders[id];
+                        })
+                        .toArray();
+                    
+                    config.IgnoredPhysicalLocations = checked
+                        .filter(function () {
+                            return $(this).attr("folderType") == "physical";
+                        })
+                        .map(function () {
+                            var id = $(this).attr("folderId");
+                            return AnimeConfigurationPage.physicalFolders[id];
+                        })
+                        .toArray();
                 }
             };
 
