@@ -146,20 +146,21 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         }
 
         /// <summary>
-        /// Finds the path to the data folder of the series at a logical offset from that provided, in terms of
+        /// Finds the AniDB ID of the series at a logical offset from that provided, in terms of
         /// prequel/sequel series.
         /// </summary>
         /// <param name="anidbSeriesId"></param>
         /// <param name="indexOffset"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private Task<string> FindSeriesByLogicalRelativeIndex(string anidbSeriesId, int indexOffset, CancellationToken cancellationToken)
+        private async Task<string> FindSeriesByLogicalRelativeIndex(string anidbSeriesId, int indexOffset, CancellationToken cancellationToken)
         {
-            string dataPath = AniDbSeriesProvider.CalculateSeriesDataPath(_configurationManager.ApplicationPaths, anidbSeriesId);
             if (indexOffset == 0)
-                return Task.FromResult(dataPath);
+                return anidbSeriesId;
 
-            return FindRelated(dataPath, indexOffset, cancellationToken);
+            string dataPath = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClient, anidbSeriesId, cancellationToken);
+            string dataDirectoryPath = Path.GetDirectoryName(dataPath);
+            return await FindRelated(dataDirectoryPath, indexOffset, cancellationToken);
         }
 
         private async Task<string> FindRelated(string seriesDataPath, int indexOffset, CancellationToken cancellationToken)
