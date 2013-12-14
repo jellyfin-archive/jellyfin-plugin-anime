@@ -56,7 +56,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return item is Person;
         }
 
-        public override Task<bool> FetchAsync(BaseItem item, bool force, CancellationToken cancellationToken)
+        public override Task<bool> FetchAsync(BaseItem item, bool force, BaseProviderInfo providerInfo, CancellationToken cancellationToken)
         {
             if (!string.IsNullOrEmpty(item.GetProviderId(ProviderNames.AniDb)))
                 return Task.FromResult(false);
@@ -89,7 +89,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 }
             }
 
-            SetLastRefreshed(item, DateTime.UtcNow);
+            SetLastRefreshed(item, DateTime.UtcNow, providerInfo);
             return Task.FromResult(true);
         }
 
@@ -153,7 +153,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return item is Person;
         }
 
-        public override async Task<bool> FetchAsync(BaseItem item, bool force, CancellationToken cancellationToken)
+        public override async Task<bool> FetchAsync(BaseItem item, bool force, BaseProviderInfo providerInfo, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(item.PrimaryImagePath))
             {
@@ -192,7 +192,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 }
             }
 
-            SetLastRefreshed(item, DateTime.UtcNow);
+            SetLastRefreshed(item, DateTime.UtcNow, providerInfo);
             return true;
         }
     }

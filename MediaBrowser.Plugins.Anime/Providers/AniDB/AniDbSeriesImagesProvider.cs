@@ -93,7 +93,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return base.NeedsRefreshInternal(item, providerInfo);
         }
 
-        public override async Task<bool> FetchAsync(BaseItem item, bool force, CancellationToken cancellationToken)
+        public override async Task<bool> FetchAsync(BaseItem item, bool force, BaseProviderInfo providerInfo, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -114,7 +114,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                     await _providerManager.SaveImage(series, imageUrl, AniDbSeriesProvider.ResourcePool, ImageType.Primary, null, cancellationToken)
                                           .ConfigureAwait(false);
 
-                    SetLastRefreshed(item, DateTime.UtcNow);
+                    SetLastRefreshed(item, DateTime.UtcNow, providerInfo);
                     return true;
                 }
             }

@@ -81,7 +81,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             return base.NeedsRefreshBasedOnCompareDate(item, providerInfo);
         }
 
-        public override async Task<bool> FetchAsync(BaseItem item, bool force, CancellationToken cancellationToken)
+        public override async Task<bool> FetchAsync(BaseItem item, bool force, BaseProviderInfo providerInfo, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -114,7 +114,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 }
             }
 
-            SetLastRefreshed(item, DateTime.UtcNow);
+            SetLastRefreshed(item, DateTime.UtcNow, providerInfo);
             return true;
         }
 

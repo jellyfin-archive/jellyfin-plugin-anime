@@ -60,7 +60,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             return item is Episode;
         }
 
-        public override async Task<bool> FetchAsync(BaseItem item, bool force, CancellationToken cancellationToken)
+        public override async Task<bool> FetchAsync(BaseItem item, bool force, BaseProviderInfo providerInfo, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -73,7 +73,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             // merge results
             MergeEpisodeInfo(episode, anidb);
 
-            SetLastRefreshed(item, DateTime.UtcNow);
+            SetLastRefreshed(item, DateTime.UtcNow, providerInfo);
             return true;
         }
 

@@ -7,7 +7,6 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
-using MediaBrowser.Plugins.Anime.Configuration;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 {
@@ -44,7 +43,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return base.NeedsRefreshInternal(item, providerInfo);
         }
 
-        public override async Task<bool> FetchAsync(BaseItem item, bool force, CancellationToken cancellationToken)
+        public override Task<bool> FetchAsync(BaseItem item, bool force, BaseProviderInfo providerInfo, CancellationToken cancellationToken)
         {
             var season = (Season)item;
             string seriesId = season.Series.GetProviderId(ProviderNames.AniDb);
@@ -59,8 +58,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 }
             }
 
-            SetLastRefreshed(item, DateTime.Now);
-            return true;
+            SetLastRefreshed(item, DateTime.Now, providerInfo);
+            return Task.FromResult(true);
         }
     }
 }
