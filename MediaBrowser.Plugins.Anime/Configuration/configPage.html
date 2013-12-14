@@ -139,7 +139,7 @@
                     ApiClient.getVirtualFolders().done(function (result) {
                         var virtualFolderNodes = result
                             .filter(function(virtualFolder) {
-                                return virtualFolder.CollectionType == "tvshows"
+                                return virtualFolder.CollectionType == "tvshows";
                             })
                             .map(function(virtualFolder) {
                                 return AnimeConfigurationPage.createVirtualFolderNode(virtualFolder, config);
@@ -161,7 +161,6 @@
 
                             themes: {
                                 theme: 'default',
-                                url: 'thirdparty/jstree1.0/themes/default/style.css?v=' + Dashboard.initialServerVersion
                             }
                         });
                     });
