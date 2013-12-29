@@ -46,7 +46,7 @@ namespace MediaBrowser.Plugins.Anime.Tests
             PluginConfiguration.Instance = () => config;
 
             var anilist = new AniListSeriesProvider(downloader.Object, logger.Object, configurationManager.Object);
-            var info = await anilist.FindSeriesInfo(series, CancellationToken.None);
+            var info = await anilist.FindSeriesInfo(series, "en", CancellationToken.None);
 
             Assert.That(info.Name, Is.EqualTo("Mahou Shoujo Madoka★Magica"));
             Assert.That(info.Genres, Contains.Item("Drama"));

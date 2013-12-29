@@ -56,7 +56,7 @@ namespace MediaBrowser.Plugins.Anime.Tests
 
             var cancellation = new CancellationTokenSource();
 
-            var info = await provider.FindSeriesInfo(series, cancellation.Token);
+            var info = await provider.FindSeriesInfo(series, "en", cancellation.Token);
 
             Assert.That(info.Name, Is.EqualTo("Puella Magi Madoka Magica"));
         }
