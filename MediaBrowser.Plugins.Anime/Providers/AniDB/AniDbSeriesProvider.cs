@@ -61,7 +61,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             set;
         }
 
-        public async Task<SeriesInfo> FindSeriesInfo(Series item, CancellationToken cancellationToken)
+        public async Task<SeriesInfo> FindSeriesInfo(Series item, string preferredMetadataLanguage, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -74,7 +74,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
                 if (string.IsNullOrEmpty(aid))
                 {
-                    await TitleMatcher.FindSeries(item.Name, cancellationToken);
+                    aid = await TitleMatcher.FindSeries(item.Name, cancellationToken);
                 }
                 else if (AniDbTitleMatcher.GetComparableName(folderName) != AniDbTitleMatcher.GetComparableName(item.Name))
                 {
@@ -93,7 +93,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 var seriesDataPath = await GetSeriesData(_appPaths, _httpClient, aid, cancellationToken);
 
                 // load series data and apply to item
-                FetchSeriesInfo(series, seriesDataPath);
+                FetchSeriesInfo(series, seriesDataPath, item.GetPreferredMetadataLanguage());
             }
 
             return series;
@@ -125,7 +125,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return Path.Combine(paths.DataPath, "anidb", "series", seriesId);
         }
 
-        private void FetchSeriesInfo(SeriesInfo series, string seriesDataPath)
+        private void FetchSeriesInfo(SeriesInfo series, string seriesDataPath, string preferredMetadataLangauge)
         {
             var settings = new XmlReaderSettings
             {
@@ -177,7 +177,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                             case "titles":
                                 using (var subtree = reader.ReadSubtree())
                                 {
-                                    var title = ParseTitle(subtree);
+                                    var title = ParseTitle(subtree, preferredMetadataLangauge);
                                     if (!string.IsNullOrEmpty(title))
                                     {
                                         series.Name = title;
@@ -341,7 +341,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             }
         }
 
-        private string ParseTitle(XmlReader reader)
+        private string ParseTitle(XmlReader reader, string preferredMetadataLangauge)
         {
             var titles = new List<Title>();
 
@@ -362,7 +362,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 }
             }
 
-            return titles.Localize(PluginConfiguration.Instance().TitlePreference, _configurationManager.Configuration.PreferredMetadataLanguage).Name;
+            return titles.Localize(PluginConfiguration.Instance().TitlePreference, preferredMetadataLangauge).Name;
         }
 
         private void ParseCreators(SeriesInfo series, XmlReader reader)

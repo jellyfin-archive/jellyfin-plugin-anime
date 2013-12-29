@@ -67,7 +67,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             var episode = (Episode) item;
 
             // get anidb info
-            EpisodeInfo anidb = await _aniDb.FindEpisodeInfo(episode, cancellationToken);
+            EpisodeInfo anidb = await _aniDb.FindEpisodeInfo(episode, item.GetPreferredMetadataLanguage(), cancellationToken);
             AddProviders(episode, anidb.ExternalProviders);
 
             // merge results

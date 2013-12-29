@@ -10,6 +10,6 @@ namespace MediaBrowser.Plugins.Anime.Providers
     {
         bool RequiresInternet { get; }
         bool NeedsRefreshBasedOnCompareDate(BaseItem item, BaseProviderInfo providerInfo);
-        Task<SeriesInfo> FindSeriesInfo(Series series, CancellationToken cancellationToken);
+        Task<SeriesInfo> FindSeriesInfo(Series series, string preferredMetadataLanguage, CancellationToken cancellationToken);
     }
 }

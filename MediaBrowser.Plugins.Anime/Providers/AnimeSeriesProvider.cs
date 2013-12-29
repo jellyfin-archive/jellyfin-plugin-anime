@@ -86,7 +86,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             cancellationToken.ThrowIfCancellationRequested();
 
             var series = (Series) item;
-
+            
             // ignore series we can be fairly certain are not anime, or that the user has marked as ignored
             if (SeriesNotAnimated(series) || SeriesIsIgnored(series))
             {
@@ -95,15 +95,15 @@ namespace MediaBrowser.Plugins.Anime.Providers
             }
 
             // get anidb info
-            SeriesInfo anidb = await _aniDbProvider.FindSeriesInfo(series, cancellationToken);
+            SeriesInfo anidb = await _aniDbProvider.FindSeriesInfo(series, item.GetPreferredMetadataLanguage(), cancellationToken);
             AddProviders(series, anidb.ExternalProviders);
 
             // get anilist info
-            SeriesInfo anilist = await _aniListProvider.FindSeriesInfo(series, cancellationToken);
+            SeriesInfo anilist = await _aniListProvider.FindSeriesInfo(series, item.GetPreferredMetadataLanguage(), cancellationToken);
             AddProviders(series, anilist.ExternalProviders);
 
             // get mal info
-            SeriesInfo mal = await _malProvider.FindSeriesInfo(series, cancellationToken);
+            SeriesInfo mal = await _malProvider.FindSeriesInfo(series, item.GetPreferredMetadataLanguage(), cancellationToken);
             AddProviders(series, mal.ExternalProviders);
             
             if (!series.DontFetchMeta)
@@ -132,7 +132,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             var recognised = !string.IsNullOrEmpty(series.GetProviderId(MetadataProviders.Tvdb)) ||
                              !string.IsNullOrEmpty(series.GetProviderId(MetadataProviders.Imdb));
 
-            var isEnglishMetadata = string.Equals(ConfigurationManager.Configuration.PreferredMetadataLanguage, "en", StringComparison.OrdinalIgnoreCase);
+            var isEnglishMetadata = string.Equals(series.GetPreferredMetadataLanguage(), "en", StringComparison.OrdinalIgnoreCase);
 
             return recognised && isEnglishMetadata && !series.Genres.Contains("Animation");
         }
@@ -218,7 +218,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 // only prefer our own genre descriptions if we are using enlish metadata, as our providers are only available in english
 
                 IEnumerable<string> genres;
-                if (ConfigurationManager.Configuration.PreferredMetadataLanguage == "en")
+                if (item.GetPreferredMetadataLanguage() == "en")
                     genres = SelectCollection(mal.Genres, anilist.Genres, item.Genres.ToArray(), anidb.Genres);
                 else
                     genres = SelectCollection(item.Genres.ToArray(), mal.Genres, anilist.Genres, anidb.Genres);

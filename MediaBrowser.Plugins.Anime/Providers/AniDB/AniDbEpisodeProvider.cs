@@ -37,7 +37,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             _indexSearch = new SeriesIndexSearch(configurationManager, httpClient);
         }
 
-        public async Task<EpisodeInfo> FindEpisodeInfo(Episode item, CancellationToken cancellationToken)
+        public async Task<EpisodeInfo> FindEpisodeInfo(Episode item, string preferredMetadataLangauge, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -53,7 +53,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             if (xml == null || !xml.Exists)
                 return new EpisodeInfo();
 
-            return ParseEpisodeXml(xml);
+            return ParseEpisodeXml(xml, preferredMetadataLangauge);
         }
 
         private async Task<string> FindSeriesFolder(string seriesId, int season, CancellationToken cancellationToken)
@@ -100,7 +100,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return false;
         }
 
-        private EpisodeInfo ParseEpisodeXml(FileInfo xml)
+        private EpisodeInfo ParseEpisodeXml(FileInfo xml, string preferredMetadataLanguage)
         {
             var info = new EpisodeInfo();
 
@@ -172,7 +172,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                     }
                 }
 
-                string title = titles.Localize(PluginConfiguration.Instance().TitlePreference, _configurationManager.Configuration.PreferredMetadataLanguage).Name;
+                string title = titles.Localize(PluginConfiguration.Instance().TitlePreference, preferredMetadataLanguage).Name;
                 if (!string.IsNullOrEmpty(title))
                     info.Name = title;
             }

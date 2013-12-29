@@ -92,7 +92,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
             return false;
         }
 
-        public async Task<SeriesInfo> FindSeriesInfo(Series series, CancellationToken cancellationToken)
+        public async Task<SeriesInfo> FindSeriesInfo(Series series, string preferredMetadataLanguage, CancellationToken cancellationToken)
         {
             var seriesId = series.GetProviderId(ProviderNames.MyAnimeList);
             if (string.IsNullOrEmpty(seriesId))

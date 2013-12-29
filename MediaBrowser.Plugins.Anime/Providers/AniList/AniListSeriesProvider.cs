@@ -128,7 +128,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             return false;
         }
 
-        public async Task<SeriesInfo> FindSeriesInfo(Series series, CancellationToken cancellationToken)
+        public async Task<SeriesInfo> FindSeriesInfo(Series series, string preferredMetadataLanguage, CancellationToken cancellationToken)
         {
             var seriesId = series.GetProviderId(ProviderNames.AniList) ?? series.GetProviderId(ProviderNames.MyAnimeList);
             if (string.IsNullOrEmpty(seriesId))
@@ -147,7 +147,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 var data = File.ReadAllText(dataFile.FullName, Encoding.UTF8);
 
                 var info = new SeriesInfo();
-                ParseTitle(info, data);
+                ParseTitle(info, data, preferredMetadataLanguage);
                 ParseSummary(info, data);
                 ParseStudio(info, data);
                 ParseGenres(info, data);
@@ -175,7 +175,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             }
         }
 
-        private void ParseTitle(SeriesInfo info, string data)
+        private void ParseTitle(SeriesInfo info, string data, string preferredMetadataLanguage)
         {
             var titles = new List<Title>();
 
@@ -215,7 +215,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 });
             }
 
-            var preferredTitle = titles.Localize(PluginConfiguration.Instance().TitlePreference, _configurationManager.Configuration.PreferredMetadataLanguage);
+            var preferredTitle = titles.Localize(PluginConfiguration.Instance().TitlePreference, preferredMetadataLanguage);
             if (preferredTitle != null)
             {
                 info.Name = preferredTitle.Name;
