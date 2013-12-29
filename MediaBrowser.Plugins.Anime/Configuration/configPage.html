@@ -27,12 +27,6 @@
                             <input id="chkAutomaticUpdates" name="chkAutomaticUpdates" type="checkbox" value="automaticUpdates" />
                         </li>
                         <li>
-                            <label for="chkAutoCorrectSeriesPosters">
-                                Automatically Correct Series Posters
-                            </label>
-                            <input id="chkAutoCorrectSeriesPosters" name="chkAutoCorrectSeriesPosters" type="checkbox" value="correctSeriesPosters" />
-                        </li>
-                        <li>
                             <label for="ignoreTree">Ignore the following locations:</label>
                             <div id="ignoreTree" class="ignoreTree" />
                         </li>
@@ -61,7 +55,6 @@
 
                         $('#titleLanguage', page).val(config.TitlePreference).change();
                         $('#chkAutomaticUpdates', page).checked(config.AllowAutomaticMetadataUpdates).checkboxradio("refresh");
-                        $('#chkAutoCorrectSeriesPosters', page).checked(config.AutoCorrectSeriesPosters).checkboxradio("refresh");
                         
                         for (var i = 0; i < config.IgnoredVirtualFolders.length; i++) {
                             config.IgnoredVirtualFolders[i] = config.IgnoredVirtualFolders[i].replace(/\\\\/g, "\\");
@@ -85,7 +78,6 @@
 
                         config.TitlePreference = $('#titleLanguage', page).val();
                         config.AllowAutomaticMetadataUpdates = $('#chkAutomaticUpdates', page).prop('checked');
-                        config.AutoCorrectSeriesPosters = $('#chkAutoCorrectSeriesPosters', page).prop('checked');
                         
                         AnimeConfigurationPage.saveCollectionIgnoreTree(config);
 

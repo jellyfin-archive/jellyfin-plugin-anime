@@ -35,7 +35,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         protected override bool NeedsRefreshInternal(BaseItem item, BaseProviderInfo providerInfo)
         {
-            if (item.HasImage(ImageType.Primary))
+            if (item.HasImage(ImageType.Primary) || item.LockedFields.Contains(MetadataFields.Images))
             {
                 return false;
             }
@@ -48,7 +48,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             var season = (Season)item;
             string seriesId = season.Series.GetProviderId(ProviderNames.AniDb);
 
-            if (!string.IsNullOrEmpty(seriesId) && !season.HasImage(ImageType.Primary))
+            if (!string.IsNullOrEmpty(seriesId) && !season.HasImage(ImageType.Primary) && !season.LockedFields.Contains(MetadataFields.Images))
             {
                 var seriesImage = season.Series.GetImagePath(ImageType.Primary, 0);
                 if (!string.IsNullOrEmpty(seriesImage))

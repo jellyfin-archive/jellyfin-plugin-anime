@@ -84,7 +84,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 return false;
             }
 
-            if (item.HasImage(ImageType.Primary) && PluginConfiguration.Instance().AutoCorrectSeriesPosters)
+            if (item.HasImage(ImageType.Primary) && !item.LockedFields.Contains(MetadataFields.Images))
             {
                 var seriesIndex = _indexSearch.FindSeriesIndex(id, CancellationToken.None).Result;
                 return seriesIndex != 1;
@@ -100,7 +100,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             var series = (Series) item;
             string seriesId = series.GetProviderId(ProviderNames.AniDb);
             
-            if (!string.IsNullOrEmpty(seriesId) && (!item.HasImage(ImageType.Primary) || await ShouldOverrideImage(seriesId)))
+            if (!string.IsNullOrEmpty(seriesId) && !item.LockedFields.Contains(MetadataFields.Images) && (!item.HasImage(ImageType.Primary) || await ShouldOverrideImage(seriesId)))
             {
                 string seriesDataDirectory = AniDbSeriesProvider.CalculateSeriesDataPath(ConfigurationManager.ApplicationPaths, seriesId);
                 string seriesDataPath = Path.Combine(seriesDataDirectory, "series.xml");
@@ -122,9 +122,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return false;
         }
 
-        private async Task<bool> ShouldOverrideImage(string seriesId)
+        private Task<bool> ShouldOverrideImage(string seriesId)
         {
-            return PluginConfiguration.Instance().AutoCorrectSeriesPosters && await TvdbImageIsLikelyWrong(seriesId);
+            return TvdbImageIsLikelyWrong(seriesId);
         }
 
         private async Task<bool> TvdbImageIsLikelyWrong(string seriesId)

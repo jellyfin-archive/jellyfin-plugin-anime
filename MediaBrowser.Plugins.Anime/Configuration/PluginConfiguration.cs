@@ -27,7 +27,6 @@ namespace MediaBrowser.Plugins.Anime.Configuration
     {
         public TitlePreferenceType TitlePreference { get; set; }
         public bool AllowAutomaticMetadataUpdates { get; set; }
-        public bool AutoCorrectSeriesPosters { get; set; }
         public HashSet<string> IgnoredVirtualFolders { get; set; }
         public HashSet<string> IgnoredPhysicalLocations { get; set; } 
 
@@ -37,7 +36,6 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         {
             TitlePreference = TitlePreferenceType.Localized;
             AllowAutomaticMetadataUpdates = true;
-            AutoCorrectSeriesPosters = false;
             IgnoredVirtualFolders = new HashSet<string>();
             IgnoredPhysicalLocations = new HashSet<string>();
         }
