@@ -98,15 +98,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         private static readonly Regex GenreRegex = new Regex(@"(?<genre>.*?)<br>", RegexOptions.Singleline | RegexOptions.Compiled);
         private static readonly Regex RatingRegex = new Regex(@"<li><span class='type'>Rating:</span><span class='value'>(?<rating>.*?)( - .*?)?</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
 
-        private readonly IServerConfigurationManager _configurationManager;
         private readonly IAniListDownloader _downloader;
         private readonly ILogger _logger;
 
-        public AniListSeriesProvider(IAniListDownloader downloader, ILogger logger, IServerConfigurationManager configurationManager)
+        public AniListSeriesProvider(IAniListDownloader downloader, ILogger logger)
         {
             _downloader = downloader;
             _logger = logger;
-            _configurationManager = configurationManager;
         }
 
         public bool RequiresInternet { get { return true; } }

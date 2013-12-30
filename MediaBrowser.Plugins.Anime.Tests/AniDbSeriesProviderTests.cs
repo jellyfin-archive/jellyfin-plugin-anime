@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Implementations.HttpClientManager;
 using MediaBrowser.Controller;
-using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Plugins.Anime.Configuration;
@@ -27,10 +26,6 @@ namespace MediaBrowser.Plugins.Anime.Tests
 
             var logger = new Mock<ILogger>();
 
-            var configurationManager = new Mock<IServerConfigurationManager>();
-            configurationManager.Setup(c => c.ApplicationPaths).Returns(paths.Object);
-            configurationManager.Setup(c => c.Configuration).Returns(new Model.Configuration.ServerConfiguration());
-
             var downloader = new Mock<IAniDbTitleDownloader>();
             downloader.Setup(d => d.Load(It.IsAny<CancellationToken>())).Returns(Task.FromResult(0));
             downloader.Setup(d => d.TitlesFilePath).Returns("TestData/anidb/titles.xml");
@@ -46,7 +41,7 @@ namespace MediaBrowser.Plugins.Anime.Tests
 
             PluginConfiguration.Instance = () => config;
 
-            var provider = new AniDbSeriesProvider(logger.Object, configurationManager.Object, paths.Object, httpClient);
+            var provider = new AniDbSeriesProvider(logger.Object, paths.Object, httpClient);
 
             var series = new Series
             {

@@ -13,7 +13,6 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
-using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
@@ -30,7 +29,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         private const string ClientName = "mediabrowser";
 
         private readonly ILogger _log;
-        private readonly IServerConfigurationManager _configurationManager;
         private readonly IApplicationPaths _appPaths;
         private readonly IHttpClient _httpClient;
 
@@ -45,10 +43,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             { "Chief Animation Direction", "Chief Animation Director" }
         };
 
-        public AniDbSeriesProvider(ILogger log, IServerConfigurationManager configurationManager, IApplicationPaths appPaths, IHttpClient httpClient)
+        public AniDbSeriesProvider(ILogger log, IApplicationPaths appPaths, IHttpClient httpClient)
         {
             _log = log;
-            _configurationManager = configurationManager;
             _appPaths = appPaths;
             _httpClient = httpClient;
 
