@@ -26,7 +26,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
         private readonly AniDbSeriesProvider _aniDbProvider;
         private readonly AniListSeriesProvider _aniListProvider;
         private readonly MalSeriesProvider _malProvider;
-
+        
         public AnimeSeriesProvider(ILogManager logManager, ILibraryManager library, IServerConfigurationManager configurationManager, IApplicationPaths appPaths, IHttpClient httpClient)
             : base(logManager, configurationManager)
         {
@@ -64,7 +64,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
         protected override string ProviderVersion
         {
-            get { return "1"; }
+            get { return "2"; }
         }
 
         public override bool Supports(BaseItem item)
@@ -116,7 +116,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             SetLastRefreshed(item, DateTime.UtcNow, providerInfo);
             return true;
         }
-
+        
         private void RemoveProviderIds(BaseItem item, params string[] ids)
         {
             foreach (var id in ids)
@@ -208,7 +208,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             SeriesInfo mostVoted = (new[] {anidb, mal, anilist}).OrderByDescending(info => info.VoteCount ?? 0).First();
             if (item.CommunityRating == null || item.VoteCount < mostVoted.VoteCount)
             {
-                item.CommunityRating = mostVoted.CommunityRating;
+                item.CommunityRating = mostVoted.CommunityRating != null ? (float?)Math.Round(mostVoted.CommunityRating.Value, 1) : null;
                 item.VoteCount = mostVoted.VoteCount;
             }
             
@@ -223,10 +223,25 @@ namespace MediaBrowser.Plugins.Anime.Providers
                     genres = SelectCollection(item.Genres.ToArray(), mal.Genres, anilist.Genres, anidb.Genres);
 
                 item.Genres.Clear();
-                foreach (string genre in genres)
+                foreach (string genre in genres.Where(g => !"Animation".Equals(g)))
                     item.AddGenre(genre);
 
-                item.AddGenre("Animation");
+                item.AddGenre("Anime");
+            }
+
+            if (!item.LockedFields.Contains(MetadataFields.Tags))
+            {
+                // only prefer our own tags if we are using enlish metadata, as our providers are only available in english
+
+                IEnumerable<string> tags;
+                if (item.GetPreferredMetadataLanguage() == "en")
+                    tags = SelectCollection(mal.Tags, anilist.Tags, item.Tags.ToArray(), anidb.Tags);
+                else
+                    tags = SelectCollection(item.Tags.ToArray(), mal.Tags, anilist.Tags, anidb.Tags);
+
+                item.Tags.Clear();
+                foreach (string tag in tags)
+                    item.AddTag(tag);
             }
         }
 

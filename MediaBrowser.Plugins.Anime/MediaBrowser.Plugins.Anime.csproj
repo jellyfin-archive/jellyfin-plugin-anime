@@ -76,6 +76,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\AniDB\AniDbSeriesProvider.cs" />
     <Compile Include="Providers\EpisodeInfo.cs" />
+    <Compile Include="Providers\GenreHelper.cs" />
     <Compile Include="Providers\IEpisodeProvider.cs" />
     <Compile Include="Providers\ISeriesProvider.cs" />
     <Compile Include="Providers\MyAnimeList\MalSeriesProvider.cs" />

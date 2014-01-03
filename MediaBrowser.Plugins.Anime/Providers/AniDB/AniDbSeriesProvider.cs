@@ -427,9 +427,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
             using (var stream = await httpClient.Get(requestOptions).ConfigureAwait(false))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
+            using (var reader = new StreamReader(unzipped, Encoding.UTF8, true))
             using (var file = File.Open(seriesDataPath, FileMode.Create, FileAccess.Write))
+            using (var writer = new StreamWriter(file))
             {
-                await unzipped.CopyToAsync(file).ConfigureAwait(false);
+                var text = await reader.ReadToEndAsync().ConfigureAwait(false);
+                text = text.Replace("&#x0;", "");
+
+                await writer.WriteAsync(text).ConfigureAwait(false);
             }
 
             await ExtractEpisodes(directory, seriesDataPath);

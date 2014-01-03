@@ -18,6 +18,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
         public string ContentRating { get; set; }
         public long? RunTimeTicks { get; set; }
         public List<string> Genres { get; set; }
+        public List<string> Tags { get; set; }
         public List<string> Studios { get; set; }
         public Dictionary<string, string> ExternalProviders { get; set; }
 
@@ -28,6 +29,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             Studios = new List<string>();
             ExternalProviders = new Dictionary<string, string>();
             Genres = new List<string>();
+            Tags = new List<string>();
         }
     }
 }

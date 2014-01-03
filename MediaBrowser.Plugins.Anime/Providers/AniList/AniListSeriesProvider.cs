@@ -242,6 +242,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                         info.Genres.Add(match.Groups["genre"].Value.Trim());
                     }
                 }
+
+                GenreHelper.TidyGenres(info);
             }
         }
 
