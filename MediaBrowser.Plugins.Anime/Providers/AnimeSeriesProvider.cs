@@ -21,6 +21,8 @@ namespace MediaBrowser.Plugins.Anime.Providers
 {
     public class AnimeSeriesProvider : BaseMetadataProvider
     {
+        private const int MaxGenres = 4;
+
         private readonly ILibraryManager _library;
         private readonly IEnumerable<ISeriesProvider> _allProviders;
         private readonly AniDbSeriesProvider _aniDbProvider;
@@ -64,7 +66,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
         protected override string ProviderVersion
         {
-            get { return "2"; }
+            get { return "4"; }
         }
 
         public override bool Supports(BaseItem item)
@@ -211,23 +213,6 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 item.CommunityRating = mostVoted.CommunityRating != null ? (float?)Math.Round(mostVoted.CommunityRating.Value, 1) : null;
                 item.VoteCount = mostVoted.VoteCount;
             }
-            
-            if (!item.LockedFields.Contains(MetadataFields.Genres))
-            {
-                // only prefer our own genre descriptions if we are using enlish metadata, as our providers are only available in english
-
-                IEnumerable<string> genres;
-                if (item.GetPreferredMetadataLanguage() == "en")
-                    genres = SelectCollection(mal.Genres, anilist.Genres, item.Genres.ToArray(), anidb.Genres);
-                else
-                    genres = SelectCollection(item.Genres.ToArray(), mal.Genres, anilist.Genres, anidb.Genres);
-
-                item.Genres.Clear();
-                foreach (string genre in genres.Where(g => !"Animation".Equals(g)))
-                    item.AddGenre(genre);
-
-                item.AddGenre("Anime");
-            }
 
             if (!item.LockedFields.Contains(MetadataFields.Tags))
             {
@@ -235,19 +220,62 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
                 IEnumerable<string> tags;
                 if (item.GetPreferredMetadataLanguage() == "en")
-                    tags = SelectCollection(mal.Tags, anilist.Tags, item.Tags.ToArray(), anidb.Tags);
+                    tags = MergeCollections(mal.Tags, anilist.Tags, anidb.Tags, item.Tags.ToArray());
                 else
-                    tags = SelectCollection(item.Tags.ToArray(), mal.Tags, anilist.Tags, anidb.Tags);
+                    tags = MergeCollections(item.Tags.ToArray(), mal.Tags, anilist.Tags, anidb.Tags);
 
                 item.Tags.Clear();
                 foreach (string tag in tags)
                     item.AddTag(tag);
+            }
+            
+            if (!item.LockedFields.Contains(MetadataFields.Genres))
+            {
+                // only prefer our own genre descriptions if we are using enlish metadata, as our providers are only available in english
+
+                IEnumerable<string> genres;
+                if (item.GetPreferredMetadataLanguage() == "en")
+                    genres = MergeCollections(mal.Genres, anilist.Genres, anidb.Genres, item.Genres.ToArray());
+                else
+                    genres = MergeCollections(item.Genres.ToArray(), mal.Genres, anilist.Genres, anidb.Genres);
+
+                genres = GenreHelper.RemoveRedundantGenres(genres);
+                genres = genres.Where(g => !"Animation".Equals(g));
+
+                var genreList = genres as IList<string> ?? genres.ToList();
+
+                item.Genres.Clear();
+                foreach (string genre in genreList.Take(MaxGenres))
+                    item.AddGenre(genre);
+
+                item.AddGenre("Anime");
+
+                if (!item.LockedFields.Contains(MetadataFields.Tags))
+                {
+                    foreach (string genre in genreList.Skip(MaxGenres))
+                        item.AddTag(genre);
+                }
             }
         }
 
         private IEnumerable<T> SelectCollection<T>(params IEnumerable<T>[] items)
         {
             return items.FirstOrDefault(l => l != null && l.Any()) ?? new List<T>();
+        }
+
+        private IEnumerable<T> MergeCollections<T>(params IEnumerable<T>[] items)
+        {
+            var results = new List<T>();
+            foreach (var collection in items)
+            {
+                foreach (var item in collection)
+                {
+                    if (!results.Contains(item))
+                        results.Add(item);
+                }
+            }
+
+            return results;
         }
 
         private void AddProviders(BaseItem item, Dictionary<string, string> providers)

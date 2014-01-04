@@ -3,13 +3,15 @@ using System.Linq;
 
 namespace MediaBrowser.Plugins.Anime.Providers
 {
-    public class GenreHelper
+    public static class GenreHelper
     {
         private static readonly Dictionary<string, string> GenreMappings = new Dictionary<string, string>
         {
             {"Action", "Action"},
             {"Advanture", "Adventure"},
+            {"Contemporary Fantasy", "Fantasy"},
             {"Comedy", "Comedy"},
+            {"Dark Fantasy", "Fantasy"},
             {"Dementia", "Psychological Thriller"},
             {"Demons", "Fantasy"},
             {"Drama", "Drama"},
@@ -23,6 +25,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             {"Kids", "Kids"},
             {"Magic", "Fantasy"},
             {"Martial Arts", "Martial Arts"},
+            {"Mahou Shoujo", "Mahou Shoujo"},
             {"Mecha", "Mecha"},
             {"Music", "Music"},
             {"Mystery", "Mystery"},
@@ -38,9 +41,12 @@ namespace MediaBrowser.Plugins.Anime.Providers
             {"Sports", "Sport"},
             {"Supernatural", "Supernatural"},
             {"Thriller", "Thriller"},
+            {"Tragedy", "Tragedy"},
+            {"Witch", "Supernatural"},
             {"Vampire", "Supernatural"},
             {"Yaoi", "Adult"},
-            {"Yuri", "Adult"}
+            {"Yuri", "Adult"},
+            {"Zombie", "Supernatural"}
         };
 
         private static readonly string[] GenresAsTags =
@@ -49,7 +55,13 @@ namespace MediaBrowser.Plugins.Anime.Providers
             "Space",
             "Vampire",
             "Yaoi",
-            "Yuri"
+            "Yuri",
+            "Zombie"
+        };
+
+        private static readonly Dictionary<string, string> IgnoreIfPresent = new Dictionary<string, string>
+        {
+            {"Psychological Thriller", "Thriller"}
         };
 
         public static void TidyGenres(SeriesInfo series)
@@ -71,6 +83,14 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
             series.Genres = genres.ToList();
             series.Tags = tags.ToList();
+        }
+
+        public static IEnumerable<string> RemoveRedundantGenres(IEnumerable<string> genres)
+        {
+            var list = genres as IList<string> ?? genres.ToList();
+
+            var toRemove = list.Where(IgnoreIfPresent.ContainsKey).Select(genre => IgnoreIfPresent[genre]).ToList();
+            return list.Where(genre => !toRemove.Contains(genre));
         }
     }
 }

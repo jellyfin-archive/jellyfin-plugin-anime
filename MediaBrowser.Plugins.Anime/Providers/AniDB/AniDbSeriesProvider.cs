@@ -36,6 +36,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
         public static readonly RateLimiter RequestLimiter = new RateLimiter(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(5));
 
+        private static readonly int[] IgnoredCategoryIds = { 6, 22, 23, 60, 128, 129, 185, 216, 242, 255, 268, 269, 289 };
+
         private readonly Dictionary<string, string> _typeMappings = new Dictionary<string, string>
         {
             { "Direction", PersonType.Director },
@@ -91,6 +93,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
                 // load series data and apply to item
                 FetchSeriesInfo(series, seriesDataPath, item.GetPreferredMetadataLanguage());
+                GenreHelper.TidyGenres(series);
             }
 
             return series;
@@ -226,6 +229,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                             case "categories":
                                 using (var subtree = reader.ReadSubtree())
                                 {
+                                    ParseCategories(series, subtree);
                                 }
 
                                 break;
@@ -233,6 +237,49 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                     }
                 }
             }
+        }
+
+        private struct GenreInfo
+        {
+            public int Weight;
+            public string Name;
+        }
+
+        private void ParseCategories(SeriesInfo series, XmlReader reader)
+        {
+            var genres = new List<GenreInfo>();
+
+            while (reader.Read())
+            {
+                if (reader.NodeType == XmlNodeType.Element && reader.Name == "category")
+                {
+                    int weight;
+                    if (!int.TryParse(reader.GetAttribute("weight"), out weight) || weight < 400)
+                        continue;
+
+                    int id;
+                    if (int.TryParse(reader.GetAttribute("id"), out id) && IgnoredCategoryIds.Contains(id))
+                        continue;
+
+                    int parentId;
+                    if (int.TryParse(reader.GetAttribute("parentid"), out parentId) && IgnoredCategoryIds.Contains(parentId))
+                        continue;
+
+                    using (var categorySubtree = reader.ReadSubtree())
+                    {
+                        while (categorySubtree.Read())
+                        {
+                            if (categorySubtree.NodeType == XmlNodeType.Element && categorySubtree.Name == "name")
+                            {
+                                var name = categorySubtree.ReadElementContentAsString();
+                                genres.Add(new GenreInfo {Name = name, Weight = weight});
+                            }
+                        }
+                    }
+                }
+            }
+
+            series.Genres = genres.OrderBy(g => g.Weight).Select(g => g.Name).ToList();
         }
 
         private void ParseResources(SeriesInfo series, XmlReader reader)
