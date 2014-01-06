@@ -28,7 +28,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         private const string SeriesQueryUrl = "http://api.anidb.net:9001/httpapi?request=anime&client={0}&clientver=1&protover=1&aid={1}";
         private const string ClientName = "mediabrowser";
 
-        private readonly ILogger _log;
         private readonly IApplicationPaths _appPaths;
         private readonly IHttpClient _httpClient;
 
@@ -45,9 +44,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             { "Chief Animation Direction", "Chief Animation Director" }
         };
 
-        public AniDbSeriesProvider(ILogger log, IApplicationPaths appPaths, IHttpClient httpClient)
+        public AniDbSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient)
         {
-            _log = log;
             _appPaths = appPaths;
             _httpClient = httpClient;
 
@@ -60,51 +58,28 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             set;
         }
 
-        public async Task<SeriesInfo> FindSeriesInfo(Series item, string preferredMetadataLanguage, CancellationToken cancellationToken)
+        public async Task<SeriesInfo> FindSeriesInfo(Dictionary<string, string> providerIds, string preferredMetadataLanguage, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             // find aid
-            var aid = item.GetProviderId(ProviderNames.AniDb);
-            if (string.IsNullOrEmpty(aid))
-            {
-                var folderName = GetFolderName(item);
-                aid = await TitleMatcher.FindSeries(folderName, cancellationToken);
-
-                if (string.IsNullOrEmpty(aid))
-                {
-                    aid = await TitleMatcher.FindSeries(item.Name, cancellationToken);
-                }
-                else if (AniDbTitleMatcher.GetComparableName(folderName) != AniDbTitleMatcher.GetComparableName(item.Name))
-                {
-                    // tvdb likely has matched a sequel to the first series, so clear some of its (invalid) data
-                    item.Overview = null;
-                    item.Name = folderName;
-                }
-            }
+            var aid = providerIds.GetOrDefault(ProviderNames.AniDb);
             
             var series = new SeriesInfo();
             series.ExternalProviders.Add(ProviderNames.AniDb, aid);
 
             if (!string.IsNullOrEmpty(aid))
             {
-                _log.Debug("Identified {0} as AniDB ID {1}", item.Name, aid);
                 var seriesDataPath = await GetSeriesData(_appPaths, _httpClient, aid, cancellationToken);
 
                 // load series data and apply to item
-                FetchSeriesInfo(series, seriesDataPath, item.GetPreferredMetadataLanguage());
+                FetchSeriesInfo(series, seriesDataPath, preferredMetadataLanguage);
                 GenreHelper.TidyGenres(series);
             }
 
             return series;
         }
-
-        private string GetFolderName(Series series)
-        {
-            var directory = new DirectoryInfo(series.Path);
-            return directory.Name;
-        }
-
+        
         public static async Task<string> GetSeriesData(IApplicationPaths appPaths, IHttpClient httpClient, string seriesId, CancellationToken cancellationToken)
         {
             var dataPath = CalculateSeriesDataPath(appPaths, seriesId);

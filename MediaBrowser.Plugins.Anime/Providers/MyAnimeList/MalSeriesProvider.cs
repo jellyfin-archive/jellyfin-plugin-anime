@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -92,9 +93,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
             return false;
         }
 
-        public async Task<SeriesInfo> FindSeriesInfo(Series series, string preferredMetadataLanguage, CancellationToken cancellationToken)
+        public async Task<SeriesInfo> FindSeriesInfo(Dictionary<string, string> providerIds , string preferredMetadataLanguage, CancellationToken cancellationToken)
         {
-            var seriesId = series.GetProviderId(ProviderNames.MyAnimeList);
+            var seriesId = providerIds.GetOrDefault(ProviderNames.MyAnimeList);
             if (string.IsNullOrEmpty(seriesId))
             {
                 return new SeriesInfo();

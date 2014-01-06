@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading;
@@ -24,11 +25,13 @@ namespace MediaBrowser.Plugins.Anime.Tests
 
             var logger = new Mock<ILogger>();
 
-            var series = new Series();
-            series.ProviderIds.Add(ProviderNames.MyAnimeList, "9756");
+            var providerIds = new Dictionary<string, string>
+            {
+                { ProviderNames.MyAnimeList, "9756" }
+            };
 
             var mal = new MalSeriesProvider(downloader.Object, logger.Object);
-            var info = await mal.FindSeriesInfo(series, "en", CancellationToken.None);
+            var info = await mal.FindSeriesInfo(providerIds, "en", CancellationToken.None);
 
             Assert.That(info.Name, Is.EqualTo("Mahou Shoujo Madoka★Magica"));
             Assert.That(info.Genres, Contains.Item("Drama"));

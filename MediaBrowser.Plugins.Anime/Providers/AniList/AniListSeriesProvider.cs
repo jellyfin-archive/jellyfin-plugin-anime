@@ -126,9 +126,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             return false;
         }
 
-        public async Task<SeriesInfo> FindSeriesInfo(Series series, string preferredMetadataLanguage, CancellationToken cancellationToken)
+        public async Task<SeriesInfo> FindSeriesInfo(Dictionary<string, string> providerIds, string preferredMetadataLanguage, CancellationToken cancellationToken)
         {
-            var seriesId = series.GetProviderId(ProviderNames.AniList) ?? series.GetProviderId(ProviderNames.MyAnimeList);
+            var seriesId = providerIds.GetOrDefault(ProviderNames.AniList) ?? providerIds.GetOrDefault(ProviderNames.MyAnimeList);
             if (string.IsNullOrEmpty(seriesId))
             {
                 return new SeriesInfo();
@@ -150,7 +150,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 ParseStudio(info, data);
                 ParseGenres(info, data);
                 ParseAirDates(info, data);
-                ParseDuration(info, data);
+                ParseDuration(info, data); 
                 ParseRating(info, data);
                 
                 return info;

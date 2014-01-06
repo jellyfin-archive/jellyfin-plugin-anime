@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\AnimeConfigurationPage.cs" />
+    <Compile Include="DictionaryExtensions.cs" />
     <Compile Include="Providers\AniDB\AniDbEpisodeProvider.cs" />
     <Compile Include="Providers\AniDB\AniDbPersonInfoTask.cs" />
     <Compile Include="Providers\AniDB\AniDbPersonProvider.cs" />

@@ -63,7 +63,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AniDbSeriesProviderTests.cs" />
     <Compile Include="AniDbTitleMatcherTests.cs" />
     <Compile Include="AniListSeriesProviderTests.cs" />
     <Compile Include="MalSeriesProviderTests.cs" />

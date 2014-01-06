@@ -58,16 +58,16 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         private async Task<string> FindSeriesFolder(string seriesId, int season, CancellationToken cancellationToken)
         {
-            var seriesIndex = await _indexSearch.FindSeriesIndex(seriesId, cancellationToken);
+            var seriesIndex = await _indexSearch.FindSeriesIndex(seriesId, cancellationToken).ConfigureAwait(false);
             var seasonOffset = season - seriesIndex;
             
             if (seasonOffset != 0)
             {
-                var id = await _indexSearch.FindSeriesByRelativeIndex(seriesId, seasonOffset, cancellationToken);
+                var id = await _indexSearch.FindSeriesByRelativeIndex(seriesId, seasonOffset, cancellationToken).ConfigureAwait(false);
                 return AniDbSeriesProvider.CalculateSeriesDataPath(_configurationManager.ApplicationPaths, id);
             }
 
-            var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClient, seriesId, cancellationToken);
+            var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClient, seriesId, cancellationToken).ConfigureAwait(false);
             return Path.GetDirectoryName(seriesDataPath);
         }
         

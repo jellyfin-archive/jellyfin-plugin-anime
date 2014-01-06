@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,8 +28,10 @@ namespace MediaBrowser.Plugins.Anime.Tests
             var paths = new Mock<IServerApplicationPaths>();
             paths.Setup(p => p.DataPath).Returns("TestData");
 
-            var series = new Series();
-            series.ProviderIds.Add(ProviderNames.MyAnimeList, "9756");
+            var providerIds = new Dictionary<string, string>
+            {
+                { ProviderNames.MyAnimeList, "9756" }
+            };
 
             var config = new PluginConfiguration
             {
@@ -38,7 +41,7 @@ namespace MediaBrowser.Plugins.Anime.Tests
             PluginConfiguration.Instance = () => config;
 
             var anilist = new AniListSeriesProvider(downloader.Object, logger.Object);
-            SeriesInfo info = await anilist.FindSeriesInfo(series, "en", CancellationToken.None);
+            SeriesInfo info = await anilist.FindSeriesInfo(providerIds, "en", CancellationToken.None);
 
             Assert.That(info.Name, Is.EqualTo("Mahou Shoujo Madoka★Magica"));
             Assert.That(info.Genres, Contains.Item("Drama"));
