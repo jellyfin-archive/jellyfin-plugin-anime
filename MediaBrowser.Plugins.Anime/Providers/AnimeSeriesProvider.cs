@@ -105,7 +105,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 if (force || PluginConfiguration.Instance().AllowAutomaticMetadataUpdates || !item.ResolveArgs.ContainsMetaFileByName("series.xml"))
                 {
                     var initialSeriesInfo = SeriesInfo.FromSeries(series);
-                    initialSeriesInfo.ExternalProviders[ProviderNames.AniDb] = await FindAniDbId(series, cancellationToken).ConfigureAwait(false);
+                    initialSeriesInfo.ExternalProviders[ProviderNames.AniDb] = await FindAniDbId(initialSeriesInfo, series.Path, cancellationToken).ConfigureAwait(false);
 
                     var merged = await FindSeriesInfo(initialSeriesInfo, item.GetPreferredMetadataLanguage(), cancellationToken);
                     merged.Set(series);
@@ -136,12 +136,11 @@ namespace MediaBrowser.Plugins.Anime.Providers
             return merged;
         }
 
-        private async Task<string> FindAniDbId(Series series, CancellationToken cancellationToken)
+        private async Task<string> FindAniDbId(SeriesInfo series, string folderName, CancellationToken cancellationToken)
         {
-            var aid = series.GetProviderId(ProviderNames.AniDb);
+            var aid = series.ExternalProviders.GetOrDefault(ProviderNames.AniDb);
             if (string.IsNullOrEmpty(aid))
             {
-                var folderName = GetFolderName(series);
                 aid = await _titleMatcher.FindSeries(folderName, cancellationToken);
 
                 if (string.IsNullOrEmpty(aid))
@@ -151,7 +150,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 else if (AniDbTitleMatcher.GetComparableName(folderName) != AniDbTitleMatcher.GetComparableName(series.Name))
                 {
                     // tvdb likely has matched a sequel to the first series, so clear some of its (invalid) data
-                    series.Overview = null;
+                    series.Description = null;
                     series.Name = folderName;
                 }
 
@@ -161,7 +160,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             return aid;
         }
 
-        private string GetFolderName(Series series)
+        private string GetFolderName(BaseItem series)
         {
             var directory = new DirectoryInfo(series.Path);
             return directory.Name;
