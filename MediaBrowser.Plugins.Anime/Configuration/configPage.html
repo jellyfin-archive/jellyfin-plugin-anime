@@ -27,7 +27,25 @@
                             <input id="chkAutomaticUpdates" name="chkAutomaticUpdates" type="checkbox" value="automaticUpdates" />
                         </li>
                         <li>
-                            <label for="ignoreTree">Ignore the following locations:</label>
+                            <label for="chkTidyGenres">
+                                Tidy Genre List
+                            </label>
+                            <input id="chkTidyGenres" name="chkTidyGenres" type="checkbox" value="tidyGenres" />
+                        </li>
+                        <li>
+                            <label for="chkMoveExcessGenresToTags">
+                                Move Excess Genres To Tags
+                            </label>
+                            <input id="chkMoveExcessGenresToTags" name="chkMoveExcessGenresToTags" type="checkbox" value="moveExcessGenresToTags" />
+                        </li>
+                        <li>
+                            <label for="chkMaxGenres">
+                                Max Genres [0: unlimited]
+                            </label>
+                            <input id="chkMaxGenres" name="chkMaxGenres" type="number" min="0" value="maxGenres" />
+                        </li>
+                        <li>
+                            <label for="ignoreTree">Ignore The Following Locations</label>
                             <div id="ignoreTree" class="ignoreTree" />
                         </li>
                         <li>
@@ -55,6 +73,9 @@
 
                         $('#titleLanguage', page).val(config.TitlePreference).change();
                         $('#chkAutomaticUpdates', page).checked(config.AllowAutomaticMetadataUpdates).checkboxradio("refresh");
+                        $('#chkTidyGenres', page).checked(config.TidyGenreList).checkboxradio("refresh");
+                        $('#chkMaxGenres', page).val(config.MaxGenres).change();
+                        $('#chkMoveExcessGenresToTags', page).checked(config.MoveExcessGenresToTags).checkboxradio("refresh");
                         
                         for (var i = 0; i < config.IgnoredVirtualFolders.length; i++) {
                             config.IgnoredVirtualFolders[i] = config.IgnoredVirtualFolders[i].replace(/\\\\/g, "\\");
@@ -78,6 +99,9 @@
 
                         config.TitlePreference = $('#titleLanguage', page).val();
                         config.AllowAutomaticMetadataUpdates = $('#chkAutomaticUpdates', page).prop('checked');
+                        config.TidyGenreList = $('#chkTidyGenres').prop('checked');
+                        config.MaxGenres = $('#chkMaxGenres').val();
+                        config.MoveExcessGenresToTags = $('#chkMoveExcessGenresToTags').prop('checked');
                         
                         AnimeConfigurationPage.saveCollectionIgnoreTree(config);
 

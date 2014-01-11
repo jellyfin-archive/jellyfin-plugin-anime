@@ -74,7 +74,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
                 // load series data and apply to item
                 FetchSeriesInfo(series, seriesDataPath, preferredMetadataLanguage);
-                GenreHelper.TidyGenres(series);
             }
 
             return series;

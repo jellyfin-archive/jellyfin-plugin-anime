@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using MediaBrowser.Plugins.Anime.Configuration;
 
 namespace MediaBrowser.Plugins.Anime.Providers
 {
@@ -66,6 +67,8 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
         public static void TidyGenres(SeriesInfo series)
         {
+            var config = PluginConfiguration.Instance();
+
             var genres = new HashSet<string>();
             var tags = new HashSet<string>(series.Tags);
 
@@ -75,10 +78,20 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 if (GenreMappings.TryGetValue(genre, out mapped))
                     genres.Add(mapped);
                 else
-                    tags.Add(genre);
+                {
+                    if (config.MoveExcessGenresToTags)
+                        tags.Add(genre);
+                    else
+                        genres.Add(genre);
+                }
 
                 if (GenresAsTags.Contains(genre))
-                    tags.Add(genre);
+                {
+                    if (config.MoveExcessGenresToTags)
+                        tags.Add(genre);
+                    else if (!genres.Contains(genre))
+                        genres.Add(genre);
+                }
             }
 
             series.Genres = genres.ToList();

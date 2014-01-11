@@ -183,7 +183,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
             {
                 MatchCollection genreMatches = GenreRegex.Matches(data);
                 info.Genres = (from Match m in genreMatches select m.Groups["genre"].Value).ToList();
-                GenreHelper.TidyGenres(info);
             }
         }
 

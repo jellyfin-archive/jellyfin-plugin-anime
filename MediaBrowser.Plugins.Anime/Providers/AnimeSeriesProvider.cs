@@ -22,16 +22,14 @@ namespace MediaBrowser.Plugins.Anime.Providers
 {
     public class AnimeSeriesProvider : BaseMetadataProvider
     {
-        private const int MaxGenres = 4;
-
-        private readonly ILogger _log;
-        private readonly ILibraryManager _library;
         private readonly IEnumerable<ISeriesProvider> _allProviders;
         private readonly AniDbSeriesProvider _aniDbProvider;
         private readonly AniListSeriesProvider _aniListProvider;
+        private readonly ILibraryManager _library;
+        private readonly ILogger _log;
         private readonly MalSeriesProvider _malProvider;
         private readonly IAniDbTitleMatcher _titleMatcher;
-        
+
         public AnimeSeriesProvider(ILogManager logManager, ILibraryManager library, IServerConfigurationManager configurationManager, IApplicationPaths appPaths, IHttpClient httpClient)
             : base(logManager, configurationManager)
         {
@@ -60,7 +58,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             get
             {
                 // run after tvdb and imdb
-                return (MetadataProviderPriority)6;
+                return (MetadataProviderPriority) 6;
             }
         }
 
@@ -99,15 +97,15 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 RemoveProviderIds(series, ProviderNames.AniDb, ProviderNames.AniList, ProviderNames.MyAnimeList);
                 return false;
             }
-            
+
             if (!series.DontFetchMeta)
             {
                 if (force || PluginConfiguration.Instance().AllowAutomaticMetadataUpdates || !item.ResolveArgs.ContainsMetaFileByName("series.xml"))
                 {
-                    var initialSeriesInfo = SeriesInfo.FromSeries(series);
-                    initialSeriesInfo.ExternalProviders[ProviderNames.AniDb] = await FindAniDbId(initialSeriesInfo, series.Path, cancellationToken).ConfigureAwait(false);
+                    SeriesInfo initialSeriesInfo = SeriesInfo.FromSeries(series);
+                    initialSeriesInfo.ExternalProviders[ProviderNames.AniDb] = await FindAniDbId(initialSeriesInfo, GetFolderName(series), cancellationToken).ConfigureAwait(false);
 
-                    var merged = await FindSeriesInfo(initialSeriesInfo, item.GetPreferredMetadataLanguage(), cancellationToken);
+                    SeriesInfo merged = await FindSeriesInfo(initialSeriesInfo, item.GetPreferredMetadataLanguage(), cancellationToken);
                     merged.Set(series);
                 }
             }
@@ -132,13 +130,13 @@ namespace MediaBrowser.Plugins.Anime.Providers
             SeriesInfo mal = await _malProvider.FindSeriesInfo(providerIds, preferredMetadataLangauge, cancellationToken);
             AddProviders(providerIds, mal.ExternalProviders);
 
-            var merged = MergeSeriesInfo(preferredMetadataLangauge, initialSeriesInfo, anidb, anilist, mal);
+            SeriesInfo merged = MergeSeriesInfo(preferredMetadataLangauge, initialSeriesInfo, anidb, anilist, mal);
             return merged;
         }
 
         private async Task<string> FindAniDbId(SeriesInfo series, string folderName, CancellationToken cancellationToken)
         {
-            var aid = series.ExternalProviders.GetOrDefault(ProviderNames.AniDb);
+            string aid = series.ExternalProviders.GetOrDefault(ProviderNames.AniDb);
             if (string.IsNullOrEmpty(aid))
             {
                 aid = await _titleMatcher.FindSeries(folderName, cancellationToken);
@@ -168,7 +166,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
         private void RemoveProviderIds(BaseItem item, params string[] ids)
         {
-            foreach (var id in ids)
+            foreach (string id in ids)
             {
                 if (!string.IsNullOrEmpty(item.GetProviderId(id)))
                     item.SetProviderId(id, null);
@@ -177,27 +175,27 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
         private bool SeriesNotAnimated(Series series)
         {
-            var recognised = !string.IsNullOrEmpty(series.GetProviderId(MetadataProviders.Tvdb)) ||
-                             !string.IsNullOrEmpty(series.GetProviderId(MetadataProviders.Imdb));
+            bool recognised = !string.IsNullOrEmpty(series.GetProviderId(MetadataProviders.Tvdb)) ||
+                              !string.IsNullOrEmpty(series.GetProviderId(MetadataProviders.Imdb));
 
-            var isEnglishMetadata = string.Equals(series.GetPreferredMetadataLanguage(), "en", StringComparison.OrdinalIgnoreCase);
+            bool isEnglishMetadata = string.Equals(series.GetPreferredMetadataLanguage(), "en", StringComparison.OrdinalIgnoreCase);
 
             return recognised && isEnglishMetadata && !series.Genres.Contains("Animation") && !series.Genres.Contains("Anime");
         }
 
         private bool SeriesIsIgnored(Series series)
         {
-            var config = PluginConfiguration.Instance();
+            PluginConfiguration config = PluginConfiguration.Instance();
 
-            var ignoredVirtualFolderLocations = _library.GetDefaultVirtualFolders().Where(vf => config.IgnoredVirtualFolders.Contains(vf.Name))
-                                                        .SelectMany(vf => vf.Locations)
-                                                        .ToList();
+            List<string> ignoredVirtualFolderLocations = _library.GetDefaultVirtualFolders().Where(vf => config.IgnoredVirtualFolders.Contains(vf.Name))
+                                                                 .SelectMany(vf => vf.Locations)
+                                                                 .ToList();
 
-            for (var item = series.Parent; item != null; item = item.Parent)
+            for (Folder item = series.Parent; item != null; item = item.Parent)
             {
                 if (!item.IsFolder)
                     continue;
-                
+
                 if (config.IgnoredPhysicalLocations.Contains(item.Path))
                 {
                     return true;
@@ -214,6 +212,8 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
         private SeriesInfo MergeSeriesInfo(string preferredMetadataLangauge, SeriesInfo item, SeriesInfo anidb, SeriesInfo anilist, SeriesInfo mal)
         {
+            SeriesInfo mostVoted = (new[] {anidb, mal, anilist}).OrderByDescending(info => info.VoteCount ?? 0).First();
+
             var merged = new SeriesInfo
             {
                 Name = anidb.Name ?? anilist.Name ?? mal.Name ?? item.Name,
@@ -226,40 +226,57 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 EndDate = anidb.EndDate ?? anilist.EndDate ?? mal.EndDate ?? item.EndDate,
                 AirTime = anidb.AirTime ?? anilist.AirTime ?? mal.AirTime ?? item.AirTime,
                 AirDays = SelectCollection(anidb.AirDays, anilist.AirDays, mal.AirDays, item.AirDays).ToList(),
-                Tags = preferredMetadataLangauge == "en" ? MergeCollections(mal.Tags, anilist.Tags, anidb.Tags, item.Tags).Distinct().ToList() : MergeCollections(item.Tags, mal.Tags, anilist.Tags, anidb.Tags).Distinct().ToList()
+                Tags = preferredMetadataLangauge == "en" ? MergeCollections(mal.Tags, anilist.Tags, anidb.Tags, item.Tags).Distinct().ToList() : MergeCollections(item.Tags, mal.Tags, anilist.Tags, anidb.Tags).Distinct().ToList(),
+                Genres = preferredMetadataLangauge == "en" ? MergeCollections(mal.Genres, anilist.Genres, anidb.Genres, item.Genres).ToList() : MergeCollections(item.Genres, mal.Genres, anilist.Genres, anidb.Genres).ToList(),
+                CommunityRating = mostVoted.CommunityRating != null ? (float?) Math.Round(mostVoted.CommunityRating.Value, 1) : null,
+                VoteCount = mostVoted.VoteCount
             };
 
-            SeriesInfo mostVoted = (new[] {anidb, mal, anilist}).OrderByDescending(info => info.VoteCount ?? 0).First();
-            merged.CommunityRating = mostVoted.CommunityRating != null ? (float?)Math.Round(mostVoted.CommunityRating.Value, 1) : null;
-            merged.VoteCount = mostVoted.VoteCount;
+            CleanupGenres(merged);
+            RemoveDuplicateTags(merged);
 
-            // only prefer our own genre descriptions if we are using enlish metadata, as our providers are only available in english
-            IEnumerable<string> genres;
-            if (preferredMetadataLangauge == "en")
-                genres = MergeCollections(mal.Genres, anilist.Genres, anidb.Genres, item.Genres);
-            else
-                genres = MergeCollections(item.Genres, mal.Genres, anilist.Genres, anidb.Genres);
+            return merged;
+        }
 
-            genres = GenreHelper.RemoveRedundantGenres(genres);
-            genres = genres.Where(g => !"Animation".Equals(g) && !"Anime".Equals(g)).Distinct();
+        private static void CleanupGenres(SeriesInfo merged)
+        {
+            PluginConfiguration config = PluginConfiguration.Instance();
 
-            var genreList = genres as IList<string> ?? genres.ToList();
-            
-            merged.Genres = genreList.Take(MaxGenres).ToList();
-
-            foreach (var genre in genreList.Skip(MaxGenres))
+            if (config.TidyGenreList)
             {
-                if (!merged.Tags.Contains(genre))
-                    merged.Tags.Add(genre);
+                merged.Genres = GenreHelper.RemoveRedundantGenres(merged.Genres)
+                                           .Where(g => !"Animation".Equals(g) && !"Anime".Equals(g))
+                                           .Distinct()
+                                           .ToList();
+
+                GenreHelper.TidyGenres(merged);
+            }
+
+            if (config.MaxGenres > 0)
+            {
+                if (config.MoveExcessGenresToTags)
+                {
+                    foreach (string genre in merged.Genres.Skip(config.MaxGenres - 1))
+                    {
+                        if (!merged.Tags.Contains(genre))
+                            merged.Tags.Add(genre);
+                    }
+                }
+
+                merged.Genres = merged.Genres.Take(config.MaxGenres - 1).ToList();
             }
 
             if (!merged.Genres.Contains("Anime"))
                 merged.Genres.Add("Anime");
+        }
 
-            if (merged.Tags.Contains("Anime"))
-                merged.Tags.Remove("Anime");
-
-            return merged;
+        private static void RemoveDuplicateTags(SeriesInfo series)
+        {
+            for (int i = series.Tags.Count - 1; i >= 0; i--)
+            {
+                if (series.Genres.Contains(series.Tags[i]))
+                    series.Tags.RemoveAt(i);
+            }
         }
 
         private IEnumerable<T> SelectCollection<T>(params IEnumerable<T>[] items)
@@ -272,7 +289,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             var results = new List<T>();
             foreach (var collection in items)
             {
-                foreach (var item in collection)
+                foreach (T item in collection)
                 {
                     if (!results.Contains(item))
                         results.Add(item);
