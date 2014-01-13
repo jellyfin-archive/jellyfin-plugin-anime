@@ -59,19 +59,22 @@ namespace MediaBrowser.Plugins.Anime.Providers
         {
             return item is Episode;
         }
-
+        
         public override async Task<bool> FetchAsync(BaseItem item, bool force, BaseProviderInfo providerInfo, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             var episode = (Episode) item;
 
-            // get anidb info
-            EpisodeInfo anidb = await _aniDb.FindEpisodeInfo(episode, item.GetPreferredMetadataLanguage(), cancellationToken);
-            AddProviders(episode, anidb.ExternalProviders);
+            if (!item.DontFetchMeta)
+            {
+                // get anidb info
+                EpisodeInfo anidb = await _aniDb.FindEpisodeInfo(episode, item.GetPreferredMetadataLanguage(), cancellationToken);
+                AddProviders(episode, anidb.ExternalProviders);
 
-            // merge results
-            MergeEpisodeInfo(episode, anidb);
+                // merge results
+                MergeEpisodeInfo(episode, anidb);
+            }
 
             SetLastRefreshed(item, DateTime.UtcNow, providerInfo);
             return true;

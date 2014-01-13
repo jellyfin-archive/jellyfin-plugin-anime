@@ -44,6 +44,15 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
         public override async Task<bool> FetchAsync(BaseItem item, bool force, BaseProviderInfo providerInfo, CancellationToken cancellationToken)
         {
+            if (!item.DontFetchMeta)
+                await FetchSeriesData(item, cancellationToken);
+
+            SetLastRefreshed(item, DateTime.Now, providerInfo);
+            return true;
+        }
+
+        private async Task FetchSeriesData(BaseItem item, CancellationToken cancellationToken)
+        {
             var season = (Season) item;
             string seriesId = season.Series.GetProviderId(ProviderNames.AniDb);
 
@@ -110,7 +119,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
                     season.EndDate = seriesInfo.EndDate;
                     season.CommunityRating = seriesInfo.CommunityRating;
                     season.VoteCount = seriesInfo.VoteCount;
-                    
+
                     if (season.ProductionYear == null && season.PremiereDate != null)
                         season.ProductionYear = season.PremiereDate.Value.Year;
                 }
@@ -119,9 +128,6 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 var seriesIndex = await _indexSearch.FindSeriesIndex(seriesId, cancellationToken).ConfigureAwait(false);
                 season.IndexNumber += seriesIndex - 1;
             }
-
-            SetLastRefreshed(item, DateTime.Now, providerInfo);
-            return true;
         }
     }
 }
