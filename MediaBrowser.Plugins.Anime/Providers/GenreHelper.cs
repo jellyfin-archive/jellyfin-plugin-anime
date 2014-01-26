@@ -57,7 +57,9 @@ namespace MediaBrowser.Plugins.Anime.Providers
             "Vampire",
             "Yaoi",
             "Yuri",
-            "Zombie"
+            "Zombie",
+            "Demons",
+            "Witch"
         };
 
         private static readonly Dictionary<string, string> IgnoreIfPresent = new Dictionary<string, string>

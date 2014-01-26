@@ -38,8 +38,8 @@ namespace MediaBrowser.Plugins.Anime.Providers
         {
             return new SeriesInfo
             {
-                Name = series.Name,
-                Description = series.Overview,
+                Name = string.IsNullOrEmpty(series.Name) ? null : series.Name,
+                Description = string.IsNullOrEmpty(series.Overview) ? null : series.Overview,
                 StartDate = series.PremiereDate,
                 EndDate = series.DateLastEpisodeAdded,
                 CommunityRating = series.CommunityRating,
