@@ -48,11 +48,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
             if (!string.IsNullOrEmpty(seriesId) && series.IndexNumber.HasValue && series.IndexNumber.Value > 0)
             {
-                var seriesDataDirectory = AniDbSeriesProvider.CalculateSeriesDataPath(_appPaths, seriesId);
-
-                // TODO: Have an ensure method on AniDbSeriesProvider to download data if non-existant, or old based on some cache length (7d?)
-                
-                var seriesDataPath = Path.Combine(seriesDataDirectory, "series.xml");
+                var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_appPaths, _httpClient, seriesId, cancellationToken);
                 var imageUrl = FindImageUrl(seriesDataPath);
 
                 if (!string.IsNullOrEmpty(imageUrl))
