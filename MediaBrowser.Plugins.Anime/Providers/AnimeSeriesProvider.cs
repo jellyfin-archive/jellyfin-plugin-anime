@@ -100,14 +100,14 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
             if (!series.DontFetchMeta)
             {
-                if (force || PluginConfiguration.Instance().AllowAutomaticMetadataUpdates || !item.ResolveArgs.ContainsMetaFileByName("series.xml"))
-                {
-                    SeriesInfo initialSeriesInfo = SeriesInfo.FromSeries(series);
-                    initialSeriesInfo.ExternalProviders[ProviderNames.AniDb] = await FindAniDbId(initialSeriesInfo, GetFolderName(series), cancellationToken).ConfigureAwait(false);
+                //if (force || PluginConfiguration.Instance().AllowAutomaticMetadataUpdates || !item.ResolveArgs.ContainsMetaFileByName("series.xml"))
+                //{
+                //    SeriesInfo initialSeriesInfo = SeriesInfo.FromSeries(series);
+                //    initialSeriesInfo.ExternalProviders[ProviderNames.AniDb] = await FindAniDbId(initialSeriesInfo, GetFolderName(series), cancellationToken).ConfigureAwait(false);
 
-                    SeriesInfo merged = await FindSeriesInfo(initialSeriesInfo, item.GetPreferredMetadataLanguage(), cancellationToken);
-                    merged.Set(series);
-                }
+                //    SeriesInfo merged = await FindSeriesInfo(initialSeriesInfo, item.GetPreferredMetadataLanguage(), cancellationToken);
+                //    merged.Set(series);
+                //}
             }
 
             SetLastRefreshed(item, DateTime.UtcNow, providerInfo);

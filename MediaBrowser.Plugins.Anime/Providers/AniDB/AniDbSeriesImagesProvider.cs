@@ -1,135 +1,86 @@
-﻿using System;
+﻿using MediaBrowser.Common.Configuration;
+using MediaBrowser.Common.Net;
+using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Providers;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using MediaBrowser.Common.Net;
-using MediaBrowser.Controller.Configuration;
-using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Providers;
-using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Logging;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 {
-    public class AniDbSeriesImagesProvider : BaseMetadataProvider
+    public class AniDbSeriesImagesProvider : IRemoteImageProvider
     {
-        private readonly IProviderManager _providerManager;
-        private readonly SeriesIndexSearch _indexSearch;
+        private readonly IHttpClient _httpClient;
+        private readonly IApplicationPaths _appPaths;
 
-        public AniDbSeriesImagesProvider(ILogManager logManager, IServerConfigurationManager configurationManager, IProviderManager providerManager, IHttpClient httpClient)
-            : base(logManager, configurationManager)
+        public AniDbSeriesImagesProvider(IHttpClient httpClient, IApplicationPaths appPaths)
         {
-            _providerManager = providerManager;
-            _indexSearch = new SeriesIndexSearch(configurationManager, httpClient);
+            _httpClient = httpClient;
+            _appPaths = appPaths;
         }
 
-        public override MetadataProviderPriority Priority
+        public async Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            get { return MetadataProviderPriority.Last; }
-        }
+            await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
 
-        public override bool RequiresInternet
-        {
-            get { return true; }
-        }
-
-        public override ItemUpdateType ItemUpdateType
-        {
-            get { return ItemUpdateType.ImageUpdate; }
-        }
-
-        protected override bool RefreshOnVersionChange
-        {
-            get { return true; }
-        }
-
-        protected override string ProviderVersion
-        {
-            get { return "1"; }
-        }
-
-        public override bool Supports(BaseItem item)
-        {
-            return item is Series;
-        }
-
-        protected override DateTime CompareDate(BaseItem item)
-        {
-            string seriesId = item.GetProviderId(ProviderNames.AniDb);
-
-            if (!string.IsNullOrEmpty(seriesId))
+            return await _httpClient.GetResponse(new HttpRequestOptions
             {
-                string imagesXmlPath = Path.Combine(AniDbSeriesProvider.CalculateSeriesDataPath(ConfigurationManager.ApplicationPaths, seriesId), "series.xml");
-                var imagesFileInfo = new FileInfo(imagesXmlPath);
+                CancellationToken = cancellationToken,
+                Url = url,
+                ResourcePool = AniDbSeriesProvider.ResourcePool
 
-                if (imagesFileInfo.Exists)
-                {
-                    return imagesFileInfo.LastWriteTimeUtc;
-                }
-            }
-
-            return base.CompareDate(item);
+            }).ConfigureAwait(false);
         }
 
-        protected override bool NeedsRefreshInternal(BaseItem item, BaseProviderInfo providerInfo)
+        public async Task<IEnumerable<RemoteImageInfo>> GetImages(IHasImages item, CancellationToken cancellationToken)
         {
-            var id = item.GetProviderId(ProviderNames.AniDb);
-            if (string.IsNullOrEmpty(id))
+            var list = new List<RemoteImageInfo>();
+
+            var series = (Series)item;
+
+            var seriesId = series.GetProviderId(ProviderNames.AniDb);
+
+            if (!string.IsNullOrEmpty(seriesId) && series.IndexNumber.HasValue && series.IndexNumber.Value > 0)
             {
-                return false;
-            }
+                var seriesDataDirectory = AniDbSeriesProvider.CalculateSeriesDataPath(_appPaths, seriesId);
 
-            if (item.HasImage(ImageType.Primary) && !item.LockedFields.Contains(MetadataFields.Images))
-            {
-                var seriesIndex = _indexSearch.FindSeriesIndex(id, CancellationToken.None).Result;
-                return seriesIndex != 1;
-            }
-
-            return base.NeedsRefreshInternal(item, providerInfo);
-        }
-
-        public override async Task<bool> FetchAsync(BaseItem item, bool force, BaseProviderInfo providerInfo, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var series = (Series) item;
-            string seriesId = series.GetProviderId(ProviderNames.AniDb);
-            
-            if (!string.IsNullOrEmpty(seriesId) && !item.LockedFields.Contains(MetadataFields.Images) && (!item.HasImage(ImageType.Primary) || await ShouldOverrideImage(seriesId)))
-            {
-                string seriesDataDirectory = AniDbSeriesProvider.CalculateSeriesDataPath(ConfigurationManager.ApplicationPaths, seriesId);
-                string seriesDataPath = Path.Combine(seriesDataDirectory, "series.xml");
-                string imageUrl = FindImageUrl(seriesDataPath);
+                // TODO: Have an ensure method on AniDbSeriesProvider to download data if non-existant, or old based on some cache length (7d?)
+                
+                var seriesDataPath = Path.Combine(seriesDataDirectory, "series.xml");
+                var imageUrl = FindImageUrl(seriesDataPath);
 
                 if (!string.IsNullOrEmpty(imageUrl))
                 {
-                    Logger.Debug("Downloading primary image for {0} from {1}", item.Name, imageUrl);
-
-                    await AniDbSeriesProvider.RequestLimiter.Tick();
-                    await _providerManager.SaveImage(series, imageUrl, AniDbSeriesProvider.ResourcePool, ImageType.Primary, null, cancellationToken)
-                                          .ConfigureAwait(false);
-
-                    SetLastRefreshed(item, DateTime.UtcNow, providerInfo);
-                    return true;
+                    list.Add(new RemoteImageInfo
+                    {
+                        ProviderName = Name,
+                        Url = imageUrl
+                    });
                 }
             }
 
-            return false;
+            return list;
         }
 
-        private Task<bool> ShouldOverrideImage(string seriesId)
+        public IEnumerable<ImageType> GetSupportedImages(IHasImages item)
         {
-            return TvdbImageIsLikelyWrong(seriesId);
+            return new[] { ImageType.Primary };
         }
 
-        private async Task<bool> TvdbImageIsLikelyWrong(string seriesId)
+        public string Name
         {
-            var seriesIndex = await _indexSearch.FindSeriesIndex(seriesId, CancellationToken.None);
-            return seriesIndex != 0;
+            get { return "AniDB"; }
+        }
+
+        public bool Supports(IHasImages item)
+        {
+            return item is Series;
         }
 
         private string FindImageUrl(string seriesDataPath)
