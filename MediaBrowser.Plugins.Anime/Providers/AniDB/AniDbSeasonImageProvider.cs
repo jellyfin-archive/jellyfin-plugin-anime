@@ -1,65 +1,56 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using MediaBrowser.Controller.Configuration;
+﻿using MediaBrowser.Common.Configuration;
+using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Providers;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 {
     /// <summary>
     ///     Copies the series image into a season, if the season does not otherwise have any primary image.
     /// </summary>
-    public class AniDbSeasonImageProvider : BaseMetadataProvider
+    public class AniDbSeasonImageProvider : IRemoteImageProvider
     {
-        private readonly IProviderManager _providerManager;
+        private readonly IHttpClient _httpClient;
+        private readonly IApplicationPaths _appPaths;
 
-        public AniDbSeasonImageProvider(ILogManager logManager, IServerConfigurationManager configurationManager, IProviderManager providerManager)
-            : base(logManager, configurationManager)
+        public AniDbSeasonImageProvider(IApplicationPaths appPaths, IHttpClient httpClient)
         {
-            _providerManager = providerManager;
+            _appPaths = appPaths;
+            _httpClient = httpClient;
         }
 
-        public override MetadataProviderPriority Priority
+        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            get { return MetadataProviderPriority.First; }
+            return new AniDbSeriesImagesProvider(_httpClient, _appPaths).GetImageResponse(url, cancellationToken);
         }
 
-        public override bool Supports(BaseItem item)
-        {
-            return item is Season;
-        }
-
-        protected override bool NeedsRefreshInternal(BaseItem item, BaseProviderInfo providerInfo)
-        {
-            if (item.HasImage(ImageType.Primary) || item.LockedFields.Contains(MetadataFields.Images))
-            {
-                return false;
-            }
-
-            return base.NeedsRefreshInternal(item, providerInfo);
-        }
-
-        public override Task<bool> FetchAsync(BaseItem item, bool force, BaseProviderInfo providerInfo, CancellationToken cancellationToken)
+        public Task<IEnumerable<RemoteImageInfo>> GetImages(IHasImages item, CancellationToken cancellationToken)
         {
             var season = (Season)item;
-            string seriesId = season.Series.GetProviderId(ProviderNames.AniDb);
+            var series = season.Series;
 
-            if (!string.IsNullOrEmpty(seriesId) && !season.HasImage(ImageType.Primary) && !season.LockedFields.Contains(MetadataFields.Images))
-            {
-                var seriesImage = season.Series.GetImagePath(ImageType.Primary, 0);
-                if (!string.IsNullOrEmpty(seriesImage))
-                {
-                    _providerManager.SaveImage(season, seriesImage, AniDbSeriesProvider.ResourcePool, ImageType.Primary, null, cancellationToken)
-                                    .ConfigureAwait(false);
-                }
-            }
+            return new AniDbSeriesImagesProvider(_httpClient, _appPaths).GetImages(series, cancellationToken);
+        }
 
-            SetLastRefreshed(item, DateTime.Now, providerInfo);
-            return Task.FromResult(true);
+        public IEnumerable<ImageType> GetSupportedImages(IHasImages item)
+        {
+            return new[] { ImageType.Primary };
+        }
+
+        public string Name
+        {
+            get { return "AniDB"; }
+        }
+
+        public bool Supports(IHasImages item)
+        {
+            return item is Season;
         }
     }
 }
