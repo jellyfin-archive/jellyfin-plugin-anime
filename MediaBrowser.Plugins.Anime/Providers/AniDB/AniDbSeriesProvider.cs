@@ -22,7 +22,7 @@ using MediaBrowser.Plugins.Anime.Configuration;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 {
-    public class AniDbSeriesProvider : ISeriesProvider
+    public class AniDbSeriesProvider : IRemoteMetadataProvider<Series, MediaBrowser.Controller.Providers.SeriesInfo>
     {
         private const string SeriesDataFile = "series.xml";
         private const string SeriesQueryUrl = "http://api.anidb.net:9001/httpapi?request=anime&client={0}&clientver=1&protover=1&aid={1}";
@@ -57,6 +57,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             get;
             set;
         }
+
+
+        public Task<MetadataResult<Series>> GetMetadata(Controller.Providers.SeriesInfo info, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string Name { get { return "AniDB"; } }
 
         public async Task<SeriesInfo> FindSeriesInfo(Dictionary<string, string> providerIds, string preferredMetadataLanguage, CancellationToken cancellationToken)
         {
@@ -693,46 +701,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             }
 
             return null;
-        }
-
-        public bool RequiresInternet
-        {
-            get { return true; }
-        }
-
-        public bool NeedsRefreshBasedOnCompareDate(BaseItem item, BaseProviderInfo providerInfo)
-        {
-            if (!PluginConfiguration.Instance().AllowAutomaticMetadataUpdates)
-            {
-                return false;
-            }
-
-            var seriesId = item.GetProviderId(ProviderNames.AniDb);
-
-            if (!string.IsNullOrEmpty(seriesId))
-            {
-                var path = Path.Combine(_appPaths.DataPath, "anidb", seriesId);
-
-                try
-                {
-                    var files = new DirectoryInfo(path)
-                        .EnumerateFiles("*.xml", SearchOption.TopDirectoryOnly)
-                        .Select(i => i.LastWriteTimeUtc)
-                        .ToList();
-
-                    if (files.Count > 0)
-                    {
-                        return files.Max() > providerInfo.LastRefreshed;
-                    }
-                }
-                catch (DirectoryNotFoundException)
-                {
-                    // Don't blow up
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
     
