@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Net;
@@ -66,7 +67,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
         public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(Controller.Providers.SeriesInfo searchInfo, CancellationToken cancellationToken)
         {
-            return Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
+            return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
         }
 
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
