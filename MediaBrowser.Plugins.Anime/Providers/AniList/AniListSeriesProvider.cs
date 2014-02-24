@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -9,12 +10,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using MediaBrowser.Common.Configuration;
-using MediaBrowser.Controller.Configuration;
-using MediaBrowser.Controller.Entities;
+using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
-using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Providers;
 using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers.AniDB;
 using MediaBrowser.Plugins.Anime.Providers.MyAnimeList;
@@ -42,20 +42,20 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
         public async Task<FileInfo> DownloadSeriesPage(string id)
         {
-            var cachedPath = CalculateCacheFilename(id);
+            string cachedPath = CalculateCacheFilename(id);
             var cached = new FileInfo(cachedPath);
 
             if (!cached.Exists || DateTime.UtcNow - cached.LastWriteTimeUtc > TimeSpan.FromDays(7))
             {
-                var url = string.Format(SeriesUrl, id);
+                string url = string.Format(SeriesUrl, id);
 
                 try
                 {
                     var client = new WebClient();
                     client.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.101 Safari/537.36");
-                    var data = await client.DownloadStringTaskAsync(url);
+                    string data = await client.DownloadStringTaskAsync(url);
 
-                    var directory = Path.GetDirectoryName(cachedPath);
+                    string directory = Path.GetDirectoryName(cachedPath);
                     if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                     {
                         Directory.CreateDirectory(directory);
@@ -84,7 +84,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         }
     }
 
-    public class AniListSeriesProvider : ISeriesProvider
+    public class AniListSeriesProvider : IRemoteMetadataProvider<Series, Controller.Providers.SeriesInfo>
     {
         private static readonly Regex RomajiTitleRegex = new Regex(@"<li><span class='type'>Romaji Title:</span><span class='value'>(?<romaji>.*?)</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
         private static readonly Regex JapaneseTitleRegex = new Regex(@"li><span class='type'>Japanese:</span><span class='value'>(?<japanese>.*?)</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
@@ -98,89 +98,99 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         private static readonly Regex GenreRegex = new Regex(@"(?<genre>.*?)<br>", RegexOptions.Singleline | RegexOptions.Compiled);
         private static readonly Regex RatingRegex = new Regex(@"<li><span class='type'>Rating:</span><span class='value'>(?<rating>.*?)( - .*?)?</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
 
+        private readonly IApplicationPaths _appPaths;
         private readonly IAniListDownloader _downloader;
+        private readonly IHttpClient _httpClient;
         private readonly ILogger _logger;
 
-        public AniListSeriesProvider(IAniListDownloader downloader, ILogger logger)
+        public AniListSeriesProvider(IAniListDownloader downloader, ILogger logger, IApplicationPaths appPaths, IHttpClient httpClient)
         {
             _downloader = downloader;
             _logger = logger;
+            _appPaths = appPaths;
+            _httpClient = httpClient;
         }
 
-        public bool RequiresInternet { get { return true; } }
-
-        public bool NeedsRefreshBasedOnCompareDate(BaseItem item, BaseProviderInfo providerInfo)
+        public async Task<MetadataResult<Series>> GetMetadata(Controller.Providers.SeriesInfo info, CancellationToken cancellationToken)
         {
-            if (!PluginConfiguration.Instance().AllowAutomaticMetadataUpdates)
-            {
-                return false;
-            }
+            var result = new MetadataResult<Series>();
 
-            var seriesId = item.GetProviderId(ProviderNames.AniList) ?? item.GetProviderId(ProviderNames.MyAnimeList);
-            if (!string.IsNullOrEmpty(seriesId))
-            {
-                var cached = _downloader.GetCachedSeriesPage(seriesId);
-                return !cached.Exists || (DateTime.UtcNow - cached.LastWriteTimeUtc) > TimeSpan.FromDays(7);
-            }
-
-            return false;
-        }
-
-        public async Task<SeriesInfo> FindSeriesInfo(Dictionary<string, string> providerIds, string preferredMetadataLanguage, CancellationToken cancellationToken)
-        {
-            var seriesId = providerIds.GetOrDefault(ProviderNames.AniList) ?? providerIds.GetOrDefault(ProviderNames.MyAnimeList);
+            string seriesId = info.ProviderIds.GetOrDefault(ProviderNames.AniList) ?? info.ProviderIds.GetOrDefault(ProviderNames.MyAnimeList);
             if (string.IsNullOrEmpty(seriesId))
             {
-                return new SeriesInfo();
+                // ask the AniDB provider to see if it can find the IDs
+                var aniDbProvider = new AniDbSeriesProvider(_appPaths, _httpClient);
+                MetadataResult<Series> aniDbResult = await aniDbProvider.GetMetadata(info, cancellationToken).ConfigureAwait(false);
+
+                if (!aniDbResult.HasMetadata || aniDbResult.Item == null)
+                    return result;
+
+                seriesId = aniDbResult.Item.ProviderIds.GetOrDefault(ProviderNames.AniList) ?? aniDbResult.Item.ProviderIds.GetOrDefault(ProviderNames.MyAnimeList);
             }
+
+            if (string.IsNullOrEmpty(seriesId))
+                return result;
 
             try
             {
-                var dataFile = await _downloader.DownloadSeriesPage(seriesId);
+                FileInfo dataFile = await _downloader.DownloadSeriesPage(seriesId);
                 if (!dataFile.Exists)
-                {
-                    return new SeriesInfo();
-                }
+                    return result;
 
-                var data = File.ReadAllText(dataFile.FullName, Encoding.UTF8);
+                string data = File.ReadAllText(dataFile.FullName, Encoding.UTF8);
 
-                var info = new SeriesInfo();
-                ParseTitle(info, data, preferredMetadataLanguage);
-                ParseSummary(info, data);
-                ParseStudio(info, data);
-                ParseGenres(info, data);
-                ParseAirDates(info, data);
-                ParseDuration(info, data); 
-                ParseRating(info, data);
-                
-                return info;
+                result.Item = new Series();
+                result.HasMetadata = true;
+
+                ParseTitle(result.Item, data, info.MetadataLanguage);
+                ParseSummary(result.Item, data);
+                ParseStudio(result.Item, data);
+                ParseGenres(result.Item, data);
+                ParseAirDates(result.Item, data);
+                ParseDuration(result.Item, data);
+                ParseRating(result.Item, data);
             }
             catch (Exception e)
             {
                 _logger.ErrorException("Failed to scrape {0}", e, seriesId);
             }
 
-            return new SeriesInfo();
+            return result;
         }
 
-        private void ParseStudio(SeriesInfo info, string data)
+        public string Name
         {
-            var match = StudioRegex.Match(data);
+            get { return "AniList"; }
+        }
+
+        public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(Controller.Providers.SeriesInfo searchInfo, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
+        }
+
+        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ParseStudio(Series info, string data)
+        {
+            Match match = StudioRegex.Match(data);
             if (match.Success)
             {
-                var studio = match.Groups["studio"].Value;
+                string studio = match.Groups["studio"].Value;
                 info.Studios.Add(studio);
             }
         }
 
-        private void ParseTitle(SeriesInfo info, string data, string preferredMetadataLanguage)
+        private void ParseTitle(Series info, string data, string preferredMetadataLanguage)
         {
             var titles = new List<Title>();
 
-            var romajiMatch = RomajiTitleRegex.Match(data);
+            Match romajiMatch = RomajiTitleRegex.Match(data);
             if (romajiMatch.Success)
             {
-                var title = HttpUtility.HtmlDecode(romajiMatch.Groups["romaji"].Value);
+                string title = HttpUtility.HtmlDecode(romajiMatch.Groups["romaji"].Value);
                 titles.Add(new Title
                 {
                     Name = title,
@@ -189,10 +199,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 });
             }
 
-            var japaneseMatch = JapaneseTitleRegex.Match(data);
+            Match japaneseMatch = JapaneseTitleRegex.Match(data);
             if (japaneseMatch.Success)
             {
-                var title = japaneseMatch.Groups["japanese"].Value;
+                string title = japaneseMatch.Groups["japanese"].Value;
                 titles.Add(new Title
                 {
                     Name = title,
@@ -201,10 +211,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 });
             }
 
-            var englishMatch = EngTitleRegex.Match(data);
+            Match englishMatch = EngTitleRegex.Match(data);
             if (englishMatch.Success)
             {
-                var title = englishMatch.Groups["eng"].Value;
+                string title = englishMatch.Groups["eng"].Value;
                 titles.Add(new Title
                 {
                     Name = title,
@@ -213,28 +223,28 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 });
             }
 
-            var preferredTitle = titles.Localize(PluginConfiguration.Instance().TitlePreference, preferredMetadataLanguage);
+            Title preferredTitle = titles.Localize(PluginConfiguration.Instance().TitlePreference, preferredMetadataLanguage);
             if (preferredTitle != null)
             {
                 info.Name = preferredTitle.Name;
             }
         }
 
-        private void ParseSummary(SeriesInfo info, string data)
+        private void ParseSummary(Series info, string data)
         {
-            var match = DescriptionRegex.Match(data);
+            Match match = DescriptionRegex.Match(data);
             if (match.Success)
             {
-                info.Description = MalSeriesProvider.StripHtml(HttpUtility.HtmlDecode(match.Groups["description"].Value));
+                info.Overview = MalSeriesProvider.StripHtml(HttpUtility.HtmlDecode(match.Groups["description"].Value));
             }
         }
 
-        private void ParseGenres(SeriesInfo info, string data)
+        private void ParseGenres(Series info, string data)
         {
-            var genreListMatch = GenreListRegex.Match(data);
+            Match genreListMatch = GenreListRegex.Match(data);
             if (genreListMatch.Success)
             {
-                var genreMatches = GenreRegex.Matches(genreListMatch.Groups["genres"].Value);
+                MatchCollection genreMatches = GenreRegex.Matches(genreListMatch.Groups["genres"].Value);
                 foreach (Match match in genreMatches)
                 {
                     if (match.Success)
@@ -245,19 +255,19 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             }
         }
 
-        private void ParseAirDates(SeriesInfo info, string data)
+        private void ParseAirDates(Series info, string data)
         {
-            var startMatch = StartDateRegex.Match(data);
+            Match startMatch = StartDateRegex.Match(data);
             if (startMatch.Success)
             {
                 DateTime date;
                 if (DateTime.TryParse(startMatch.Groups["start"].Value, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
                 {
-                    info.StartDate = date;
+                    info.PremiereDate = date;
                 }
             }
 
-            var endMatch = EndDateRegex.Match(data);
+            Match endMatch = EndDateRegex.Match(data);
             if (endMatch.Success)
             {
                 DateTime date;
@@ -268,9 +278,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             }
         }
 
-        private void ParseDuration(SeriesInfo info, string data)
+        private void ParseDuration(Series info, string data)
         {
-            var match = DurationRegex.Match(data);
+            Match match = DurationRegex.Match(data);
             if (match.Success)
             {
                 int duration;
@@ -281,12 +291,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             }
         }
 
-        private void ParseRating(SeriesInfo info, string data)
+        private void ParseRating(Series info, string data)
         {
-            var match = RatingRegex.Match(data);
+            Match match = RatingRegex.Match(data);
             if (match.Success)
             {
-                info.ContentRating = match.Groups["rating"].Value;
+                info.OfficialRating = match.Groups["rating"].Value;
             }
         }
     }

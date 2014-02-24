@@ -146,14 +146,16 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return Task.FromResult(infos);
         }
 
-        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        public async Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            return _httpClient.GetResponse(new HttpRequestOptions
+            await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
+
+            return await _httpClient.GetResponse(new HttpRequestOptions
             {
                 CancellationToken = cancellationToken,
                 Url = url,
                 ResourcePool = AniDbSeriesProvider.ResourcePool
-            });
+            }).ConfigureAwait(false);
         }
 
         private RemoteImageInfo GetImageFromSeriesData(Series series, string personName)
