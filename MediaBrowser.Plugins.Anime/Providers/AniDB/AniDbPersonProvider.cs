@@ -5,78 +5,55 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Providers;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 {
-    public class AniDbPersonProvider : BaseMetadataProvider
+    public class AniDbPersonProvider : IRemoteMetadataProvider<Person, PersonLookupInfo>
     {
+        private readonly IServerConfigurationManager _configurationManager;
         private readonly ILibraryManager _library;
 
-        public AniDbPersonProvider(ILogManager logManager, IServerConfigurationManager configurationManager, ILibraryManager library)
-            : base(logManager, configurationManager)
+        public AniDbPersonProvider(IServerConfigurationManager configurationManager, ILibraryManager library)
         {
+            _configurationManager = configurationManager;
             _library = library;
         }
 
-        protected override bool RefreshOnVersionChange
+        public async Task<MetadataResult<Person>> GetMetadata(PersonLookupInfo info, CancellationToken cancellationToken)
         {
-            get { return true; }
-        }
+            var result = new MetadataResult<Person>();
 
-        protected override string ProviderVersion
-        {
-            get { return "1"; }
-        }
+            if (!string.IsNullOrEmpty(info.ProviderIds.GetOrDefault(ProviderNames.AniDb)))
+                return result;
 
-        public override bool RequiresInternet
-        {
-            get { return false; }
-        }
-
-        public override MetadataProviderPriority Priority
-        {
-            get { return MetadataProviderPriority.Fourth; }
-        }
-
-        public override ItemUpdateType ItemUpdateType
-        {
-            get { return ItemUpdateType.MetadataImport; }
-        }
-
-        public override bool Supports(BaseItem item)
-        {
-            return item is Person;
-        }
-
-        public override Task<bool> FetchAsync(BaseItem item, bool force, BaseProviderInfo providerInfo, CancellationToken cancellationToken)
-        {
-            if (!string.IsNullOrEmpty(item.GetProviderId(ProviderNames.AniDb)))
-                return Task.FromResult(false);
-            
             List<Series> seriesWithPerson = _library.RootFolder
                                                     .RecursiveChildren
                                                     .OfType<Series>()
-                                                    .Where(i => !string.IsNullOrEmpty(i.GetProviderId(ProviderNames.AniDb)) && i.People.Any(p => string.Equals(p.Name, item.Name, StringComparison.OrdinalIgnoreCase)))
+                                                    .Where(i => !string.IsNullOrEmpty(i.GetProviderId(ProviderNames.AniDb)) && i.People.Any(p => string.Equals(p.Name, info.Name, StringComparison.OrdinalIgnoreCase)))
                                                     .ToList();
 
             foreach (Series series in seriesWithPerson)
             {
                 try
                 {
-                    string seriesPath = AniDbSeriesProvider.CalculateSeriesDataPath(ConfigurationManager.ApplicationPaths, series.GetProviderId(ProviderNames.AniDb));
-                    AniDbPersonInfo person = TryFindPerson(item.Name, seriesPath);
+                    string seriesPath = AniDbSeriesProvider.CalculateSeriesDataPath(_configurationManager.ApplicationPaths, series.GetProviderId(ProviderNames.AniDb));
+                    AniDbPersonInfo person = TryFindPerson(info.Name, seriesPath);
                     if (person != null)
                     {
                         if (!string.IsNullOrEmpty(person.Id))
                         {
-                            item.SetProviderId(ProviderNames.AniDb, person.Id);
+                            result.Item = new Person();
+                            result.HasMetadata = true;
+
+                            result.Item.SetProviderId(ProviderNames.AniDb, person.Id);
                         }
 
                         break;
@@ -88,8 +65,22 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 }
             }
 
-            SetLastRefreshed(item, DateTime.UtcNow, providerInfo);
-            return Task.FromResult(true);
+            return result;
+        }
+
+        public string Name
+        {
+            get { return "AniDB"; }
+        }
+
+        public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(PersonLookupInfo searchInfo, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
+        }
+
+        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
 
         public static AniDbPersonInfo TryFindPerson(string name, string dataPath)
@@ -110,89 +101,76 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         }
     }
 
-    public class AniDbPersonImageProvider : BaseMetadataProvider
+    public class AniDbPersonImageProvider : IRemoteImageProvider
     {
+        private readonly IServerConfigurationManager _configurationManager;
+        private readonly IHttpClient _httpClient;
         private readonly ILibraryManager _library;
         private readonly IProviderManager _providerManager;
 
-        public AniDbPersonImageProvider(ILogManager logManager, IServerConfigurationManager configurationManager, ILibraryManager library, IProviderManager providerManager)
-            : base(logManager, configurationManager)
+        public AniDbPersonImageProvider(IServerConfigurationManager configurationManager, ILibraryManager library, IProviderManager providerManager, IHttpClient httpClient)
         {
+            _configurationManager = configurationManager;
             _library = library;
             _providerManager = providerManager;
+            _httpClient = httpClient;
         }
 
-        protected override bool RefreshOnVersionChange
-        {
-            get { return true; }
-        }
-
-        protected override string ProviderVersion
-        {
-            get { return "1"; }
-        }
-
-        public override bool RequiresInternet
-        {
-            get { return true; }
-        }
-
-        public override MetadataProviderPriority Priority
-        {
-            get { return MetadataProviderPriority.Fourth; }
-        }
-
-        public override ItemUpdateType ItemUpdateType
-        {
-            get { return ItemUpdateType.MetadataImport | ItemUpdateType.ImageUpdate; }
-        }
-
-        public override bool Supports(BaseItem item)
+        public bool Supports(IHasImages item)
         {
             return item is Person;
         }
 
-        public override async Task<bool> FetchAsync(BaseItem item, bool force, BaseProviderInfo providerInfo, CancellationToken cancellationToken)
+        public string Name
         {
-            if (string.IsNullOrEmpty(item.PrimaryImagePath))
+            get { return "AniDB"; }
+        }
+
+        public IEnumerable<ImageType> GetSupportedImages(IHasImages item)
+        {
+            yield return ImageType.Primary;
+        }
+
+        public Task<IEnumerable<RemoteImageInfo>> GetImages(IHasImages item, CancellationToken cancellationToken)
+        {
+            List<Series> seriesWithPerson = _library.RootFolder
+                                                    .RecursiveChildren
+                                                    .OfType<Series>()
+                                                    .Where(i => !string.IsNullOrEmpty(i.GetProviderId(ProviderNames.AniDb)) && i.People.Any(p => string.Equals(p.Name, item.Name, StringComparison.OrdinalIgnoreCase)))
+                                                    .ToList();
+
+            IEnumerable<RemoteImageInfo> infos = seriesWithPerson.Select(i => GetImageFromSeriesData(i, item.Name))
+                                                                 .Where(i => i != null)
+                                                                 .Take(1);
+
+            return Task.FromResult(infos);
+        }
+
+        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        {
+            return _httpClient.GetResponse(new HttpRequestOptions
             {
-                List<Series> seriesWithPerson = _library.RootFolder
-                                                        .RecursiveChildren
-                                                        .OfType<Series>()
-                                                        .Where(i => !string.IsNullOrEmpty(i.GetProviderId(ProviderNames.AniDb)) && i.People.Any(p => string.Equals(p.Name, item.Name, StringComparison.OrdinalIgnoreCase)))
-                                                        .ToList();
+                CancellationToken = cancellationToken,
+                Url = url,
+                ResourcePool = AniDbSeriesProvider.ResourcePool
+            });
+        }
 
-                foreach (Series series in seriesWithPerson)
+        private RemoteImageInfo GetImageFromSeriesData(Series series, string personName)
+        {
+            string seriesPath = AniDbSeriesProvider.CalculateSeriesDataPath(_configurationManager.ApplicationPaths, series.GetProviderId(ProviderNames.AniDb));
+            AniDbPersonInfo person = AniDbPersonProvider.TryFindPerson(personName, seriesPath);
+            if (person != null)
+            {
+                return new RemoteImageInfo
                 {
-                    try
-                    {
-                        string seriesPath = AniDbSeriesProvider.CalculateSeriesDataPath(ConfigurationManager.ApplicationPaths, series.GetProviderId(ProviderNames.AniDb));
-                        AniDbPersonInfo person = AniDbPersonProvider.TryFindPerson(item.Name, seriesPath);
-                        if (person != null)
-                        {
-                            if (!string.IsNullOrEmpty(person.Id))
-                            {
-                                item.SetProviderId(ProviderNames.AniDb, person.Id);
-                            }
-
-                            if (!string.IsNullOrEmpty(person.Image))
-                            {
-                                await _providerManager.SaveImage(item, person.Image, AniDbSeriesProvider.ResourcePool, ImageType.Primary, null, cancellationToken)
-                                                      .ConfigureAwait(false);
-                            }
-
-                            break;
-                        }
-                    }
-                    catch (FileNotFoundException)
-                    {
-                        // No biggie
-                    }
-                }
+                    Url = person.Image,
+                    Type = ImageType.Primary,
+                    ProviderName = Name
+                };
             }
 
-            SetLastRefreshed(item, DateTime.UtcNow, providerInfo);
-            return true;
+            return null;
         }
     }
 }
