@@ -16,7 +16,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
     /// The SeriesIndexProvider class is a metadata provider which finds the absolute series index of an anime series via AniDB data.
     /// </summary>
     public class SeriesIndexProvider
-        : IRemoteMetadataProvider<Series, MediaBrowser.Controller.Providers.SeriesInfo>
+        : IRemoteMetadataProvider<Series, SeriesInfo>
     {
         private readonly IAniDbTitleMatcher _titleMatcher;
         private readonly SeriesIndexSearch _indexSearcher;
@@ -29,7 +29,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             _indexSearcher = new SeriesIndexSearch(configurationManager, httpClient);
         }
 
-        public async Task<MetadataResult<Series>> GetMetadata(Controller.Providers.SeriesInfo info, CancellationToken cancellationToken)
+        public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
 
@@ -40,7 +40,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 result.HasMetadata = true;
 
                 result.Item.ProviderIds.Add(ProviderNames.AniDb, aniDbId);
-                result.Item.IndexNumber = await _indexSearcher.FindSeriesIndex(aniDbId, cancellationToken).ConfigureAwait(false);
+                result.Item.IndexNumber = await _indexSearcher.FindSeriesIndex(aniDbId, cancellationToken).ConfigureAwait(false) - 1;
             }
 
             return result;
@@ -51,7 +51,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             get { return "Anime"; }
         }
 
-        private async Task<string> FindAniDbId(MediaBrowser.Controller.Providers.SeriesInfo series, CancellationToken cancellationToken)
+        private async Task<string> FindAniDbId(SeriesInfo series, CancellationToken cancellationToken)
         {
             string aid = series.ProviderIds.GetOrDefault(ProviderNames.AniDb);
             if (string.IsNullOrEmpty(aid))
@@ -65,7 +65,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             return aid;
         }
 
-        public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(Controller.Providers.SeriesInfo searchInfo, CancellationToken cancellationToken)
+        public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
         {
             return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
         }

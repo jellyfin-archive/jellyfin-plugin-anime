@@ -66,6 +66,7 @@
     <Compile Include="Providers\AniDB\AniDbTitleMatcher.cs" />
     <Compile Include="AsyncLock.cs" />
     <Compile Include="Providers\AniDB\SeriesIndexSearch.cs" />
+    <Compile Include="Providers\AniList\AniListExternalId.cs" />
     <Compile Include="Providers\AniList\AniListSeriesProvider.cs" />
     <Compile Include="Providers\AniDB\IAniDbTitleDownloader.cs" />
     <Compile Include="Providers\AniDB\IAniDbTitleMatcher.cs" />

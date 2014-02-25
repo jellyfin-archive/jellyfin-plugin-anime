@@ -106,13 +106,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         private readonly IServerConfigurationManager _configurationManager;
         private readonly IHttpClient _httpClient;
         private readonly ILibraryManager _library;
-        private readonly IProviderManager _providerManager;
 
-        public AniDbPersonImageProvider(IServerConfigurationManager configurationManager, ILibraryManager library, IProviderManager providerManager, IHttpClient httpClient)
+        public AniDbPersonImageProvider(IServerConfigurationManager configurationManager, ILibraryManager library, IHttpClient httpClient)
         {
             _configurationManager = configurationManager;
             _library = library;
-            _providerManager = providerManager;
             _httpClient = httpClient;
         }
 

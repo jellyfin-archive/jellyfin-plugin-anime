@@ -83,7 +83,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         }
     }
 
-    public class AniListSeriesProvider : IRemoteMetadataProvider<Series, Controller.Providers.SeriesInfo>
+    public class AniListSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
     {
         private static readonly Regex RomajiTitleRegex = new Regex(@"<li><span class='type'>Romaji Title:</span><span class='value'>(?<romaji>.*?)</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
         private static readonly Regex JapaneseTitleRegex = new Regex(@"li><span class='type'>Japanese:</span><span class='value'>(?<japanese>.*?)</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
@@ -112,7 +112,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             _httpClient = httpClient;
         }
 
-        public async Task<MetadataResult<Series>> GetMetadata(Controller.Providers.SeriesInfo info, CancellationToken cancellationToken)
+        public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
 
@@ -164,7 +164,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             get { return "AniList"; }
         }
 
-        public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(Controller.Providers.SeriesInfo searchInfo, CancellationToken cancellationToken)
+        public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
         {
             return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
         }

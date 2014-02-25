@@ -332,7 +332,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 }
             }
 
-            if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(role))
+            if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(role) && series.People.All(p => p.Name != name))
             {
                 series.People.Add(CreatePerson(name, PersonType.Actor, role));
             }

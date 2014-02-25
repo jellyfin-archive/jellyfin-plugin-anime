@@ -18,7 +18,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
     /// <summary>
     ///     The <see cref="AniDbEpisodeProvider" /> class provides episode metadata from AniDB.
     /// </summary>
-    public class AniDbEpisodeProvider : IRemoteMetadataProvider<Episode, Controller.Providers.EpisodeInfo>
+    public class AniDbEpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
     {
         private readonly IServerConfigurationManager _configurationManager;
         private readonly IHttpClient _httpClient;
@@ -36,7 +36,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             _indexSearch = new SeriesIndexSearch(configurationManager, httpClient);
         }
 
-        public async Task<MetadataResult<Episode>> GetMetadata(Controller.Providers.EpisodeInfo info, CancellationToken cancellationToken)
+        public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Episode>();
 
@@ -54,7 +54,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             if (xml == null || !xml.Exists)
                 return result;
 
-            result.Item = new Episode();
+            result.Item = new Episode
+            {
+                IndexNumber = info.IndexNumber,
+                IndexNumberEnd = info.IndexNumber,
+                ParentIndexNumber = info.ParentIndexNumber
+            };
+
             result.HasMetadata = true;
 
             ParseEpisodeXml(xml, result.Item, info.MetadataLanguage);
