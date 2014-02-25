@@ -99,13 +99,15 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
         private readonly IApplicationPaths _appPaths;
         private readonly IAniListDownloader _downloader;
+        private readonly ILogManager _logManager;
         private readonly IHttpClient _httpClient;
         private readonly ILogger _logger;
 
-        public AniListSeriesProvider(IAniListDownloader downloader, ILogger logger, IApplicationPaths appPaths, IHttpClient httpClient)
+        public AniListSeriesProvider(IAniListDownloader downloader, ILogManager logManager, IApplicationPaths appPaths, IHttpClient httpClient)
         {
             _downloader = downloader;
-            _logger = logger;
+            _logManager = logManager;
+            _logger = logManager.GetLogger("AniList");
             _appPaths = appPaths;
             _httpClient = httpClient;
         }
@@ -118,7 +120,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             if (string.IsNullOrEmpty(seriesId))
             {
                 // ask the AniDB provider to see if it can find the IDs
-                var aniDbProvider = new AniDbSeriesProvider(_appPaths, _httpClient);
+                var aniDbProvider = new AniDbSeriesProvider(_appPaths, _httpClient, _logManager);
                 MetadataResult<Series> aniDbResult = await aniDbProvider.GetMetadata(info, cancellationToken).ConfigureAwait(false);
 
                 if (!aniDbResult.HasMetadata || aniDbResult.Item == null)

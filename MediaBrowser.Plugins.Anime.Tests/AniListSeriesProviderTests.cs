@@ -24,7 +24,8 @@ namespace MediaBrowser.Plugins.Anime.Tests
             var downloader = new Mock<IAniListDownloader>();
             downloader.Setup(d => d.DownloadSeriesPage(It.IsAny<string>())).Returns(Task.FromResult(new FileInfo("TestData/anilist/9756.html")));
 
-            var logger = new Mock<ILogger>();
+            var logger = new Mock<ILogManager>();
+            logger.Setup(l => l.GetLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
             var paths = new Mock<IServerApplicationPaths>();
             paths.Setup(p => p.DataPath).Returns("TestData");
