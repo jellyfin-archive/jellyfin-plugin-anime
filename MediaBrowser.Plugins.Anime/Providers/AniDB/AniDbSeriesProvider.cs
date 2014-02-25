@@ -224,6 +224,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                     }
                 }
             }
+
+            GenreHelper.TidyGenres(series);
+            GenreHelper.RemoveDuplicateTags(series);
         }
 
         private void ParseCategories(Series series, XmlReader reader)

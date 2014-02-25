@@ -285,6 +285,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                     }
                 }
             }
+
+            GenreHelper.TidyGenres(info);
+            GenreHelper.RemoveDuplicateTags(info);
         }
 
         private void ParseAirDates(Series info, string data)
