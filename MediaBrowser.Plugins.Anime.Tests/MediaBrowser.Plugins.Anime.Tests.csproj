@@ -65,7 +65,6 @@
   <ItemGroup>
     <Compile Include="AniDbTitleMatcherTests.cs" />
     <Compile Include="AniListSeriesProviderTests.cs" />
-    <Compile Include="MalSeriesProviderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

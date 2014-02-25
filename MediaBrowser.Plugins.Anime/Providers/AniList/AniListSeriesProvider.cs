@@ -17,7 +17,6 @@ using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
 using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers.AniDB;
-using MediaBrowser.Plugins.Anime.Providers.MyAnimeList;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniList
 {
@@ -235,8 +234,39 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             Match match = DescriptionRegex.Match(data);
             if (match.Success)
             {
-                info.Overview = MalSeriesProvider.StripHtml(HttpUtility.HtmlDecode(match.Groups["description"].Value));
+                info.Overview = StripHtml(HttpUtility.HtmlDecode(match.Groups["description"].Value));
             }
+        }
+
+        public static string StripHtml(string source)
+        {
+            var array = new char[source.Length];
+            int arrayIndex = 0;
+            bool inside = false;
+
+            for (int i = 0; i < source.Length; i++)
+            {
+                char c = source[i];
+                if (c == '<')
+                {
+                    inside = true;
+                    continue;
+                }
+
+                if (c == '>')
+                {
+                    inside = false;
+                    continue;
+                }
+
+                if (!inside)
+                {
+                    array[arrayIndex] = c;
+                    arrayIndex++;
+                }
+            }
+
+            return new string(array, 0, arrayIndex);
         }
 
         private void ParseGenres(Series info, string data)

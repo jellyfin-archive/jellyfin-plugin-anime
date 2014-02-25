@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Plugins.Anime.Configuration;
 
 namespace MediaBrowser.Plugins.Anime.Providers
@@ -67,7 +68,48 @@ namespace MediaBrowser.Plugins.Anime.Providers
             {"Psychological Thriller", "Thriller"}
         };
 
-        public static void TidyGenres(SeriesInfo series)
+        public static void CleanupGenres(Series series)
+        {
+            PluginConfiguration config = PluginConfiguration.Instance();
+
+            if (config.TidyGenreList)
+            {
+                series.Genres = RemoveRedundantGenres(series.Genres)
+                                           .Where(g => !"Animation".Equals(g) && !"Anime".Equals(g))
+                                           .Distinct()
+                                           .ToList();
+
+                TidyGenres(series);
+            }
+
+            if (config.MaxGenres > 0)
+            {
+                if (config.MoveExcessGenresToTags)
+                {
+                    foreach (string genre in series.Genres.Skip(config.MaxGenres - 1))
+                    {
+                        if (!series.Tags.Contains(genre))
+                            series.Tags.Add(genre);
+                    }
+                }
+
+                series.Genres = series.Genres.Take(config.MaxGenres - 1).ToList();
+            }
+
+            if (!series.Genres.Contains("Anime"))
+                series.Genres.Add("Anime");
+        }
+
+        public static void RemoveDuplicateTags(Series series)
+        {
+            for (int i = series.Tags.Count - 1; i >= 0; i--)
+            {
+                if (series.Genres.Contains(series.Tags[i]))
+                    series.Tags.RemoveAt(i);
+            }
+        }
+
+        public static void TidyGenres(Series series)
         {
             var config = PluginConfiguration.Instance();
 

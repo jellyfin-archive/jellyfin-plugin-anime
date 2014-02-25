@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers;
@@ -40,16 +41,17 @@ namespace MediaBrowser.Plugins.Anime.Tests
 
             PluginConfiguration.Instance = () => config;
 
-            var anilist = new AniListSeriesProvider(downloader.Object, logger.Object);
-            SeriesInfo info = await anilist.FindSeriesInfo(providerIds, "en", CancellationToken.None);
+            var anilist = new AniListSeriesProvider(downloader.Object, logger.Object, null, null);
+            var info = await anilist.GetMetadata(new SeriesInfo { ProviderIds = providerIds, MetadataLanguage = "en"}, CancellationToken.None);
+            var series = info.Item;
 
-            Assert.That(info.Name, Is.EqualTo("Mahou Shoujo Madoka★Magica"));
-            Assert.That(info.Genres, Contains.Item("Drama"));
-            Assert.That(info.Genres, Contains.Item("Magic"));
-            Assert.That(info.Genres, Contains.Item("Psychological"));
-            Assert.That(info.Genres, Contains.Item("Thriller"));
-            Assert.That(info.StartDate, Is.EqualTo(new DateTime(2011, 1, 7)));
-            Assert.That(info.EndDate, Is.EqualTo(new DateTime(2011, 4, 22)));
+            Assert.That(series.Name, Is.EqualTo("Mahou Shoujo Madoka★Magica"));
+            Assert.That(series.Genres, Contains.Item("Drama"));
+            Assert.That(series.Genres, Contains.Item("Magic"));
+            Assert.That(series.Genres, Contains.Item("Psychological"));
+            Assert.That(series.Genres, Contains.Item("Thriller"));
+            Assert.That(series.PremiereDate, Is.EqualTo(new DateTime(2011, 1, 7)));
+            Assert.That(series.EndDate, Is.EqualTo(new DateTime(2011, 4, 22)));
         }
     }
 }
