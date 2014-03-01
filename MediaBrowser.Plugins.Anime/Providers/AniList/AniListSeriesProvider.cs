@@ -79,7 +79,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
         private string CalculateCacheFilename(string id)
         {
-            return Path.Combine(_appPaths.DataPath, "anilist", id + ".html");
+            return Path.Combine(_appPaths.CachePath, "anilist", id + ".html");
         }
     }
 

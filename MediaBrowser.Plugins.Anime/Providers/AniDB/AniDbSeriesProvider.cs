@@ -112,7 +112,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         public static string CalculateSeriesDataPath(IApplicationPaths paths, string seriesId)
         {
-            return Path.Combine(paths.DataPath, "anidb", "series", seriesId);
+            return Path.Combine(paths.CachePath, "anidb", "series", seriesId);
         }
 
         private void FetchSeriesInfo(Series series, string seriesDataPath, string preferredMetadataLangauge)

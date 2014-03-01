@@ -35,7 +35,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         /// <returns>The path to the anidb data folder.</returns>
         public static string GetDataPath(IApplicationPaths applicationPaths)
         {
-            return Path.Combine(applicationPaths.DataPath, "anidb");
+            return Path.Combine(applicationPaths.CachePath, "anidb");
         }
 
         public async Task Load(CancellationToken cancellationToken)
