@@ -38,17 +38,20 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             }).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<RemoteImageInfo>> GetImages(IHasImages item, CancellationToken cancellationToken)
+        public Task<IEnumerable<RemoteImageInfo>> GetImages(IHasImages item, CancellationToken cancellationToken)
+        {
+            var series = (Series)item;
+            var seriesId = series.GetProviderId(ProviderNames.AniDb);
+            return GetImages(seriesId, cancellationToken);
+        }
+
+        public async Task<IEnumerable<RemoteImageInfo>> GetImages(string aniDbId, CancellationToken cancellationToken)
         {
             var list = new List<RemoteImageInfo>();
 
-            var series = (Series)item;
-
-            var seriesId = series.GetProviderId(ProviderNames.AniDb);
-
-            if (!string.IsNullOrEmpty(seriesId) && series.IndexNumber.HasValue && series.IndexNumber.Value > 0)
+            if (!string.IsNullOrEmpty(aniDbId))
             {
-                var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_appPaths, _httpClient, seriesId, cancellationToken);
+                var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_appPaths, _httpClient, aniDbId, cancellationToken);
                 var imageUrl = FindImageUrl(seriesDataPath);
 
                 if (!string.IsNullOrEmpty(imageUrl))

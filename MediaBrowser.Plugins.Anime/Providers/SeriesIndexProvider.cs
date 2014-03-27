@@ -1,49 +1,45 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Logging;
-using MediaBrowser.Model.Providers;
 using MediaBrowser.Plugins.Anime.Providers.AniDB;
 
 namespace MediaBrowser.Plugins.Anime.Providers
 {
     /// <summary>
-    /// The SeriesIndexProvider class is a metadata provider which finds the absolute series index of an anime series via AniDB data.
+    ///     The SeriesIndexProvider class is a metadata provider which finds the absolute series index of an anime series via
+    ///     AniDB data.
     /// </summary>
     public class SeriesIndexProvider
-        : IRemoteMetadataProvider<Series, SeriesInfo>
+        : ICustomMetadataProvider<Series>, IPreRefreshProvider
     {
-        private readonly IAniDbTitleMatcher _titleMatcher;
         private readonly SeriesIndexSearch _indexSearcher;
         private readonly ILogger _log;
+        private readonly IAniDbTitleMatcher _titleMatcher;
 
-        public SeriesIndexProvider(IAniDbTitleMatcher titleMatcher, ILogManager logManager, IServerConfigurationManager configurationManager, IHttpClient httpClient)
+        public SeriesIndexProvider(ILogManager logManager, IServerConfigurationManager configurationManager, IHttpClient httpClient)
         {
-            _titleMatcher = titleMatcher;
+            _titleMatcher = AniDbTitleMatcher.DefaultInstance;
             _log = logManager.GetLogger("Anime");
             _indexSearcher = new SeriesIndexSearch(configurationManager, httpClient);
         }
 
-        public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
+        public async Task<ItemUpdateType> FetchAsync(Series item, IDirectoryService directoryService, CancellationToken cancellationToken)
         {
-            var result = new MetadataResult<Series>();
-
-            var aniDbId = await FindAniDbId(info, cancellationToken).ConfigureAwait(false);
+            string aniDbId = await FindAniDbId(item, cancellationToken).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(aniDbId))
             {
-                result.Item = new Series();
-                result.HasMetadata = true;
+                item.ProviderIds.Add(ProviderNames.AniDb, aniDbId);
+                item.AnimeSeriesIndex = await _indexSearcher.FindSeriesIndex(aniDbId, cancellationToken).ConfigureAwait(false);
 
-                result.Item.ProviderIds.Add(ProviderNames.AniDb, aniDbId);
-                result.Item.IndexNumber = await _indexSearcher.FindSeriesIndex(aniDbId, cancellationToken).ConfigureAwait(false) - 1;
+                return ItemUpdateType.MetadataImport;
             }
 
-            return result;
+            return ItemUpdateType.None;
         }
 
         public string Name
@@ -51,28 +47,41 @@ namespace MediaBrowser.Plugins.Anime.Providers
             get { return "Anime"; }
         }
 
-        private async Task<string> FindAniDbId(SeriesInfo series, CancellationToken cancellationToken)
+        private async Task<string> FindAniDbId(Series series, CancellationToken cancellationToken)
         {
             string aid = series.ProviderIds.GetOrDefault(ProviderNames.AniDb);
             if (string.IsNullOrEmpty(aid))
-            {
                 aid = await _titleMatcher.FindSeries(series.Name, cancellationToken);
-
-                if (!string.IsNullOrEmpty(aid))
-                    _log.Debug("Identified {0} as AniDB ID {1}", series.Name, aid);
-            }
 
             return aid;
         }
+    }
 
-        public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
+    public class SeriesOrderProvider
+        : ISeriesOrderProvider
+    {
+        private readonly SeriesIndexSearch _indexSearcher;
+        private readonly IAniDbTitleMatcher _titleMatcher;
+
+        public SeriesOrderProvider(IServerConfigurationManager configurationManager, IHttpClient httpClient)
         {
-            return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
+            _titleMatcher = AniDbTitleMatcher.DefaultInstance;
+            _indexSearcher = new SeriesIndexSearch(configurationManager, httpClient);
         }
 
-        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        public async Task<int?> FindSeriesIndex(string seriesName)
         {
-            throw new System.NotImplementedException();
+            var cancellationSource = new CancellationTokenSource();
+            string aniDbId = await _titleMatcher.FindSeries(seriesName, cancellationSource.Token);
+            if (aniDbId == null)
+                return null;
+
+            return await _indexSearcher.FindSeriesIndex(aniDbId, cancellationSource.Token);
+        }
+
+        public string OrderType
+        {
+            get { return SeriesOrderTypes.Anime; }
         }
     }
 }

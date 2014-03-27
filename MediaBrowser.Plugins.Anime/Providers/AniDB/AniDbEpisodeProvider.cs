@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -57,7 +58,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             result.Item = new Episode
             {
                 IndexNumber = info.IndexNumber,
-                IndexNumberEnd = info.IndexNumber,
                 ParentIndexNumber = info.ParentIndexNumber
             };
 
@@ -85,12 +85,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         private async Task<string> FindSeriesFolder(string seriesId, int season, CancellationToken cancellationToken)
         {
-            int seriesIndex = await _indexSearch.FindSeriesIndex(seriesId, cancellationToken).ConfigureAwait(false);
-            int seasonOffset = season - seriesIndex;
-
-            if (seasonOffset != 0)
+            if (season != 1)
             {
-                string id = await _indexSearch.FindSeriesByRelativeIndex(seriesId, seasonOffset, cancellationToken).ConfigureAwait(false);
+                string id = await _indexSearch.FindSeriesByRelativeIndex(seriesId, season - 1, cancellationToken).ConfigureAwait(false);
                 return AniDbSeriesProvider.CalculateSeriesDataPath(_configurationManager.ApplicationPaths, id);
             }
 

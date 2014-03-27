@@ -103,9 +103,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         private readonly IHttpClient _httpClient;
         private readonly ILogger _logger;
 
-        public AniListSeriesProvider(IAniListDownloader downloader, ILogManager logManager, IApplicationPaths appPaths, IHttpClient httpClient)
+        public AniListSeriesProvider(ILogManager logManager, IApplicationPaths appPaths, IHttpClient httpClient)
         {
-            _downloader = downloader;
+            _downloader = new AniListSeriesDownloader(appPaths, logManager.GetLogger("AniList"));
             _logManager = logManager;
             _logger = logManager.GetLogger("AniList");
             _appPaths = appPaths;

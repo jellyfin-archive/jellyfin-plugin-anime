@@ -56,8 +56,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         }
 
         public IAniDbTitleMatcher TitleMatcher { get; set; }
-
-
+        
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
@@ -277,11 +276,35 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                     switch (type)
                     {
                         case "2":
+                            var ids = new List<int>();
+
+                            using (var idSubtree = reader.ReadSubtree())
+                            {
+                                while (idSubtree.Read())
+                                {
+                                    if (idSubtree.NodeType == XmlNodeType.Element && idSubtree.Name == "identifier")
+                                    {
+                                        int id;
+                                        if (int.TryParse(idSubtree.ReadElementContentAsString(), out id))
+                                            ids.Add(id);
+                                    }
+                                }
+                            }
+
+                            if (ids.Count > 0)
+                            {
+                                var firstId = ids.OrderBy(i => i).First().ToString(CultureInfo.InvariantCulture);
+                                series.ProviderIds.Add(ProviderNames.MyAnimeList, firstId);
+                                series.ProviderIds.Add(ProviderNames.AniList, firstId);
+                            }
+
+                            break;
+                        case "4":
                             while (reader.Read())
                             {
-                                if (reader.NodeType == XmlNodeType.Element && reader.Name == "identifier")
+                                if (reader.NodeType == XmlNodeType.Element && reader.Name == "url")
                                 {
-                                    series.ProviderIds.Add(ProviderNames.MyAnimeList, reader.ReadElementContentAsString());
+                                    series.HomePageUrl = reader.ReadElementContentAsString();
                                     break;
                                 }
                             }

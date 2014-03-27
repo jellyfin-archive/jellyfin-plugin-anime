@@ -1,5 +1,7 @@
-﻿using MediaBrowser.Common.Configuration;
+﻿using System.Linq;
+using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
+using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
@@ -16,13 +18,15 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
     /// </summary>
     public class AniDbSeasonImageProvider : IRemoteImageProvider
     {
+        private readonly SeriesIndexSearch _indexSearcher;
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _appPaths;
 
-        public AniDbSeasonImageProvider(IApplicationPaths appPaths, IHttpClient httpClient)
+        public AniDbSeasonImageProvider(IServerConfigurationManager configurationManager,  IApplicationPaths appPaths, IHttpClient httpClient)
         {
             _appPaths = appPaths;
             _httpClient = httpClient;
+            _indexSearcher = new SeriesIndexSearch(configurationManager, httpClient);
         }
 
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
@@ -30,12 +34,20 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return new AniDbSeriesImagesProvider(_httpClient, _appPaths).GetImageResponse(url, cancellationToken);
         }
 
-        public Task<IEnumerable<RemoteImageInfo>> GetImages(IHasImages item, CancellationToken cancellationToken)
+        public async Task<IEnumerable<RemoteImageInfo>> GetImages(IHasImages item, CancellationToken cancellationToken)
         {
             var season = (Season)item;
             var series = season.Series;
 
-            return new AniDbSeriesImagesProvider(_httpClient, _appPaths).GetImages(series, cancellationToken);
+            string seriesId = series.ProviderIds.GetOrDefault(ProviderNames.AniDb);
+            if (string.IsNullOrEmpty(seriesId))
+                return Enumerable.Empty<RemoteImageInfo>();
+
+            string seasonid = await _indexSearcher.FindSeriesByRelativeIndex(seriesId, (season.IndexNumber ?? 1) - 1, cancellationToken).ConfigureAwait(false);
+            if (string.IsNullOrEmpty(seasonid))
+                return Enumerable.Empty<RemoteImageInfo>();
+
+            return await new AniDbSeriesImagesProvider(_httpClient, _appPaths).GetImages(seasonid, cancellationToken);
         }
 
         public IEnumerable<ImageType> GetSupportedImages(IHasImages item)
