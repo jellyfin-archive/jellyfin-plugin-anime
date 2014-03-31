@@ -45,10 +45,6 @@
                             <input id="chkMaxGenres" name="chkMaxGenres" type="number" min="0" value="maxGenres" />
                         </li>
                         <li>
-                            <label for="ignoreTree">Ignore The Following Locations</label>
-                            <div id="ignoreTree" class="ignoreTree" />
-                        </li>
-                        <li>
                             <button type="submit" data-theme="b">Save</button>
                             <button type="button" onclick=" history.back(); ">Cancel</button>
                         </li>
@@ -77,15 +73,6 @@
                         $('#chkMaxGenres', page).val(config.MaxGenres).change();
                         $('#chkMoveExcessGenresToTags', page).checked(config.MoveExcessGenresToTags).checkboxradio("refresh");
                         
-                        for (var i = 0; i < config.IgnoredVirtualFolders.length; i++) {
-                            config.IgnoredVirtualFolders[i] = config.IgnoredVirtualFolders[i].replace(/\\\\/g, "\\");
-                        }
-                        for (var i = 0; i < config.IgnoredPhysicalLocations.length; i++) {
-                            config.IgnoredPhysicalLocations[i] = config.IgnoredPhysicalLocations[i].replace(/\\\\/g, "\\");
-                        }
-
-                        AnimeConfigurationPage.loadCollectionIgnoreTree(page, config);
-
                         Dashboard.hideLoadingMsg();
                     });
                 },
@@ -103,108 +90,11 @@
                         config.MaxGenres = $('#chkMaxGenres').val();
                         config.MoveExcessGenresToTags = $('#chkMoveExcessGenresToTags').prop('checked');
                         
-                        AnimeConfigurationPage.saveCollectionIgnoreTree(config);
-
                         ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).done(function(result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
                         });
                     });
                 },
-
-                createVirtualFolderNode: function (virtualFolder, config) {
-                    var id = AnimeConfigurationPage.virtualFolders.push(virtualFolder.Name) - 1;
-                    
-                    var node = {
-                        attr: {
-                            folderType: "virtual",
-                            folderId: id
-                        },
-                        data: virtualFolder.Name,
-                        state: "closed",
-                        children: virtualFolder.Locations.map(function(location) {
-                            return AnimeConfigurationPage.createFolderNode(location, config);
-                        })
-                    };
-                    
-                    if ($.inArray(virtualFolder.Name, config.IgnoredVirtualFolders) != -1) {
-                        node.attr["class"] = "jstree-checked";
-                    }
-
-                    return node;
-                },
-
-                createFolderNode: function (folder, config) {
-                    var id = AnimeConfigurationPage.physicalFolders.push(folder) - 1;
-
-                    var node = {
-                        attr: {
-                            folderType: "physical",
-                            folderId: id
-                        },
-                        data: folder
-                    };
-
-                    if ($.inArray(folder, config.IgnoredPhysicalLocations) != -1) {
-                        node.attr["class"] = "jstree-checked";
-                    }
-
-                    return node;
-                },
-                
-                loadCollectionIgnoreTree: function (page, config) {
-                    ApiClient.getVirtualFolders().done(function (result) {
-                        var virtualFolderNodes = result
-                            .filter(function(virtualFolder) {
-                                return virtualFolder.CollectionType == "tvshows";
-                            })
-                            .map(function(virtualFolder) {
-                                return AnimeConfigurationPage.createVirtualFolderNode(virtualFolder, config);
-                            });
-                        
-                        $('.ignoreTree').jstree({
-                            "plugins": ["ui", "json_data", "checkbox", "themes"],
-
-                            checkbox: {
-                                real_checkboxes: true,
-                                override_ui: true
-                            },
-
-                            data: virtualFolderNodes,
-
-                            json_data: {
-                                data: virtualFolderNodes
-                            },
-
-                            themes: {
-                                theme: 'default',
-                            }
-                        });
-                    });
-                },
-                
-                saveCollectionIgnoreTree: function(config) {
-                    var checked = $('.ignoreTree').jstree("get_checked");
-                    
-                    config.IgnoredVirtualFolders = checked
-                        .filter(function() {
-                            return $(this).attr("folderType") == "virtual";
-                        })
-                        .map(function() {
-                            var id = $(this).attr("folderId");
-                            return AnimeConfigurationPage.virtualFolders[id];
-                        })
-                        .toArray();
-                    
-                    config.IgnoredPhysicalLocations = checked
-                        .filter(function () {
-                            return $(this).attr("folderType") == "physical";
-                        })
-                        .map(function () {
-                            var id = $(this).attr("folderId");
-                            return AnimeConfigurationPage.physicalFolders[id];
-                        })
-                        .toArray();
-                }
             };
 
             $('#animeConfigurationPage').on('pageshow', function () {

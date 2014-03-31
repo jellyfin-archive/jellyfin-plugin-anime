@@ -27,8 +27,6 @@ namespace MediaBrowser.Plugins.Anime.Configuration
     {
         public TitlePreferenceType TitlePreference { get; set; }
         public bool AllowAutomaticMetadataUpdates { get; set; }
-        public HashSet<string> IgnoredVirtualFolders { get; set; }
-        public HashSet<string> IgnoredPhysicalLocations { get; set; }
         public bool TidyGenreList { get; set; }
         public int MaxGenres { get; set; }
         public bool MoveExcessGenresToTags { get; set; }
@@ -39,8 +37,6 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         {
             TitlePreference = TitlePreferenceType.Localized;
             AllowAutomaticMetadataUpdates = true;
-            IgnoredVirtualFolders = new HashSet<string>();
-            IgnoredPhysicalLocations = new HashSet<string>();
             TidyGenreList = true;
             MaxGenres = 5;
             MoveExcessGenresToTags = true;

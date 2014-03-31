@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Web;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
+using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Logging;
@@ -26,7 +27,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         FileInfo GetCachedSeriesPage(string id);
     }
 
-    public class AniListSeriesDownloader : IAniListDownloader
+    public class AniListSeriesDownloader : IAniListDownloader, IHasOrder
     {
         private const string SeriesUrl = "http://anilist.co/anime/{0}/";
 
@@ -81,6 +82,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         {
             return Path.Combine(_appPaths.CachePath, "anilist", id + ".html");
         }
+
+        public int Order { get { return 0; } }
     }
 
     public class AniListSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
@@ -97,19 +100,15 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         private static readonly Regex GenreRegex = new Regex(@"(?<genre>.*?)<br>", RegexOptions.Singleline | RegexOptions.Compiled);
         private static readonly Regex RatingRegex = new Regex(@"<li><span class='type'>Rating:</span><span class='value'>(?<rating>.*?)( - .*?)?</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
 
-        private readonly IApplicationPaths _appPaths;
         private readonly IAniListDownloader _downloader;
-        private readonly ILogManager _logManager;
-        private readonly IHttpClient _httpClient;
         private readonly ILogger _logger;
+        private readonly AniDbSeriesProvider _anidbSeriesProvider;
 
-        public AniListSeriesProvider(ILogManager logManager, IApplicationPaths appPaths, IHttpClient httpClient)
+        public AniListSeriesProvider(ILogManager logManager, IApplicationPaths appPaths, IHttpClient httpClient, IServerConfigurationManager configurationManger)
         {
             _downloader = new AniListSeriesDownloader(appPaths, logManager.GetLogger("AniList"));
-            _logManager = logManager;
             _logger = logManager.GetLogger("AniList");
-            _appPaths = appPaths;
-            _httpClient = httpClient;
+            _anidbSeriesProvider = new AniDbSeriesProvider(appPaths, httpClient, configurationManger);
         }
 
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
@@ -120,8 +119,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             if (string.IsNullOrEmpty(seriesId))
             {
                 // ask the AniDB provider to see if it can find the IDs
-                var aniDbProvider = new AniDbSeriesProvider(_appPaths, _httpClient, _logManager);
-                MetadataResult<Series> aniDbResult = await aniDbProvider.GetMetadata(info, cancellationToken).ConfigureAwait(false);
+                MetadataResult<Series> aniDbResult = await _anidbSeriesProvider.GetMetadata(info, cancellationToken).ConfigureAwait(false);
 
                 if (!aniDbResult.HasMetadata || aniDbResult.Item == null)
                     return result;

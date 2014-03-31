@@ -18,21 +18,29 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         private readonly SeriesIndexSearch _indexSearcher;
         private readonly AniDbSeriesProvider _seriesProvider;
 
-        public AniDbSeasonProvider(IServerConfigurationManager configurationManager, IHttpClient httpClient, IApplicationPaths appPaths, ILogManager logManager)
+        public AniDbSeasonProvider(IServerConfigurationManager configurationManager, IHttpClient httpClient, IApplicationPaths appPaths)
         {
             _indexSearcher = new SeriesIndexSearch(configurationManager, httpClient);
-            _seriesProvider = new AniDbSeriesProvider(appPaths, httpClient, logManager);
+            _seriesProvider = new AniDbSeriesProvider(appPaths, httpClient, configurationManager);
         }
 
         public async Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)
         {
-            var result = new MetadataResult<Season>();
+            var result = new MetadataResult<Season> {
+                HasMetadata = true,
+                Item = new Season {
+                    Name = info.Name,
+                    IndexNumber = info.IndexNumber
+                }
+            };
             
             string seriesId = info.SeriesProviderIds.GetOrDefault(ProviderNames.AniDb);
             if (seriesId == null)
                 return result;
 
             string seasonid = await _indexSearcher.FindSeriesByRelativeIndex(seriesId, (info.IndexNumber ?? 1) - 1, cancellationToken).ConfigureAwait(false);
+            if (seasonid == null)
+                return result;
 
             var seriesInfo = new SeriesInfo();
             seriesInfo.ProviderIds.Add(ProviderNames.AniDb, seasonid);
@@ -40,20 +48,15 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             var seriesResult = await _seriesProvider.GetMetadata(seriesInfo, cancellationToken);
             if (seriesResult.HasMetadata)
             {
-                result.HasMetadata = true;
-                result.Item = new Season
-                {
-                    IndexNumber = info.IndexNumber,
-                    Name = seriesResult.Item.Name,
-                    Overview = seriesResult.Item.Overview,
-                    PremiereDate = seriesResult.Item.PremiereDate,
-                    EndDate = seriesResult.Item.EndDate,
-                    CommunityRating = seriesResult.Item.CommunityRating,
-                    VoteCount = seriesResult.Item.VoteCount,
-                    People = seriesResult.Item.People,
-                    Studios = seriesResult.Item.Studios,
-                    Genres = seriesResult.Item.Genres
-                };
+                result.Item.Name = seriesResult.Item.Name;
+                result.Item.Overview = seriesResult.Item.Overview;
+                result.Item.PremiereDate = seriesResult.Item.PremiereDate;
+                result.Item.EndDate = seriesResult.Item.EndDate;
+                result.Item.CommunityRating = seriesResult.Item.CommunityRating;
+                result.Item.VoteCount = seriesResult.Item.VoteCount;
+                result.Item.People = seriesResult.Item.People;
+                result.Item.Studios = seriesResult.Item.Studios;
+                result.Item.Genres = seriesResult.Item.Genres;
             }
 
             return result;

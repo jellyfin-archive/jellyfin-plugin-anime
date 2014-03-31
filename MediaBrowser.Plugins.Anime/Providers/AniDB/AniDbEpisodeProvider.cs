@@ -88,6 +88,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             if (season != 1)
             {
                 string id = await _indexSearch.FindSeriesByRelativeIndex(seriesId, season - 1, cancellationToken).ConfigureAwait(false);
+                if (string.IsNullOrEmpty(id))
+                    return null;
+
                 return AniDbSeriesProvider.CalculateSeriesDataPath(_configurationManager.ApplicationPaths, id);
             }
 

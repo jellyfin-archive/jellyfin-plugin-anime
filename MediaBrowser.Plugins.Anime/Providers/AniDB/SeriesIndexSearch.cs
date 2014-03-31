@@ -46,6 +46,18 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         }
 
         /// <summary>
+        /// Gets the ID of the original series by air date order.
+        /// </summary>
+        /// <param name="anidbId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<string> FindOriginalSeriesId(string anidbId, CancellationToken cancellationToken)
+        {
+            var sequence = await GetSeriesSequence(anidbId, cancellationToken);
+            return sequence.FirstOrDefault();
+        }
+
+        /// <summary>
         /// Gets the AniDB ID of a series prequel or sequel relative to the given series.
         /// </summary>
         /// <param name="anidbId">The series to start searching from.</param>
@@ -55,10 +67,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         public async Task<string> FindSeriesByRelativeIndex(string anidbId, int offset, CancellationToken cancellationToken)
         {
             var sequence = await GetSeriesSequence(anidbId, cancellationToken);
-            var index = Array.IndexOf(sequence, anidbId);
+            var index = Array.IndexOf(sequence, anidbId) + offset;
 
-            return sequence[Math.Max(0, Math.Min(index + offset, sequence.Length - 1))];
-        }
+            if (index < 0 || index > sequence.Length - 1)
+                return null;
+
+            return sequence[index];
+        } 
 
         private async Task<string[]> GetSeriesSequence(string anidbId, CancellationToken cancellationToken)
         {
@@ -174,7 +189,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 indexOffset = (indexOffset > 0) ? indexOffset - 1 : indexOffset + 1;
 
             if (indexOffset == 0)
-                return Path.GetDirectoryName(relatedData);
+            {
+                var dir = Path.GetDirectoryName(relatedData);
+                return new DirectoryInfo(dir).Name;
+            }
 
             return await FindRelated(Path.GetDirectoryName(relatedData), indexOffset, cancellationToken);
         }
