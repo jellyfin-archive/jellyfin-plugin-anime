@@ -185,7 +185,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
                                 break;
                             case "description":
-                                series.Overview = StripAniDbLinks(reader.ReadElementContentAsString());
+                                series.Overview = ReplaceLineFeedWithNewLine(StripAniDbLinks(reader.ReadElementContentAsString()));
 
                                 break;
                             case "ratings":
@@ -321,6 +321,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         private string StripAniDbLinks(string text)
         {
             return AniDbUrlRegex.Replace(text, "${name}");
+        }
+
+        public static string ReplaceLineFeedWithNewLine(string text)
+        {
+            return text.Replace("\n", Environment.NewLine);
         }
 
         private void ParseActors(Series series, XmlReader reader)

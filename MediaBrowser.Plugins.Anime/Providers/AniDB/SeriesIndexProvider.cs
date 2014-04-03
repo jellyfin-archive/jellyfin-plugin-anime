@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Net;
@@ -6,6 +7,7 @@ using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Logging;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 {

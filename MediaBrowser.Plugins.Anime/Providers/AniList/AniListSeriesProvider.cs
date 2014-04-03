@@ -240,6 +240,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
         public static string StripHtml(string source)
         {
+            source = new[] {"<br/>", "<BR/>", "<br />", "<BR />"}.Aggregate(source, (current, lineBreak) => current.Replace(lineBreak, Environment.NewLine));
+
             var array = new char[source.Length];
             int arrayIndex = 0;
             bool inside = false;

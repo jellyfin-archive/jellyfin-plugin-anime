@@ -84,7 +84,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 if (!_cache.TryGetValue(anidbId, out sequence))
                 {
                     sequence = await FindSeriesSequence(anidbId, cancellationToken);
-                    _cache.Add(anidbId, sequence);
+                    _cache[anidbId] = sequence;
 //                    foreach (var series in sequence)
 //                    {
 //                        _cache.Add(series, sequence);
