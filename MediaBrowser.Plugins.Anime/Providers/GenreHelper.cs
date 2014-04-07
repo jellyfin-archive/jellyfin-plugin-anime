@@ -111,7 +111,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
         public static void TidyGenres(Series series)
         {
-            var config = PluginConfiguration.Instance();
+            var config = PluginConfiguration.Instance != null ? PluginConfiguration.Instance() : new PluginConfiguration();
 
             var genres = new HashSet<string>();
             var tags = new HashSet<string>(series.Tags);

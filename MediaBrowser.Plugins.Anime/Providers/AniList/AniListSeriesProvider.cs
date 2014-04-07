@@ -172,7 +172,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             throw new NotImplementedException();
         }
 
-        private void ParseStudio(Series info, string data)
+        public static void ParseStudio(Series info, string data)
         {
             Match match = StudioRegex.Match(data);
             if (match.Success)
@@ -182,7 +182,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             }
         }
 
-        private void ParseTitle(Series info, string data, string preferredMetadataLanguage)
+        public static void ParseTitle(Series info, string data, string preferredMetadataLanguage)
         {
             var titles = new List<Title>();
 
@@ -222,14 +222,15 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 });
             }
 
-            Title preferredTitle = titles.Localize(PluginConfiguration.Instance().TitlePreference, preferredMetadataLanguage);
+            var config = PluginConfiguration.Instance != null ? PluginConfiguration.Instance() : null;
+            Title preferredTitle = titles.Localize(config != null ? PluginConfiguration.Instance().TitlePreference : TitlePreferenceType.JapaneseRomaji, preferredMetadataLanguage);
             if (preferredTitle != null)
             {
                 info.Name = preferredTitle.Name;
             }
         }
 
-        private void ParseSummary(Series info, string data)
+        public static void ParseSummary(Series info, string data)
         {
             Match match = DescriptionRegex.Match(data);
             if (match.Success)
@@ -271,7 +272,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             return new string(array, 0, arrayIndex);
         }
 
-        private void ParseGenres(Series info, string data)
+        public static void ParseGenres(Series info, string data)
         {
             Match genreListMatch = GenreListRegex.Match(data);
             if (genreListMatch.Success)
@@ -290,7 +291,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             GenreHelper.RemoveDuplicateTags(info);
         }
 
-        private void ParseAirDates(Series info, string data)
+        public static void ParseAirDates(Series info, string data)
         {
             Match startMatch = StartDateRegex.Match(data);
             if (startMatch.Success)
@@ -313,7 +314,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             }
         }
 
-        private void ParseDuration(Series info, string data)
+        public static void ParseDuration(Series info, string data)
         {
             Match match = DurationRegex.Match(data);
             if (match.Success)
@@ -326,7 +327,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             }
         }
 
-        private void ParseRating(Series info, string data)
+        public static void ParseRating(Series info, string data)
         {
             Match match = RatingRegex.Match(data);
             if (match.Success)
