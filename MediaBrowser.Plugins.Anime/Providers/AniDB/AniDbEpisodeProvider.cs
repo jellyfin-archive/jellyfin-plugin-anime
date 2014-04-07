@@ -51,7 +51,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             if (string.IsNullOrEmpty(seriesFolder))
                 return result;
 
-            FileInfo xml = GetEpisodeXmlFile(info, seriesFolder);
+            FileInfo xml = GetEpisodeXmlFile(info.IndexNumber, (info.ParentIndexNumber ?? 1) == 0, seriesFolder);
             if (xml == null || !xml.Exists)
                 return result;
 
@@ -65,7 +65,66 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
             ParseEpisodeXml(xml, result.Item, info.MetadataLanguage);
 
+            if (info.IndexNumber != null && info.IndexNumberEnd != null && info.IndexNumberEnd.Value > info.IndexNumber.Value) 
+            {
+                for (int i = info.IndexNumber.Value + 1; i <= info.IndexNumberEnd.Value; i++) {
+                    FileInfo additionalXml = GetEpisodeXmlFile(i, (info.ParentIndexNumber ?? 1) == 0, seriesFolder);
+                    if (additionalXml == null || !additionalXml.Exists)
+                        continue;
+
+                    ParseAdditionalEpisodeXml(additionalXml, result.Item, info.MetadataLanguage);
+                }
+            }
+
             return result;
+        }
+
+        private void ParseAdditionalEpisodeXml(FileInfo xml, Episode episode, string metadataLanguage)
+        {
+            var settings = new XmlReaderSettings {
+                CheckCharacters = false,
+                IgnoreProcessingInstructions = true,
+                IgnoreComments = true,
+                ValidationType = ValidationType.None
+            };
+
+            using (StreamReader streamReader = xml.OpenText())
+            using (XmlReader reader = XmlReader.Create(streamReader, settings)) {
+                reader.MoveToContent();
+
+                var titles = new List<Title>();
+
+                while (reader.Read()) {
+                    if (reader.NodeType == XmlNodeType.Element) {
+                        switch (reader.Name) {
+                            case "length":
+                                string length = reader.ReadElementContentAsString();
+                                if (!string.IsNullOrEmpty(length)) {
+                                    long duration;
+                                    if (long.TryParse(length, out duration))
+                                        episode.RunTimeTicks += TimeSpan.FromMinutes(duration).Ticks;
+                                }
+
+                                break;
+                            case "title":
+                                string language = reader.GetAttribute("xml:lang");
+                                string name = reader.ReadElementContentAsString();
+
+                                titles.Add(new Title {
+                                    Language = language,
+                                    Type = "main",
+                                    Name = name
+                                });
+
+                                break;
+                        }
+                    }
+                }
+
+                string title = titles.Localize(PluginConfiguration.Instance().TitlePreference, metadataLanguage).Name;
+                if (!string.IsNullOrEmpty(title))
+                    episode.Name += ", " + title;
+            }
         }
 
         public string Name
@@ -174,15 +233,15 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             }
         }
 
-        private FileInfo GetEpisodeXmlFile(Controller.Providers.EpisodeInfo episode, string seriesDataPath)
+        private FileInfo GetEpisodeXmlFile(int? episodeNumber, bool special, string seriesDataPath)
         {
-            if (episode.IndexNumber == null)
+            if (episodeNumber == null)
             {
                 return null;
             }
 
-            string nameFormat = (episode.ParentIndexNumber == 0) ? "episode-S{0}.xml" : "episode-{0}.xml";
-            string filename = Path.Combine(seriesDataPath, string.Format(nameFormat, episode.IndexNumber.Value));
+            string nameFormat = special ? "episode-S{0}.xml" : "episode-{0}.xml";
+            string filename = Path.Combine(seriesDataPath, string.Format(nameFormat, episodeNumber.Value));
             return new FileInfo(filename);
         }
     }
