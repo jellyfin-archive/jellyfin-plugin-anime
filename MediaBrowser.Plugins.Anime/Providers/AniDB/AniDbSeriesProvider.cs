@@ -391,7 +391,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                                            CultureInfo.InvariantCulture,
                                            out rating))
                         {
-                            series.CommunityRating = rating;
+                            series.CommunityRating = (float)Math.Round(rating, 1);
                         }
                     }
                 }
