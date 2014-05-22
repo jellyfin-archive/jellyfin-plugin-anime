@@ -16,6 +16,20 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
     /// </summary>
     public class AniDbTitleMatcher : IAniDbTitleMatcher
     {
+        private enum TitleType
+        {
+            Main = 0,
+            Official = 1,
+            Short = 2,
+            Synonym = 3
+        }
+
+        private struct TitleInfo
+        {
+            public string AniDbId { get; set; }
+            public TitleType Type { get; set; }
+        }
+
         //todo replace the singleton IAniDbTitleMatcher with an injected dependency if/when MediaBrowser allows plugins to register their own components
         /// <summary>
         /// Gets or sets the global <see cref="IAniDbTitleMatcher"/> instance.
@@ -26,7 +40,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         private readonly IAniDbTitleDownloader _downloader;
         private readonly AsyncLock _lock;
 
-        private Dictionary<string, string> _titles;
+        private Dictionary<string, IList<TitleInfo>> _titles;
         
         /// <summary>
         /// Creates a new instance of the AniDbTitleMatcher class.
@@ -55,16 +69,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 }
             }
 
-            string aid;
-            if (_titles.TryGetValue(title, out aid))
-            {
-                return aid;
-            }
-            
-            title = GetComparableName(title);
-            if (_titles.TryGetValue(title, out aid))
-            {
-                return aid;
+            return LookupAniDbId(title) ?? LookupAniDbId(GetComparableName(title));
+        }
+
+        private string LookupAniDbId(string title)
+        {
+            IList<TitleInfo> info;
+            if (_titles.TryGetValue(title, out info)) {
+                return info.OrderBy(i => (int) i.Type).Select(i => i.AniDbId).FirstOrDefault();
             }
 
             return null;
@@ -125,7 +137,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         {
             if (_titles == null)
             {
-                _titles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                _titles = new Dictionary<string, IList<TitleInfo>>(StringComparer.OrdinalIgnoreCase);
             }
             else
             {
@@ -176,9 +188,16 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                                     break;
                                 case "title":
                                     var title = reader.ReadElementContentAsString();
-                                    if (!string.IsNullOrEmpty(aid) && !string.IsNullOrEmpty(title))
-                                    {
-                                        _titles[title] = aid;
+                                    if (!string.IsNullOrEmpty(aid) && !string.IsNullOrEmpty(title)) {
+                                        var type = ParseType(reader.GetAttribute("type"));
+
+                                        IList<TitleInfo> items;
+                                        if (!_titles.TryGetValue(title, out items)) {
+                                            items = new List<TitleInfo>();
+                                            _titles[title] = items;
+                                        }
+
+                                        items.Add(new TitleInfo {AniDbId = aid, Type = type});
                                     }
                                     break;
                             }
@@ -197,6 +216,22 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                     _titles[pair.Title] = pair.Id;
                 }
             });
+        }
+
+        private TitleType ParseType(string type)
+        {
+            switch (type) {
+                case "main":
+                    return TitleType.Main;
+                case "official":
+                    return TitleType.Official;
+                case "short":
+                    return TitleType.Short;
+                case "syn":
+                    return TitleType.Synonym;
+            }
+
+            return TitleType.Synonym;
         }
     }
 }

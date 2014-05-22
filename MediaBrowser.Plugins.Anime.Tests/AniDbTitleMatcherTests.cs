@@ -30,6 +30,13 @@ namespace MediaBrowser.Plugins.Anime.Tests
             Assert.That(await matcher.FindSeries("サザンアイズ"), Is.EqualTo("2"));
             Assert.That(await matcher.FindSeries("3x3 Eyes"), Is.EqualTo("2"));
             Assert.That(await matcher.FindSeries("Sazan Eyes"), Is.EqualTo("2"));
+
+            Assert.That(await matcher.FindSeries("Black Rock Shooter"), Is.EqualTo("6820"));
+            Assert.That(await matcher.FindSeries("ブラック★ロックシューター"), Is.EqualTo("6820"));
+            Assert.That(await matcher.FindSeries("brs"), Is.EqualTo("6820"));
+            Assert.That(await matcher.FindSeries("BLACK★ROCK SHOOTER"), Is.EqualTo("6820"));
+            Assert.That(await matcher.FindSeries("Black Rock Shooter (2012)"), Is.EqualTo("8584"));
+            Assert.That(await matcher.FindSeries("ブラック★ロックシューター (2012)"), Is.EqualTo("8584"));
         }
 
         [Test]
