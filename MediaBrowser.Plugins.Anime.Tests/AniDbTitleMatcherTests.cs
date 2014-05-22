@@ -12,7 +12,7 @@ namespace MediaBrowser.Plugins.Anime.Tests
     public class AniDbTitleMatcherTests
     {
         [Test]
-        public async Task LoadsOnFindIfNotLoaded()
+        public async Task ParseHtml()
         {
             var logger = new Mock<ILogger>();
 

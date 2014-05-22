@@ -196,7 +196,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                                         TitleInfo currentTitleInfo;
                                         if (!_titles.TryGetValue(title, out currentTitleInfo) || (int)currentTitleInfo.Type < (int)type)
                                         {
-                                            _titles[title] = new TitleInfo {AniDbId = title, Type = type};
+                                            _titles[title] = new TitleInfo {AniDbId = aid, Type = type};
                                         }
                                     }
                                     break;
