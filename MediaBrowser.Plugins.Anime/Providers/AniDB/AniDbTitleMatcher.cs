@@ -40,7 +40,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         private readonly IAniDbTitleDownloader _downloader;
         private readonly AsyncLock _lock;
 
-        private Dictionary<string, IList<TitleInfo>> _titles;
+        private Dictionary<string, TitleInfo> _titles;
         
         /// <summary>
         /// Creates a new instance of the AniDbTitleMatcher class.
@@ -74,9 +74,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         private string LookupAniDbId(string title)
         {
-            IList<TitleInfo> info;
-            if (_titles.TryGetValue(title, out info)) {
-                return info.OrderBy(i => (int) i.Type).Select(i => i.AniDbId).FirstOrDefault();
+            TitleInfo info;
+            if (_titles.TryGetValue(title, out info)) 
+            {
+                return info.AniDbId;
             }
 
             return null;
@@ -137,7 +138,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         {
             if (_titles == null)
             {
-                _titles = new Dictionary<string, IList<TitleInfo>>(StringComparer.OrdinalIgnoreCase);
+                _titles = new Dictionary<string, TitleInfo>(StringComparer.OrdinalIgnoreCase);
             }
             else
             {
@@ -188,16 +189,15 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                                     break;
                                 case "title":
                                     var title = reader.ReadElementContentAsString();
-                                    if (!string.IsNullOrEmpty(aid) && !string.IsNullOrEmpty(title)) {
+                                    if (!string.IsNullOrEmpty(aid) && !string.IsNullOrEmpty(title)) 
+                                    {
                                         var type = ParseType(reader.GetAttribute("type"));
 
-                                        IList<TitleInfo> items;
-                                        if (!_titles.TryGetValue(title, out items)) {
-                                            items = new List<TitleInfo>();
-                                            _titles[title] = items;
+                                        TitleInfo currentTitleInfo;
+                                        if (!_titles.TryGetValue(title, out currentTitleInfo) || (int)currentTitleInfo.Type < (int)type)
+                                        {
+                                            _titles[title] = new TitleInfo {AniDbId = title, Type = type};
                                         }
-
-                                        items.Add(new TitleInfo {AniDbId = aid, Type = type});
                                     }
                                     break;
                             }
