@@ -28,7 +28,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             _indexSearcher = new SeriesIndexSearch(configurationManager, httpClient);
         }
 
-        public async Task<ItemUpdateType> FetchAsync(Series item, IDirectoryService directoryService, CancellationToken cancellationToken)
+        public async Task<ItemUpdateType> FetchAsync(Series item, MetadataRefreshOptions refreshOptions, CancellationToken cancellationToken)
         {
             string aniDbId = await FindAniDbId(item, cancellationToken).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(aniDbId))

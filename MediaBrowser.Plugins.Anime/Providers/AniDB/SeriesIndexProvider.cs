@@ -20,7 +20,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             _indexSearcher = new SeriesIndexSearch(configurationManager, httpClient);
         }
 
-        public async Task<ItemUpdateType> FetchAsync(Series item, IDirectoryService directoryService, CancellationToken cancellationToken)
+        public async Task<ItemUpdateType> FetchAsync(Series item, MetadataRefreshOptions refreshOptions, CancellationToken cancellationToken)
         {
             string aid = item.ProviderIds.GetOrDefault(ProviderNames.AniDb);
             if (string.IsNullOrEmpty(aid))
