@@ -132,9 +132,55 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             get { return "AniDB"; }
         }
 
-        public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(Controller.Providers.EpisodeInfo searchInfo, CancellationToken cancellationToken)
+        public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(Controller.Providers.EpisodeInfo searchInfo, CancellationToken cancellationToken)
         {
-            return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
+            var list = new List<RemoteSearchResult>();
+
+            var identity = searchInfo.Identities.FirstOrDefault(id => id.Type == ProviderNames.AniDb) ?? await FindIdentity(searchInfo).ConfigureAwait(false);
+
+            if (identity != null)
+            {
+                //await AniDbSeriesProvider.Current.EnsureSeriesInfo(identity.SeriesId, searchInfo.MetadataLanguage,
+                //        cancellationToken).ConfigureAwait(false);
+                await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClient, identity.SeriesId,
+                        cancellationToken).ConfigureAwait(false);
+
+                var seriesDataPath = AniDbSeriesProvider.GetSeriesDataPath(_configurationManager.ApplicationPaths, identity.SeriesId);
+
+                try
+                {
+                    //var metadataResult = FetchEpisodeData(searchInfo, identity, seriesDataPath, searchInfo.SeriesProviderIds, cancellationToken);
+                    var metadataResult = await GetMetadata(searchInfo, cancellationToken).ConfigureAwait(false);
+
+                    if (metadataResult.HasMetadata)
+                    {
+                        var item = metadataResult.Item;
+
+                        list.Add(new RemoteSearchResult
+                        {
+                            IndexNumber = item.IndexNumber,
+                            Name = item.Name,
+                            ParentIndexNumber = item.ParentIndexNumber,
+                            PremiereDate = item.PremiereDate,
+                            ProductionYear = item.ProductionYear,
+                            ProviderIds = item.ProviderIds,
+                            SearchProviderName = Name,
+                            IndexNumberEnd = item.IndexNumberEnd
+                        });
+                    }
+                }
+                catch (FileNotFoundException)
+                {
+                    // Don't fail the provider because this will just keep on going and going.
+                }
+                catch (DirectoryNotFoundException)
+                {
+                    // Don't fail the provider because this will just keep on going and going.
+                }
+            }
+
+            return list;
+            //return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
         }
 
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
@@ -240,9 +286,31 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 return null;
             }
 
-            string nameFormat = special ? "episode-S{0}.xml" : "episode-{0}.xml";
+            string nameFormat = special ? "episode-1-S{0}.xml" : "episode-{0}.xml";
             string filename = Path.Combine(seriesDataPath, string.Format(nameFormat, episodeNumber.Value));
             return new FileInfo(filename);
+        }
+
+        public Task<EpisodeIdentity> FindIdentity(EpisodeInfo info)
+        {
+            string seriesTvdbId;
+            info.SeriesProviderIds.TryGetValue(ProviderNames.AniDb, out seriesTvdbId);
+
+            if (string.IsNullOrEmpty(seriesTvdbId) || info.IndexNumber == null)
+            {
+                return Task.FromResult<EpisodeIdentity>(null);
+            }
+
+            var id = new EpisodeIdentity
+            {
+                Type = ProviderNames.AniDb,
+                SeriesId = seriesTvdbId,
+                SeasonIndex = info.ParentIndexNumber,
+                IndexNumber = info.IndexNumber.Value,
+                IndexNumberEnd = info.IndexNumberEnd
+            };
+
+            return Task.FromResult(id);
         }
     }
 }

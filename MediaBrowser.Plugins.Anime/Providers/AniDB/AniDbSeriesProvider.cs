@@ -17,6 +17,7 @@ using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
@@ -31,6 +32,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         private const string SeriesQueryUrl = "http://api.anidb.net:9001/httpapi?request=anime&client={0}&clientver=1&protover=1&aid={1}";
         private const string ClientName = "mediabrowser";
 
+        private const string TvdbSeriesOffset = "TvdbSeriesOffset";
+        private const string TvdbSeriesOffsetFormat = "{0}-{1}";
+        internal static AniDbSeriesProvider Current { get; private set; }
+
         // AniDB has very low request rate limits, a minimum of 2 seconds between requests, and an average of 4 seconds between requests
         public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
         public static readonly RateLimiter RequestLimiter = new RateLimiter(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(5));
@@ -39,6 +44,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         private static readonly Regex AniDbUrlRegex = new Regex(@"http://anidb.net/\w+ \[(?<name>[^\]]*)\]");
         private readonly IApplicationPaths _appPaths;
         private readonly IHttpClient _httpClient;
+        private readonly ILibraryManager _libraryManager;
         private readonly SeriesIndexSearch _indexSearcher;
 
         private readonly Dictionary<string, string> _typeMappings = new Dictionary<string, string>
@@ -48,13 +54,16 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             {"Chief Animation Direction", "Chief Animation Director"}
         };
 
-        public AniDbSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, IServerConfigurationManager configurationManager)
+        public AniDbSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, IServerConfigurationManager configurationManager, ILibraryManager libraryManager)
         {
             _appPaths = appPaths;
             _httpClient = httpClient;
             _indexSearcher = new SeriesIndexSearch(configurationManager, httpClient);
+            _libraryManager =  libraryManager;
 
             TitleMatcher = AniDbTitleMatcher.DefaultInstance;
+
+            Current = this;
         }
 
         public IAniDbTitleMatcher TitleMatcher { get; set; }
@@ -87,9 +96,30 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             get { return "AniDB"; }
         }
 
-        public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
+        public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
         {
-            return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
+            var seriesId = searchInfo.GetProviderId(ProviderNames.AniDb);
+
+            var metadata = await GetMetadata(searchInfo, cancellationToken).ConfigureAwait(false);
+
+            var list = new List<RemoteSearchResult>();
+
+            if (metadata.HasMetadata)
+            {
+                var res = new RemoteSearchResult
+                {
+                    Name = metadata.Item.Name,
+                    PremiereDate = metadata.Item.PremiereDate,
+                    ProductionYear = metadata.Item.ProductionYear,
+                    ProviderIds = metadata.Item.ProviderIds,
+                    SearchProviderName = Name
+                };
+
+                list.Add(res);
+            }
+
+            return list;
+            //return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
         }
 
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
@@ -222,6 +252,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                                 }
 
                                 break;
+                            case "episodes":
+                                using (XmlReader subtree = reader.ReadSubtree())
+                                {
+                                    ParseEpisodes(series, subtree);
+                                }
+
+                                break;
                         }
                     }
                 }
@@ -229,6 +266,44 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
             GenreHelper.TidyGenres(series);
             GenreHelper.RemoveDuplicateTags(series);
+        }
+
+        private void ParseEpisodes(Series series, XmlReader reader)
+        {
+            var episodes = new List<EpisodeInfo>();
+
+            while (reader.Read())
+            {
+                if (reader.NodeType == XmlNodeType.Element && reader.Name == "episode")
+                {
+                    int id;
+                    if (int.TryParse(reader.GetAttribute("id"), out id) && IgnoredCategoryIds.Contains(id))
+                        continue;
+
+                    using (XmlReader episodeSubtree = reader.ReadSubtree())
+                    {
+                        while (episodeSubtree.Read())
+                        {
+                            if (episodeSubtree.NodeType == XmlNodeType.Element)
+                            {
+                                switch (episodeSubtree.Name)
+                                {
+                                    case "epno":
+                                        string epno = episodeSubtree.ReadElementContentAsString();
+                                        //EpisodeInfo info = new EpisodeInfo();
+                                        //info.AnimeSeriesIndex = series.AnimeSeriesIndex;
+                                        //info.IndexNumberEnd = string(epno);
+                                        //info.SeriesProviderIds.GetOrDefault(ProviderNames.AniDb);
+                                        //episodes.Add(info);
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            //series.Genres = genres.OrderBy(g => g.Weight).Select(g => g.Name).ToList();
         }
 
         private void ParseCategories(Series series, XmlReader reader)
@@ -366,9 +441,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 }
             }
 
-            if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(role) && series.People.All(p => p.Name != name))
+            if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(role)) // && series.People.All(p => p.Name != name))
             {
-                series.People.Add(CreatePerson(name, PersonType.Actor, role));
+                series.AddPerson(CreatePerson(name, PersonType.Actor, role));
             }
         }
 
@@ -437,7 +512,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                     }
                     else
                     {
-                        series.People.Add(CreatePerson(name, type));
+                        series.AddPerson(CreatePerson(name, type));
                     }
                 }
             }
@@ -741,6 +816,48 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         }
 
         public int Order { get { return -1; } }
+
+        /// <summary>
+        /// Gets the series data path.
+        /// </summary>
+        /// <param name="appPaths">The app paths.</param>
+        /// <param name="seriesId">The series id.</param>
+        /// <returns>System.String.</returns>
+        internal static string GetSeriesDataPath(IApplicationPaths appPaths, string seriesId)
+        {
+            var seriesDataPath = Path.Combine(GetSeriesDataPath(appPaths), seriesId);
+
+            return seriesDataPath;
+        }
+
+        /// <summary>
+        /// Gets the series data path.
+        /// </summary>
+        /// <param name="appPaths">The app paths.</param>
+        /// <returns>System.String.</returns>
+        internal static string GetSeriesDataPath(IApplicationPaths appPaths)
+        {
+            var dataPath = Path.Combine(appPaths.CachePath, "anidb\\series");
+
+            return dataPath;
+        }
+
+        internal static int? GetSeriesOffset(Dictionary<string, string> seriesProviderIds)
+        {
+            string idString;
+            if (!seriesProviderIds.TryGetValue(TvdbSeriesOffset, out idString))
+                return null;
+
+            var parts = idString.Split('-');
+            if (parts.Length < 2)
+                return null;
+
+            int offset;
+            if (int.TryParse(parts[1], out offset))
+                return offset;
+
+            return null;
+        }
     }
 
     public class Title
@@ -787,5 +904,30 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                    titlesList.FirstOrDefault(t => t.Type == "main") ??
                    titlesList.FirstOrDefault();
         }
-    }
+         /// <summary>
+        /// Gets the series data path.
+        /// </summary>
+        /// <param name="appPaths">The app paths.</param>
+        /// <param name="seriesId">The series id.</param>
+        /// <returns>System.String.</returns>
+        internal static string GetSeriesDataPath(IApplicationPaths appPaths, string seriesId)
+        {
+            var seriesDataPath = Path.Combine(GetSeriesDataPath(appPaths), seriesId);
+
+            return seriesDataPath;
+        }
+
+        /// <summary>
+        /// Gets the series data path.
+        /// </summary>
+        /// <param name="appPaths">The app paths.</param>
+        /// <returns>System.String.</returns>
+        internal static string GetSeriesDataPath(IApplicationPaths appPaths)
+        {
+            var dataPath = Path.Combine(appPaths.CachePath, "tvdb");
+
+            return dataPath;
+        }
+
+   }
 }

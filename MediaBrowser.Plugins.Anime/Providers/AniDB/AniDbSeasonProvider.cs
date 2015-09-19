@@ -7,6 +7,7 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
@@ -18,10 +19,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         private readonly SeriesIndexSearch _indexSearcher;
         private readonly AniDbSeriesProvider _seriesProvider;
 
-        public AniDbSeasonProvider(IServerConfigurationManager configurationManager, IHttpClient httpClient, IApplicationPaths appPaths)
+        public AniDbSeasonProvider(IServerConfigurationManager configurationManager, IHttpClient httpClient, IApplicationPaths appPaths, ILibraryManager library)
         {
             _indexSearcher = new SeriesIndexSearch(configurationManager, httpClient);
-            _seriesProvider = new AniDbSeriesProvider(appPaths, httpClient, configurationManager);
+            _seriesProvider = new AniDbSeriesProvider(appPaths, httpClient, configurationManager, library);
         }
 
         public async Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)
