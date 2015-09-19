@@ -904,5 +904,30 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                    titlesList.FirstOrDefault(t => t.Type == "main") ??
                    titlesList.FirstOrDefault();
         }
-    }
+         /// <summary>
+        /// Gets the series data path.
+        /// </summary>
+        /// <param name="appPaths">The app paths.</param>
+        /// <param name="seriesId">The series id.</param>
+        /// <returns>System.String.</returns>
+        internal static string GetSeriesDataPath(IApplicationPaths appPaths, string seriesId)
+        {
+            var seriesDataPath = Path.Combine(GetSeriesDataPath(appPaths), seriesId);
+
+            return seriesDataPath;
+        }
+
+        /// <summary>
+        /// Gets the series data path.
+        /// </summary>
+        /// <param name="appPaths">The app paths.</param>
+        /// <returns>System.String.</returns>
+        internal static string GetSeriesDataPath(IApplicationPaths appPaths)
+        {
+            var dataPath = Path.Combine(appPaths.CachePath, "tvdb");
+
+            return dataPath;
+        }
+
+   }
 }
