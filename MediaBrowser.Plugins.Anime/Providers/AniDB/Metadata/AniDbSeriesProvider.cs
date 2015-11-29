@@ -73,7 +73,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                 result.Item.ProviderIds.Add(ProviderNames.AniDb, aid);
 
                 var seriesDataPath = await GetSeriesData(_appPaths, _httpClient, aid, cancellationToken);
-                FetchSeriesInfo(result.Item, seriesDataPath, info.MetadataLanguage ?? "en");
+                FetchSeriesInfo(result, seriesDataPath, info.MetadataLanguage ?? "en");
             }
 
             return result;
@@ -120,7 +120,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             {
                 await DownloadSeriesData(seriesId, seriesDataPath, appPaths.CachePath, httpClient, cancellationToken).ConfigureAwait(false);
             }
-
+            
             return seriesDataPath;
         }
 
@@ -129,8 +129,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             return Path.Combine(paths.CachePath, "anidb", "series", seriesId);
         }
 
-        private void FetchSeriesInfo(Series series, string seriesDataPath, string preferredMetadataLangauge)
+        private void FetchSeriesInfo(MetadataResult<Series> result, string seriesDataPath, string preferredMetadataLangauge)
         {
+            var series = result.Item;
             var settings = new XmlReaderSettings
             {
                 CheckCharacters = false,
@@ -192,7 +193,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                             case "creators":
                                 using (var subtree = reader.ReadSubtree())
                                 {
-                                    ParseCreators(series, subtree);
+                                    ParseCreators(result, subtree);
                                 }
 
                                 break;
@@ -217,7 +218,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                             case "characters":
                                 using (var subtree = reader.ReadSubtree())
                                 {
-                                    ParseActors(series, subtree);
+                                    ParseActors(result, subtree);
                                 }
 
                                 break;
@@ -381,7 +382,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             return text.Replace("\n", Environment.NewLine);
         }
 
-        private void ParseActors(Series series, XmlReader reader)
+        private void ParseActors(MetadataResult<Series> series, XmlReader reader)
         {
             while (reader.Read())
             {
@@ -398,7 +399,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             }
         }
 
-        private void ParseActor(Series series, XmlReader reader)
+        private void ParseActor(MetadataResult<Series> series, XmlReader reader)
         {
             string name = null;
             string role = null;
@@ -475,7 +476,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             return titles.Localize(PluginConfiguration.Instance().TitlePreference, preferredMetadataLangauge).Name;
         }
 
-        private void ParseCreators(Series series, XmlReader reader)
+        private void ParseCreators(MetadataResult<Series> series, XmlReader reader)
         {
             while (reader.Read())
             {
@@ -486,7 +487,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
 
                     if (type == "Animation Work")
                     {
-                        series.Studios.Add(name);
+                        series.Item.Studios.Add(name);
                     }
                     else
                     {
@@ -644,7 +645,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             var serializer = new XmlSerializer(typeof (AniDbPersonInfo));
             foreach (var person in cast)
             {
-                var path = GetCastPath(person.Name, Path.Combine(cachePath, "anidb-cast"));
+                var path = GetCastPath(person.Name, cachePath);
+                var directory = Path.GetDirectoryName(path);
+                Directory.CreateDirectory(directory);
+
                 if (!File.Exists(path) || person.Image != null)
                 {
                     try
@@ -684,7 +688,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
         private static string GetCastPath(string name, string cachePath)
         {
             name = name.ToLowerInvariant();
-            return Path.Combine(cachePath, name[0].ToString(), name + ".xml");
+            return Path.Combine(cachePath, "anidb-people", name[0].ToString(), name + ".xml");
         }
 
         private static IEnumerable<AniDbPersonInfo> ParseCharacterList(string xml)
@@ -702,7 +706,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                     {
                         var person = new AniDbPersonInfo
                         {
-                            Name = seiyuu.Value
+                            Name = ReverseNameOrder(seiyuu.Value)
                         };
 
                         var picture = seiyuu.Attribute("picture");
@@ -743,7 +747,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
 
                     var person = new AniDbPersonInfo
                     {
-                        Name = creator.Value
+                        Name = ReverseNameOrder(creator.Value)
                     };
 
                     var id = creator.Attribute("id");
