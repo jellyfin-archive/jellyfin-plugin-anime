@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -14,38 +13,28 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
-using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
 using MediaBrowser.Plugins.Anime.Configuration;
+using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniDB
+namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
 {
     public class AniDbSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder
     {
         private const string SeriesDataFile = "series.xml";
         private const string SeriesQueryUrl = "http://api.anidb.net:9001/httpapi?request=anime&client={0}&clientver=1&protover=1&aid={1}";
         private const string ClientName = "mediabrowser";
-
-        private const string TvdbSeriesOffset = "TvdbSeriesOffset";
-        private const string TvdbSeriesOffsetFormat = "{0}-{1}";
-        internal static AniDbSeriesProvider Current { get; private set; }
-
         // AniDB has very low request rate limits, a minimum of 2 seconds between requests, and an average of 4 seconds between requests
         public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
         public static readonly RateLimiter RequestLimiter = new RateLimiter(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(5));
-
         private static readonly int[] IgnoredCategoryIds = {6, 22, 23, 60, 128, 129, 185, 216, 242, 255, 268, 269, 289};
         private static readonly Regex AniDbUrlRegex = new Regex(@"http://anidb.net/\w+ \[(?<name>[^\]]*)\]");
         private readonly IApplicationPaths _appPaths;
         private readonly IHttpClient _httpClient;
-        private readonly ILibraryManager _libraryManager;
-        private readonly SeriesIndexSearch _indexSearcher;
 
         private readonly Dictionary<string, string> _typeMappings = new Dictionary<string, string>
         {
@@ -54,25 +43,25 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             {"Chief Animation Direction", "Chief Animation Director"}
         };
 
-        public AniDbSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, IServerConfigurationManager configurationManager, ILibraryManager libraryManager)
+        public AniDbSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient)
         {
             _appPaths = appPaths;
             _httpClient = httpClient;
-            _indexSearcher = new SeriesIndexSearch(configurationManager, httpClient);
-            _libraryManager =  libraryManager;
 
             TitleMatcher = AniDbTitleMatcher.DefaultInstance;
 
             Current = this;
         }
 
+        internal static AniDbSeriesProvider Current { get; private set; }
         public IAniDbTitleMatcher TitleMatcher { get; set; }
-        
+        public int Order => -1;
+
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
 
-            string aid = info.ProviderIds.GetOrDefault(ProviderNames.AniDb);
+            var aid = info.ProviderIds.GetOrDefault(ProviderNames.AniDb);
             if (string.IsNullOrEmpty(aid))
                 aid = await TitleMatcher.FindSeries(info.Name, cancellationToken).ConfigureAwait(false);
 
@@ -82,24 +71,18 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 result.HasMetadata = true;
 
                 result.Item.ProviderIds.Add(ProviderNames.AniDb, aid);
-                result.Item.ProviderIds.Add(ProviderNames.AniDbOriginalSeries, await _indexSearcher.FindOriginalSeriesId(aid, cancellationToken));
 
-                string seriesDataPath = await GetSeriesData(_appPaths, _httpClient, aid, cancellationToken);
+                var seriesDataPath = await GetSeriesData(_appPaths, _httpClient, aid, cancellationToken);
                 FetchSeriesInfo(result.Item, seriesDataPath, info.MetadataLanguage ?? "en");
             }
 
             return result;
         }
 
-        public string Name
-        {
-            get { return "AniDB"; }
-        }
+        public string Name => "AniDB";
 
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
         {
-            var seriesId = searchInfo.GetProviderId(ProviderNames.AniDb);
-
             var metadata = await GetMetadata(searchInfo, cancellationToken).ConfigureAwait(false);
 
             var list = new List<RemoteSearchResult>();
@@ -119,7 +102,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             }
 
             return list;
-            //return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
         }
 
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
@@ -129,14 +111,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         public static async Task<string> GetSeriesData(IApplicationPaths appPaths, IHttpClient httpClient, string seriesId, CancellationToken cancellationToken)
         {
-            string dataPath = CalculateSeriesDataPath(appPaths, seriesId);
-            string seriesDataPath = Path.Combine(dataPath, SeriesDataFile);
+            var dataPath = CalculateSeriesDataPath(appPaths, seriesId);
+            var seriesDataPath = Path.Combine(dataPath, SeriesDataFile);
             var fileInfo = new FileInfo(seriesDataPath);
 
             // download series data if not present, or out of date
             if (!fileInfo.Exists || DateTime.UtcNow - fileInfo.LastWriteTimeUtc > TimeSpan.FromDays(7))
             {
-                await DownloadSeriesData(seriesId, seriesDataPath, httpClient, cancellationToken).ConfigureAwait(false);
+                await DownloadSeriesData(seriesId, seriesDataPath, appPaths.CachePath, httpClient, cancellationToken).ConfigureAwait(false);
             }
 
             return seriesDataPath;
@@ -157,8 +139,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 ValidationType = ValidationType.None
             };
 
-            using (FileStream streamReader = File.Open(seriesDataPath, FileMode.Open, FileAccess.Read))
-            using (XmlReader reader = XmlReader.Create(streamReader, settings))
+            using (var streamReader = File.Open(seriesDataPath, FileMode.Open, FileAccess.Read))
+            using (var reader = XmlReader.Create(streamReader, settings))
             {
                 reader.MoveToContent();
 
@@ -169,7 +151,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                         switch (reader.Name)
                         {
                             case "startdate":
-                                string val = reader.ReadElementContentAsString();
+                                var val = reader.ReadElementContentAsString();
 
                                 if (!string.IsNullOrWhiteSpace(val))
                                 {
@@ -183,7 +165,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
                                 break;
                             case "enddate":
-                                string endDate = reader.ReadElementContentAsString();
+                                var endDate = reader.ReadElementContentAsString();
 
                                 if (!string.IsNullOrWhiteSpace(endDate))
                                 {
@@ -197,9 +179,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
                                 break;
                             case "titles":
-                                using (XmlReader subtree = reader.ReadSubtree())
+                                using (var subtree = reader.ReadSubtree())
                                 {
-                                    string title = ParseTitle(subtree, preferredMetadataLangauge);
+                                    var title = ParseTitle(subtree, preferredMetadataLangauge);
                                     if (!string.IsNullOrEmpty(title))
                                     {
                                         series.Name = title;
@@ -208,7 +190,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
                                 break;
                             case "creators":
-                                using (XmlReader subtree = reader.ReadSubtree())
+                                using (var subtree = reader.ReadSubtree())
                                 {
                                     ParseCreators(series, subtree);
                                 }
@@ -219,41 +201,41 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
                                 break;
                             case "ratings":
-                                using (XmlReader subtree = reader.ReadSubtree())
+                                using (var subtree = reader.ReadSubtree())
                                 {
                                     ParseRatings(series, subtree);
                                 }
 
                                 break;
                             case "resources":
-                                using (XmlReader subtree = reader.ReadSubtree())
+                                using (var subtree = reader.ReadSubtree())
                                 {
                                     ParseResources(series, subtree);
                                 }
 
                                 break;
                             case "characters":
-                                using (XmlReader subtree = reader.ReadSubtree())
+                                using (var subtree = reader.ReadSubtree())
                                 {
                                     ParseActors(series, subtree);
                                 }
 
                                 break;
                             case "tags":
-                                using (XmlReader subtree = reader.ReadSubtree())
+                                using (var subtree = reader.ReadSubtree())
                                 {
                                 }
 
                                 break;
                             case "categories":
-                                using (XmlReader subtree = reader.ReadSubtree())
+                                using (var subtree = reader.ReadSubtree())
                                 {
                                     ParseCategories(series, subtree);
                                 }
 
                                 break;
                             case "episodes":
-                                using (XmlReader subtree = reader.ReadSubtree())
+                                using (var subtree = reader.ReadSubtree())
                                 {
                                     ParseEpisodes(series, subtree);
                                 }
@@ -270,8 +252,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         private void ParseEpisodes(Series series, XmlReader reader)
         {
-            var episodes = new List<EpisodeInfo>();
-
             while (reader.Read())
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "episode")
@@ -280,7 +260,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                     if (int.TryParse(reader.GetAttribute("id"), out id) && IgnoredCategoryIds.Contains(id))
                         continue;
 
-                    using (XmlReader episodeSubtree = reader.ReadSubtree())
+                    using (var episodeSubtree = reader.ReadSubtree())
                     {
                         while (episodeSubtree.Read())
                         {
@@ -289,7 +269,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                                 switch (episodeSubtree.Name)
                                 {
                                     case "epno":
-                                        string epno = episodeSubtree.ReadElementContentAsString();
+                                        var epno = episodeSubtree.ReadElementContentAsString();
                                         //EpisodeInfo info = new EpisodeInfo();
                                         //info.AnimeSeriesIndex = series.AnimeSeriesIndex;
                                         //info.IndexNumberEnd = string(epno);
@@ -302,8 +282,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                     }
                 }
             }
-
-            //series.Genres = genres.OrderBy(g => g.Weight).Select(g => g.Name).ToList();
         }
 
         private void ParseCategories(Series series, XmlReader reader)
@@ -326,13 +304,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                     if (int.TryParse(reader.GetAttribute("parentid"), out parentId) && IgnoredCategoryIds.Contains(parentId))
                         continue;
 
-                    using (XmlReader categorySubtree = reader.ReadSubtree())
+                    using (var categorySubtree = reader.ReadSubtree())
                     {
                         while (categorySubtree.Read())
                         {
                             if (categorySubtree.NodeType == XmlNodeType.Element && categorySubtree.Name == "name")
                             {
-                                string name = categorySubtree.ReadElementContentAsString();
+                                var name = categorySubtree.ReadElementContentAsString();
                                 genres.Add(new GenreInfo {Name = name, Weight = weight});
                             }
                         }
@@ -349,7 +327,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "resource")
                 {
-                    string type = reader.GetAttribute("type");
+                    var type = reader.GetAttribute("type");
 
                     switch (type)
                     {
@@ -411,7 +389,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 {
                     if (reader.Name == "character")
                     {
-                        using (XmlReader subtree = reader.ReadSubtree())
+                        using (var subtree = reader.ReadSubtree())
                         {
                             ParseActor(series, subtree);
                         }
@@ -461,12 +439,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
                         float rating;
                         if (float.TryParse(
-                                           reader.ReadElementContentAsString(),
-                                           NumberStyles.AllowDecimalPoint,
-                                           CultureInfo.InvariantCulture,
-                                           out rating))
+                            reader.ReadElementContentAsString(),
+                            NumberStyles.AllowDecimalPoint,
+                            CultureInfo.InvariantCulture,
+                            out rating))
                         {
-                            series.CommunityRating = (float)Math.Round(rating, 1);
+                            series.CommunityRating = (float) Math.Round(rating, 1);
                         }
                     }
                 }
@@ -481,9 +459,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "title")
                 {
-                    string language = reader.GetAttribute("xml:lang");
-                    string type = reader.GetAttribute("type");
-                    string name = reader.ReadElementContentAsString();
+                    var language = reader.GetAttribute("xml:lang");
+                    var type = reader.GetAttribute("type");
+                    var name = reader.ReadElementContentAsString();
 
                     titles.Add(new Title
                     {
@@ -503,8 +481,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "name")
                 {
-                    string type = reader.GetAttribute("type");
-                    string name = reader.ReadElementContentAsString();
+                    var type = reader.GetAttribute("type");
+                    var name = reader.ReadElementContentAsString();
 
                     if (type == "Animation Work")
                     {
@@ -541,9 +519,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return name.Split(' ').Reverse().Aggregate(string.Empty, (n, part) => n + " " + part).Trim();
         }
 
-        private static async Task DownloadSeriesData(string aid, string seriesDataPath, IHttpClient httpClient, CancellationToken cancellationToken)
+        private static async Task DownloadSeriesData(string aid, string seriesDataPath, string cachePath, IHttpClient httpClient, CancellationToken cancellationToken)
         {
-            string directory = Path.GetDirectoryName(seriesDataPath);
+            var directory = Path.GetDirectoryName(seriesDataPath);
             if (directory != null)
             {
                 Directory.CreateDirectory(directory);
@@ -560,27 +538,27 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
             await RequestLimiter.Tick();
 
-            using (Stream stream = await httpClient.Get(requestOptions).ConfigureAwait(false))
+            using (var stream = await httpClient.Get(requestOptions).ConfigureAwait(false))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var reader = new StreamReader(unzipped, Encoding.UTF8, true))
-            using (FileStream file = File.Open(seriesDataPath, FileMode.Create, FileAccess.Write))
+            using (var file = File.Open(seriesDataPath, FileMode.Create, FileAccess.Write))
             using (var writer = new StreamWriter(file))
             {
-                string text = await reader.ReadToEndAsync().ConfigureAwait(false);
+                var text = await reader.ReadToEndAsync().ConfigureAwait(false);
                 text = text.Replace("&#x0;", "");
 
                 await writer.WriteAsync(text).ConfigureAwait(false);
             }
 
             await ExtractEpisodes(directory, seriesDataPath);
-            ExtractCast(directory, seriesDataPath);
+            ExtractCast(cachePath, seriesDataPath);
         }
 
         private static void DeleteXmlFiles(string path)
         {
             try
             {
-                foreach (FileInfo file in new DirectoryInfo(path)
+                foreach (var file in new DirectoryInfo(path)
                     .EnumerateFiles("*.xml", SearchOption.AllDirectories)
                     .ToList())
                 {
@@ -606,7 +584,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             using (var streamReader = new StreamReader(seriesDataPath, Encoding.UTF8))
             {
                 // Use XmlReader for best performance
-                using (XmlReader reader = XmlReader.Create(streamReader, settings))
+                using (var reader = XmlReader.Create(streamReader, settings))
                 {
                     reader.MoveToContent();
 
@@ -617,7 +595,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                         {
                             if (reader.Name == "episode")
                             {
-                                string outerXml = reader.ReadOuterXml();
+                                var outerXml = reader.ReadOuterXml();
                                 await SaveEpsiodeXml(seriesDataDirectory, outerXml).ConfigureAwait(false);
                             }
                         }
@@ -626,7 +604,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             }
         }
 
-        private static void ExtractCast(string seriesDataDirectory, string seriesDataPath)
+        private static void ExtractCast(string cachePath, string seriesDataPath)
         {
             var settings = new XmlReaderSettings
             {
@@ -636,12 +614,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 ValidationType = ValidationType.None
             };
 
-            var list = new CastList();
+            var cast = new List<AniDbPersonInfo>();
 
             using (var streamReader = new StreamReader(seriesDataPath, Encoding.UTF8))
             {
                 // Use XmlReader for best performance
-                using (XmlReader reader = XmlReader.Create(streamReader, settings))
+                using (var reader = XmlReader.Create(streamReader, settings))
                 {
                     reader.MoveToContent();
 
@@ -650,37 +628,76 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                     {
                         if (reader.NodeType == XmlNodeType.Element && reader.Name == "characters")
                         {
-                            string outerXml = reader.ReadOuterXml();
-                            list.Cast.AddRange(ParseCharacterList(outerXml));
+                            var outerXml = reader.ReadOuterXml();
+                            cast.AddRange(ParseCharacterList(outerXml));
                         }
 
                         if (reader.NodeType == XmlNodeType.Element && reader.Name == "creators")
                         {
-                            string outerXml = reader.ReadOuterXml();
-                            list.Cast.AddRange(ParseCreatorsList(outerXml));
+                            var outerXml = reader.ReadOuterXml();
+                            cast.AddRange(ParseCreatorsList(outerXml));
                         }
                     }
                 }
             }
 
-            var serializer = new XmlSerializer(typeof (CastList));
-            using (FileStream stream = File.Open(Path.Combine(seriesDataDirectory, "cast.xml"), FileMode.Create, FileAccess.Write))
+            var serializer = new XmlSerializer(typeof (AniDbPersonInfo));
+            foreach (var person in cast)
             {
-                serializer.Serialize(stream, list);
+                var path = GetCastPath(person.Name, Path.Combine(cachePath, "anidb-cast"));
+                if (!File.Exists(path) || person.Image != null)
+                {
+                    try
+                    {
+                        using (var stream = File.Open(path, FileMode.Create))
+                            serializer.Serialize(stream, person);
+                    }
+                    catch (IOException)
+                    {
+                        // ignore
+                    }
+                }
             }
+        }
+
+        public static AniDbPersonInfo GetPersonInfo(string cachePath, string name)
+        {
+            var path = GetCastPath(name, cachePath);
+            var serializer = new XmlSerializer(typeof(AniDbPersonInfo));
+
+            try
+            {
+                if (File.Exists(path))
+                {
+                    using (var stream = File.OpenRead(path))
+                        return serializer.Deserialize(stream) as AniDbPersonInfo;
+                }
+            }
+            catch (IOException)
+            {
+                return null;
+            }
+
+            return null;
+        }
+
+        private static string GetCastPath(string name, string cachePath)
+        {
+            name = name.ToLowerInvariant();
+            return Path.Combine(cachePath, name[0].ToString(), name + ".xml");
         }
 
         private static IEnumerable<AniDbPersonInfo> ParseCharacterList(string xml)
         {
-            XDocument doc = XDocument.Parse(xml);
+            var doc = XDocument.Parse(xml);
             var people = new List<AniDbPersonInfo>();
 
-            XElement characters = doc.Element("characters");
+            var characters = doc.Element("characters");
             if (characters != null)
             {
-                foreach (XElement character in characters.Descendants("character"))
+                foreach (var character in characters.Descendants("character"))
                 {
-                    XElement seiyuu = character.Element("seiyuu");
+                    var seiyuu = character.Element("seiyuu");
                     if (seiyuu != null)
                     {
                         var person = new AniDbPersonInfo
@@ -688,13 +705,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                             Name = seiyuu.Value
                         };
 
-                        XAttribute picture = seiyuu.Attribute("picture");
+                        var picture = seiyuu.Attribute("picture");
                         if (picture != null && !string.IsNullOrEmpty(picture.Value))
                         {
                             person.Image = "http://img7.anidb.net/pics/anime/" + picture.Value;
                         }
 
-                        XAttribute id = seiyuu.Attribute("id");
+                        var id = seiyuu.Attribute("id");
                         if (id != null && !string.IsNullOrEmpty(id.Value))
                         {
                             person.Id = id.Value;
@@ -710,15 +727,15 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         private static IEnumerable<AniDbPersonInfo> ParseCreatorsList(string xml)
         {
-            XDocument doc = XDocument.Parse(xml);
+            var doc = XDocument.Parse(xml);
             var people = new List<AniDbPersonInfo>();
 
-            XElement creators = doc.Element("creators");
+            var creators = doc.Element("creators");
             if (creators != null)
             {
-                foreach (XElement creator in creators.Descendants("name"))
+                foreach (var creator in creators.Descendants("name"))
                 {
-                    XAttribute type = creator.Attribute("type");
+                    var type = creator.Attribute("type");
                     if (type != null && type.Value == "Animation Work")
                     {
                         continue;
@@ -729,7 +746,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                         Name = creator.Value
                     };
 
-                    XAttribute id = creator.Attribute("id");
+                    var id = creator.Attribute("id");
                     if (id != null && !string.IsNullOrEmpty(id.Value))
                     {
                         person.Id = id.Value;
@@ -750,7 +767,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                 Async = true
             };
 
-            using (XmlWriter writer = XmlWriter.Create(filename, writerSettings))
+            using (var writer = XmlWriter.Create(filename, writerSettings))
             {
                 await writer.WriteRawAsync(xml).ConfigureAwait(false);
             }
@@ -758,11 +775,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
         private static async Task SaveEpsiodeXml(string seriesDataDirectory, string xml)
         {
-            string episodeNumber = ParseEpisodeNumber(xml);
+            var episodeNumber = ParseEpisodeNumber(xml);
 
             if (episodeNumber != null)
             {
-                string file = Path.Combine(seriesDataDirectory, string.Format("episode-{0}.xml", episodeNumber));
+                var file = Path.Combine(seriesDataDirectory, string.Format("episode-{0}.xml", episodeNumber));
                 await SaveXml(xml, file);
             }
         }
@@ -780,7 +797,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             using (var streamReader = new StringReader(xml))
             {
                 // Use XmlReader for best performance
-                using (XmlReader reader = XmlReader.Create(streamReader, settings))
+                using (var reader = XmlReader.Create(streamReader, settings))
                 {
                     reader.MoveToContent();
 
@@ -791,7 +808,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                         {
                             if (reader.Name == "epno")
                             {
-                                string val = reader.ReadElementContentAsString();
+                                var val = reader.ReadElementContentAsString();
                                 if (!string.IsNullOrWhiteSpace(val))
                                 {
                                     return val;
@@ -809,16 +826,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return null;
         }
 
-        private struct GenreInfo
-        {
-            public string Name;
-            public int Weight;
-        }
-
-        public int Order { get { return -1; } }
-
         /// <summary>
-        /// Gets the series data path.
+        ///     Gets the series data path.
         /// </summary>
         /// <param name="appPaths">The app paths.</param>
         /// <param name="seriesId">The series id.</param>
@@ -831,7 +840,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         }
 
         /// <summary>
-        /// Gets the series data path.
+        ///     Gets the series data path.
         /// </summary>
         /// <param name="appPaths">The app paths.</param>
         /// <returns>System.String.</returns>
@@ -842,21 +851,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return dataPath;
         }
 
-        internal static int? GetSeriesOffset(Dictionary<string, string> seriesProviderIds)
+        private struct GenreInfo
         {
-            string idString;
-            if (!seriesProviderIds.TryGetValue(TvdbSeriesOffset, out idString))
-                return null;
-
-            var parts = idString.Split('-');
-            if (parts.Length < 2)
-                return null;
-
-            int offset;
-            if (int.TryParse(parts[1], out offset))
-                return offset;
-
-            return null;
+            public string Name;
+            public int Weight;
         }
     }
 
@@ -871,14 +869,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
     {
         public static Title Localize(this IEnumerable<Title> titles, TitlePreferenceType preference, string metadataLanguage)
         {
-            IList<Title> titlesList = titles as IList<Title> ?? titles.ToList();
+            var titlesList = titles as IList<Title> ?? titles.ToList();
 
             if (preference == TitlePreferenceType.Localized)
             {
                 // prefer an official title, else look for a synonym
-                Title localized = titlesList.FirstOrDefault(t => t.Language == metadataLanguage && t.Type == "main") ??
-                                  titlesList.FirstOrDefault(t => t.Language == metadataLanguage && t.Type == "official") ??
-                                  titlesList.FirstOrDefault(t => t.Language == metadataLanguage && t.Type == "synonym");
+                var localized = titlesList.FirstOrDefault(t => t.Language == metadataLanguage && t.Type == "main") ??
+                                titlesList.FirstOrDefault(t => t.Language == metadataLanguage && t.Type == "official") ??
+                                titlesList.FirstOrDefault(t => t.Language == metadataLanguage && t.Type == "synonym");
 
                 if (localized != null)
                 {
@@ -889,9 +887,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             if (preference == TitlePreferenceType.Japanese)
             {
                 // prefer an official title, else look for a synonym
-                Title japanese = titlesList.FirstOrDefault(t => t.Language == "ja" && t.Type == "main") ??
-                                 titlesList.FirstOrDefault(t => t.Language == "ja" && t.Type == "official") ??
-                                 titlesList.FirstOrDefault(t => t.Language == "ja" && t.Type == "synonym");
+                var japanese = titlesList.FirstOrDefault(t => t.Language == "ja" && t.Type == "main") ??
+                               titlesList.FirstOrDefault(t => t.Language == "ja" && t.Type == "official") ??
+                               titlesList.FirstOrDefault(t => t.Language == "ja" && t.Type == "synonym");
 
                 if (japanese != null)
                 {
@@ -904,8 +902,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
                    titlesList.FirstOrDefault(t => t.Type == "main") ??
                    titlesList.FirstOrDefault();
         }
-         /// <summary>
-        /// Gets the series data path.
+
+        /// <summary>
+        ///     Gets the series data path.
         /// </summary>
         /// <param name="appPaths">The app paths.</param>
         /// <param name="seriesId">The series id.</param>
@@ -918,7 +917,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
         }
 
         /// <summary>
-        /// Gets the series data path.
+        ///     Gets the series data path.
         /// </summary>
         /// <param name="appPaths">The app paths.</param>
         /// <returns>System.String.</returns>
@@ -928,6 +927,5 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
 
             return dataPath;
         }
-
-   }
+    }
 }

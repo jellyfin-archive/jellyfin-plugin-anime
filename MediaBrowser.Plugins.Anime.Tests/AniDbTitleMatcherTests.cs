@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Plugins.Anime.Providers.AniDB;
+using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
 using Moq;
 using NUnit.Framework;
 

@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniDB
+namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
 {
     /// <summary>
     /// The <see cref="IAniDbTitleMatcher"/> interface defines a type which can match series titles to AniDB IDs.

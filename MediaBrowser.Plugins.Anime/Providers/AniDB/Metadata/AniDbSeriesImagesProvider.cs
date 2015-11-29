@@ -1,18 +1,18 @@
-﻿using MediaBrowser.Common.Configuration;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml;
+using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniDB
+namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
 {
     public class AniDbSeriesImagesProvider : IRemoteImageProvider
     {
@@ -72,10 +72,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB
             return new[] { ImageType.Primary };
         }
 
-        public string Name
-        {
-            get { return "AniDB"; }
-        }
+        public string Name => "AniDB";
 
         public bool Supports(IHasImages item)
         {

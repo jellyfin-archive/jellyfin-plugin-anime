@@ -36,16 +36,16 @@
       <HintPath>..\packages\Interfaces.IO.1.0.0.5\lib\portable-net45+sl4+wp71+win8+wpa81\Interfaces.IO.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="MediaBrowser.Common, Version=3.0.5713.5, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MediaBrowser.Common.3.0.633\lib\net45\MediaBrowser.Common.dll</HintPath>
+    <Reference Include="MediaBrowser.Common, Version=3.0.5775.26560, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MediaBrowser.Common.3.0.638\lib\net45\MediaBrowser.Common.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="MediaBrowser.Controller, Version=3.0.5713.5, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MediaBrowser.Server.Core.3.0.633\lib\net45\MediaBrowser.Controller.dll</HintPath>
+    <Reference Include="MediaBrowser.Controller, Version=3.0.5775.26558, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MediaBrowser.Server.Core.3.0.638\lib\net45\MediaBrowser.Controller.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="MediaBrowser.Model, Version=3.0.5713.5, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MediaBrowser.Common.3.0.633\lib\net45\MediaBrowser.Model.dll</HintPath>
+    <Reference Include="MediaBrowser.Model, Version=3.0.5775.26561, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MediaBrowser.Common.3.0.638\lib\net45\MediaBrowser.Model.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="MoreLinq, Version=1.1.18418.0, Culture=neutral, PublicKeyToken=384d532d7e88985d, processorArchitecture=MSIL">
@@ -60,38 +60,55 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="anime-lists-net\AnidbEpisode.cs" />
+    <Compile Include="anime-lists-net\AnimeList.cs" />
+    <Compile Include="anime-lists-net\AnimelistAnime.cs" />
+    <Compile Include="anime-lists-net\AnimelistMapping.cs" />
+    <Compile Include="anime-lists-net\AnimelistSupplementalinfo.cs" />
+    <Compile Include="anime-lists-net\AnimelistSupplementalinfoFanart.cs" />
+    <Compile Include="anime-lists-net\AnimelistSupplementalinfoFanartThumb.cs" />
+    <Compile Include="anime-lists-net\AsyncLock.cs" />
+    <Compile Include="anime-lists-net\Downloader.cs" />
+    <Compile Include="anime-lists-net\EpisodeMapping.cs" />
+    <Compile Include="anime-lists-net\ItemsChoiceType.cs" />
+    <Compile Include="anime-lists-net\Mapper.cs" />
+    <Compile Include="anime-lists-net\TvdbEpisode.cs" />
     <Compile Include="Configuration\AnimeConfigurationPage.cs" />
     <Compile Include="DictionaryExtensions.cs" />
-    <Compile Include="Providers\AniDB\AniDbEpisodeProvider.cs" />
+    <Compile Include="Providers\AniDB\Metadata\AniDbEpisodeProvider.cs" />
     <Compile Include="Providers\AniDB\AniDbExternalId.cs" />
-    <Compile Include="Providers\AniDB\AniDbPersonProvider.cs" />
-    <Compile Include="Providers\AniDB\AniDbPersonInfo.cs" />
-    <Compile Include="Providers\AniDB\AniDbSeasonImageProvider.cs" />
-    <Compile Include="Providers\AniDB\AniDbSeasonProvider.cs" />
-    <Compile Include="Providers\AniDB\AniDbSeriesImagesProvider.cs" />
-    <Compile Include="Providers\AniDB\AniDbTitleDownloader.cs" />
-    <Compile Include="Providers\AniDB\AniDbTitleMatcher.cs" />
+    <Compile Include="Providers\AniDB\Metadata\AniDbPersonProvider.cs" />
+    <Compile Include="Providers\AniDB\Metadata\AniDbPersonInfo.cs" />
+    <Compile Include="Providers\AniDB\Metadata\AniDbSeasonImageProvider.cs" />
+    <Compile Include="Providers\AniDB\Metadata\AniDbSeasonProvider.cs" />
+    <Compile Include="Providers\AniDB\Metadata\AniDbSeriesImagesProvider.cs" />
+    <Compile Include="Providers\AniDB\Identity\AniDbTitleDownloader.cs" />
+    <Compile Include="Providers\AniDB\Identity\AniDbTitleMatcher.cs" />
     <Compile Include="AsyncLock.cs" />
-    <Compile Include="Providers\AniDB\SeriesIndexProvider.cs" />
-    <Compile Include="Providers\AniDB\SeriesIndexSearch.cs" />
+    <Compile Include="Providers\AniDB\Converter\AnidbEpisodeIdentity.cs" />
+    <Compile Include="Providers\AniDB\Converter\AnidbTvdbEpisodeConverter.cs" />
+    <Compile Include="Providers\AniDB\Converter\AnidbTvdbSeasonConverter.cs" />
+    <Compile Include="Providers\AniDB\Converter\AnidbConverter.cs" />
+    <Compile Include="Providers\AniDB\Converter\TvdbEpisodeIdentity.cs" />
+    <Compile Include="Providers\AniDB\Identity\AnidbEpisodeIdentityProvider.cs" />
+    <Compile Include="Providers\AniDB\Identity\AnidbSeriesIdentityProvider.cs" />
     <Compile Include="Providers\AniList\AniListExternalId.cs" />
     <Compile Include="Providers\AniList\AniListSeriesProvider.cs" />
-    <Compile Include="Providers\AniDB\IAniDbTitleDownloader.cs" />
-    <Compile Include="Providers\AniDB\IAniDbTitleMatcher.cs" />
+    <Compile Include="Providers\AniDB\Identity\IAniDbTitleDownloader.cs" />
+    <Compile Include="Providers\AniDB\Identity\IAniDbTitleMatcher.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Configuration\PluginConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Providers\AniDB\AniDbSeriesProvider.cs" />
+    <Compile Include="Providers\AniDB\Metadata\AniDbSeriesProvider.cs" />
     <Compile Include="Providers\DummySeasonProvider.cs" />
     <Compile Include="Providers\GenreHelper.cs" />
-    <Compile Include="Providers\Hummingbird\HummingbirdSeriesSearch.cs" />
     <Compile Include="Providers\MissingEpisodeProvider.cs" />
     <Compile Include="Providers\ProviderNames.cs" />
-    <Compile Include="Providers\SeriesIndexProvider.cs" />
     <Compile Include="Providers\SeriesPostScanTask.cs" />
     <Compile Include="RateLimiter.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
@@ -99,10 +116,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Configuration\configPage.html" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>xcopy "$(TargetPath)" "..\..\..\..\MediaBrowser\ProgramData-Server\plugins\" /y</PostBuildEvent>
   </PropertyGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

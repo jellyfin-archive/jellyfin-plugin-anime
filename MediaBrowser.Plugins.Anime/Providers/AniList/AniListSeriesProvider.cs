@@ -19,6 +19,7 @@ using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
 using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers.AniDB;
+using MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniList
 {
@@ -105,11 +106,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         private readonly ILogger _logger;
         private readonly AniDbSeriesProvider _anidbSeriesProvider;
 
-        public AniListSeriesProvider(ILogManager logManager, IApplicationPaths appPaths, IHttpClient httpClient, IServerConfigurationManager configurationManger, ILibraryManager library)
+        public AniListSeriesProvider(ILogManager logManager, IApplicationPaths appPaths, IHttpClient httpClient)
         {
             _downloader = new AniListSeriesDownloader(appPaths, logManager.GetLogger("AniList"));
             _logger = logManager.GetLogger("AniList");
-            _anidbSeriesProvider = new AniDbSeriesProvider(appPaths, httpClient, configurationManger, library);
+            _anidbSeriesProvider = new AniDbSeriesProvider(appPaths, httpClient);
         }
 
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
