@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using MediaBrowser.Model.Plugins;
 
 namespace MediaBrowser.Plugins.Anime.Configuration
@@ -30,6 +31,8 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         public bool TidyGenreList { get; set; }
         public int MaxGenres { get; set; }
         public bool MoveExcessGenresToTags { get; set; }
+        public bool UseAnidbOrderingWithSeasons { get; set; }
+        public int? SettingsVersion { get; set; }
 
         public static Func<PluginConfiguration> Instance { get; set; }
 
@@ -40,6 +43,23 @@ namespace MediaBrowser.Plugins.Anime.Configuration
             TidyGenreList = true;
             MaxGenres = 5;
             MoveExcessGenresToTags = true;
+            UseAnidbOrderingWithSeasons = false;
+            SettingsVersion = null;
+        }
+
+        public void PerformMigrations()
+        {
+            VersionOne();
+
+            SettingsVersion = 1;
+        }
+
+        private void VersionOne()
+        {
+            if (SettingsVersion == null || SettingsVersion == 0)
+            {
+                UseAnidbOrderingWithSeasons = true;
+            }
         }
     }
 }

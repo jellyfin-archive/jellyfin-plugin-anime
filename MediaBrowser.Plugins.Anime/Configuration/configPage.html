@@ -42,7 +42,13 @@
                             <label for="chkMaxGenres">
                                 Max Genres [0: unlimited]
                             </label>
-                            <input id="chkMaxGenres" name="chkMaxGenres" type="number" min="0" value="maxGenres" />
+                            <input id="chkMaxGenres" name="chkMaxGenres" type="number" min="0" value="maxGenres"/>
+                        </li>
+                        <li>
+                            <label for="chkAnidbSeasonOne">
+                                Use AniDB Odering with Seasons
+                            </label>
+                            <input id="chkAnidbSeasonOne" name="chkAnidbSeasonOne" type="checkbox" value="anidbSeasonOne"/>
                         </li>
                         <li>
                             <button type="submit" data-theme="b">Save</button>
@@ -72,6 +78,7 @@
                         $('#chkTidyGenres', page).checked(config.TidyGenreList).checkboxradio("refresh");
                         $('#chkMaxGenres', page).val(config.MaxGenres).change();
                         $('#chkMoveExcessGenresToTags', page).checked(config.MoveExcessGenresToTags).checkboxradio("refresh");
+                        $('#chkAnidbSeasonOne', page).checked(config.UseAnidbOrderingWithSeasons).checkboxradio("refresh");
                         
                         Dashboard.hideLoadingMsg();
                     });
@@ -89,6 +96,7 @@
                         config.TidyGenreList = $('#chkTidyGenres').prop('checked');
                         config.MaxGenres = $('#chkMaxGenres').val();
                         config.MoveExcessGenresToTags = $('#chkMoveExcessGenresToTags').prop('checked');
+                        config.UseAnidbOrderingWithSeasons = $('#chkAnidbSeasonOne').prop('checked');
                         
                         ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).done(function(result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);

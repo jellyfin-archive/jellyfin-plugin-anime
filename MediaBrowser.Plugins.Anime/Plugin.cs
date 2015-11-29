@@ -3,7 +3,6 @@ using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Plugins.Anime.Configuration;
-using MediaBrowser.Plugins.Anime.Providers.AniDB;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Converter;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
 
@@ -19,6 +18,9 @@ namespace MediaBrowser.Plugins.Anime
 
             Instance = this;
             PluginConfiguration.Instance = () => Configuration;
+
+            Configuration.PerformMigrations();
+            SaveConfiguration();
         }
 
         public override string Name
