@@ -59,6 +59,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Converter
                 Index = tvdbId.Value.EpisodeNumber
             });
 
+            if (converted == null)
+                return null;
+
             int? end = null;
             if (tvdbId.Value.EpisodeNumberEnd != null)
             {
@@ -69,7 +72,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Converter
                     Index = tvdbId.Value.EpisodeNumberEnd.Value
                 });
 
-                if (convertedEnd.Season == converted.Season)
+                if (convertedEnd != null && convertedEnd.Season == converted.Season)
                     end = convertedEnd.Index;
             }
 

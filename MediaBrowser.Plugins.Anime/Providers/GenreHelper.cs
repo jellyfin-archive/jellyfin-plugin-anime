@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Plugins.Anime.Configuration;
@@ -75,29 +76,44 @@ namespace MediaBrowser.Plugins.Anime.Providers
             if (config.TidyGenreList)
             {
                 series.Genres = RemoveRedundantGenres(series.Genres)
-                                           .Where(g => !"Animation".Equals(g) && !"Anime".Equals(g))
                                            .Distinct()
                                            .ToList();
 
                 TidyGenres(series);
             }
 
+            var max = config.MaxGenres;
+            if (config.AddAnimeGenre)
+            {
+                series.Genres.Remove("Animation");
+                series.Genres.Remove("Anime");
+
+                max = Math.Max(max - 1, 0);
+            }
+            
             if (config.MaxGenres > 0)
             {
                 if (config.MoveExcessGenresToTags)
                 {
-                    foreach (string genre in series.Genres.Skip(config.MaxGenres - 1))
+                    foreach (string genre in series.Genres.Skip(max))
                     {
                         if (!series.Tags.Contains(genre))
                             series.Tags.Add(genre);
                     }
                 }
 
-                series.Genres = series.Genres.Take(config.MaxGenres - 1).ToList();
+                series.Genres = series.Genres.Take(max).ToList();
             }
 
-            if (!series.Genres.Contains("Anime"))
+            if (!series.Genres.Contains("Anime") && config.AddAnimeGenre)
+            {
+                if (series.Genres.Contains("Animation"))
+                    series.Genres.Remove("Animation");
+
                 series.AddGenre("Anime");
+            }
+
+            series.Genres.Sort();
         }
 
         public static void RemoveDuplicateTags(Series series)

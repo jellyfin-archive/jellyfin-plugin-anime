@@ -19,7 +19,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
         public async Task Identify(SeriesInfo info)
         {
-            if (!string.IsNullOrEmpty(info.ProviderIds.GetOrDefault(ProviderNames.AniList)))
+            if (!string.IsNullOrEmpty(info.ProviderIds.GetOrDefault(ProviderNames.AniList)) && !Plugin.Instance.CheckForceRefreshFlag())
                 return;
 
             if (string.IsNullOrEmpty(info.Name))
@@ -37,7 +37,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
                 if (first == null)
                     return;
-
+                
+                info.ProviderIds.Remove(ProviderNames.AniList);
                 info.ProviderIds.Add(ProviderNames.AniList, first.id.ToString());
             }
             catch (Exception e)

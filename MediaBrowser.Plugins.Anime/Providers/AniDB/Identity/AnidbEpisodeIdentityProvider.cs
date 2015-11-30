@@ -9,7 +9,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
     {
         public async Task Identify(EpisodeInfo info)
         {
-            if (info.ProviderIds.ContainsKey(ProviderNames.AniDb))
+            if (info.ProviderIds.ContainsKey(ProviderNames.AniDb) && !Plugin.Instance.CheckForceRefreshFlag())
                 return;
 
             var inspectSeason = info.ParentIndexNumber == null ||
@@ -25,6 +25,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
                 }
 
                 var id = new AnidbEpisodeIdentity(series, info.IndexNumber.Value, info.IndexNumberEnd, type);
+                info.ProviderIds.Remove(ProviderNames.AniDb);
                 info.ProviderIds.Add(ProviderNames.AniDb, id.ToString());
             }
         }
