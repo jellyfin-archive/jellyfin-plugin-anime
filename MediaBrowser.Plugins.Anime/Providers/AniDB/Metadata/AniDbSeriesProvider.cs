@@ -247,7 +247,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                 }
             }
 
-            GenreHelper.TidyGenres(series);
+            GenreHelper.CleanupGenres(series);
             GenreHelper.RemoveDuplicateTags(series);
         }
 

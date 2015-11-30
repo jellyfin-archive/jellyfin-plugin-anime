@@ -97,7 +97,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             }
 
             if (!series.Genres.Contains("Anime"))
-                series.Genres.Add("Anime");
+                series.AddGenre("Anime");
         }
 
         public static void RemoveDuplicateTags(Series series)

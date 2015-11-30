@@ -120,8 +120,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                     foreach (var genre in anime.genres)
                         result.Item.AddGenre(genre);
 
-                    if (result.Item.Genres == null || !result.Item.Genres.Contains("Animation"))
-                        result.Item.AddGenre("Animation");
+                    GenreHelper.CleanupGenres(result.Item);
+                    GenreHelper.RemoveDuplicateTags(result.Item);
                 }
 
                 if (!string.IsNullOrEmpty(anime.image_url_lge))

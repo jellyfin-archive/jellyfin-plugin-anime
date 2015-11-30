@@ -102,7 +102,6 @@
     <Compile Include="Providers\AniList\AniListExternalId.cs" />
     <Compile Include="Providers\AniList\AniListSeriesIdentityProvider.cs" />
     <Compile Include="Providers\AniList\AniListSeriesProvider.cs" />
-    <Compile Include="Providers\AniList\AniListSeriesProviderOLD.cs" />
     <Compile Include="Providers\AniDB\Identity\IAniDbTitleDownloader.cs" />
     <Compile Include="Providers\AniDB\Identity\IAniDbTitleMatcher.cs" />
     <Compile Include="Plugin.cs" />
