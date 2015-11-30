@@ -52,7 +52,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Converter
                 Index = 1
             });
 
-            return converted.Series;
+            return converted?.Series;
         }
     }
 }

@@ -52,6 +52,10 @@
       <HintPath>..\packages\morelinq.1.1.1\lib\net35\MoreLinq.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="ServiceStack.Text, Version=4.0.48.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ServiceStack.Text.4.0.48\lib\net40\ServiceStack.Text.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
@@ -92,14 +96,18 @@
     <Compile Include="Providers\AniDB\Converter\TvdbEpisodeIdentity.cs" />
     <Compile Include="Providers\AniDB\Identity\AnidbEpisodeIdentityProvider.cs" />
     <Compile Include="Providers\AniDB\Identity\AnidbSeriesIdentityProvider.cs" />
+    <Compile Include="Providers\AniList\AniListApiClient.cs" />
     <Compile Include="Providers\AniList\AniListExternalId.cs" />
+    <Compile Include="Providers\AniList\AniListSeriesIdentityProvider.cs" />
     <Compile Include="Providers\AniList\AniListSeriesProvider.cs" />
+    <Compile Include="Providers\AniList\AniListSeriesProviderOLD.cs" />
     <Compile Include="Providers\AniDB\Identity\IAniDbTitleDownloader.cs" />
     <Compile Include="Providers\AniDB\Identity\IAniDbTitleMatcher.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Configuration\PluginConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\AniDB\Metadata\AniDbSeriesProvider.cs" />
+    <Compile Include="Providers\AniList\ApiModel.cs" />
     <Compile Include="Providers\DummySeasonProvider.cs" />
     <Compile Include="Providers\GenreHelper.cs" />
     <Compile Include="Providers\MissingEpisodeProvider.cs" />

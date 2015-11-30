@@ -3,339 +3,239 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
-using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
 using MediaBrowser.Plugins.Anime.Configuration;
-using MediaBrowser.Plugins.Anime.Providers.AniDB;
+using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniList
 {
-    public interface IAniListDownloader
+    public class AniListSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder
     {
-        Task<FileInfo> DownloadSeriesPage(string id);
-        FileInfo GetCachedSeriesPage(string id);
-    }
+        private readonly IApplicationPaths _paths;
+        private readonly AniListApiClient _api;
 
-    public class AniListSeriesDownloader : IAniListDownloader, IHasOrder
-    {
-        private const string SeriesUrl = "http://anilist.co/anime/{0}/";
+        public int Order => -2;
+        public string Name => "AniList";
 
-        private readonly IApplicationPaths _appPaths;
-        private readonly ILogger _logger;
-
-        public AniListSeriesDownloader(IApplicationPaths appPaths, ILogger logger)
+        public AniListSeriesProvider(IHttpClient http, IApplicationPaths paths, ILogManager logManager)
         {
-            _appPaths = appPaths;
-            _logger = logger;
+            _paths = paths;
+            _api = new AniListApiClient(http, logManager);
         }
 
-        public async Task<FileInfo> DownloadSeriesPage(string id)
+        public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
         {
-            string cachedPath = CalculateCacheFilename(id);
-            var cached = new FileInfo(cachedPath);
+            var results = new Dictionary<string, RemoteSearchResult>();
 
-            if (!cached.Exists || DateTime.UtcNow - cached.LastWriteTimeUtc > TimeSpan.FromDays(7))
+            var aid = searchInfo.ProviderIds.GetOrDefault(ProviderNames.AniList);
+            if (!string.IsNullOrEmpty(aid))
             {
-                string url = string.Format(SeriesUrl, id);
+                var anime = await _api.GetAnime(aid);
+                if (anime != null && !results.ContainsKey(aid))
+                    results.Add(aid, ToSearchResult(anime));
+            }
 
-                try
+            if (!string.IsNullOrEmpty(searchInfo.Name))
+            {
+                var search = await _api.Search(searchInfo.Name);
+                foreach (var a in search)
                 {
-                    var client = new WebClient();
-                    client.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.101 Safari/537.36");
-                    string data = await client.DownloadStringTaskAsync(url);
-
-                    string directory = Path.GetDirectoryName(cachedPath);
-                    if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-                    {
-                        Directory.CreateDirectory(directory);
-                    }
-
-                    File.WriteAllText(cachedPath, data, Encoding.UTF8);
-                    return new FileInfo(cachedPath);
+                    if (!results.ContainsKey(a.id.ToString()))
+                        results.Add(a.id.ToString(), ToSearchResult(a));
                 }
-                catch (Exception e)
+
+                var cleaned = AniDbTitleMatcher.GetComparableName(searchInfo.Name);
+                if (String.Compare(cleaned, searchInfo.Name, StringComparison.OrdinalIgnoreCase) != 0)
                 {
-                    _logger.ErrorException("Failed to download {0}", e, url);
+                    search = await _api.Search(cleaned);
+                    foreach (var a in search)
+                    {
+                        if (!results.ContainsKey(a.id.ToString()))
+                            results.Add(a.id.ToString(), ToSearchResult(a));
+                    }
                 }
             }
 
-            return cached;
+            return results.Values;
         }
 
-        public FileInfo GetCachedSeriesPage(string id)
+        private RemoteSearchResult ToSearchResult(Anime anime)
         {
-            return new FileInfo(CalculateCacheFilename(id));
-        }
+            var result = new RemoteSearchResult
+            {
+                Name = SelectName(anime, PluginConfiguration.Instance().TitlePreference, "en")
+            };
 
-        private string CalculateCacheFilename(string id)
-        {
-            return Path.Combine(_appPaths.CachePath, "anilist", id + ".html");
-        }
+            result.ImageUrl = anime.image_url_lge;
+            result.SetProviderId(ProviderNames.AniList, anime.id.ToString());
+            result.SearchProviderName = Name;
 
-        public int Order { get { return 0; } }
-    }
+            DateTime start;
+            if (DateTime.TryParse(anime.start_date, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out start))
+                result.PremiereDate = start;
 
-    public class AniListSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
-    {
-        private static readonly Regex RomajiTitleRegex = new Regex(@"<li><span class='type'>Romaji Title:</span><span class='value'>(?<romaji>.*?)</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
-        private static readonly Regex JapaneseTitleRegex = new Regex(@"li><span class='type'>Japanese:</span><span class='value'>(?<japanese>.*?)</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
-        private static readonly Regex EngTitleRegex = new Regex(@"<li><span class='type'>Eng Title:</span><span class='value'>(?<eng>.*?)</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
-        private static readonly Regex DescriptionRegex = new Regex(@"<div id=""series_des"">(?<description>.*?)</div>", RegexOptions.Singleline | RegexOptions.Compiled);
-        private static readonly Regex StudioRegex = new Regex(@"<li><span class='type'>Main Work:</span><span class='value'><a href='.*?'>(?<studio>.*?)</a><br></span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
-        private static readonly Regex StartDateRegex = new Regex(@"<li><span class='type'>Start:</span><span class='value'>(?<start>.*?)</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
-        private static readonly Regex EndDateRegex = new Regex(@"<li><span class='type'>End:</span><span class='value'>(?<end>.*?)</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
-        private static readonly Regex DurationRegex = new Regex(@"<li><span class='type'>Duration:</span><span class='value'>(?<duration>\d+) mins\s*</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
-        private static readonly Regex GenreListRegex = new Regex(@"<li><span class='type'>Genres:</span><span class='value'>(?<genres>.*?)</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
-        private static readonly Regex GenreRegex = new Regex(@"(?<genre>.*?)<br>", RegexOptions.Singleline | RegexOptions.Compiled);
-        private static readonly Regex RatingRegex = new Regex(@"<li><span class='type'>Rating:</span><span class='value'>(?<rating>.*?)( - .*?)?</span></li>", RegexOptions.Singleline | RegexOptions.Compiled);
-
-        private readonly IAniListDownloader _downloader;
-        private readonly ILogger _logger;
-        private readonly AniDbSeriesProvider _anidbSeriesProvider;
-
-        public AniListSeriesProvider(ILogManager logManager, IApplicationPaths appPaths, IHttpClient httpClient)
-        {
-            _downloader = new AniListSeriesDownloader(appPaths, logManager.GetLogger("AniList"));
-            _logger = logManager.GetLogger("AniList");
-            _anidbSeriesProvider = new AniDbSeriesProvider(appPaths, httpClient);
+            return result;
         }
 
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
 
-            string seriesId = info.ProviderIds.GetOrDefault(ProviderNames.AniList) ?? info.ProviderIds.GetOrDefault(ProviderNames.MyAnimeList);
-            if (string.IsNullOrEmpty(seriesId))
-            {
-                // ask the AniDB provider to see if it can find the IDs
-                MetadataResult<Series> aniDbResult = await _anidbSeriesProvider.GetMetadata(info, cancellationToken).ConfigureAwait(false);
-
-                if (!aniDbResult.HasMetadata || aniDbResult.Item == null)
-                    return result;
-
-                seriesId = aniDbResult.Item.ProviderIds.GetOrDefault(ProviderNames.AniList) ?? aniDbResult.Item.ProviderIds.GetOrDefault(ProviderNames.MyAnimeList);
-            }
-
-            if (string.IsNullOrEmpty(seriesId))
+            var aid = info.ProviderIds.GetOrDefault(ProviderNames.AniList);
+            if (string.IsNullOrEmpty(aid))
                 return result;
 
-            try
+            if (!string.IsNullOrEmpty(aid))
             {
-                FileInfo dataFile = await _downloader.DownloadSeriesPage(seriesId);
-                if (!dataFile.Exists)
-                    return result;
-
-                string data = File.ReadAllText(dataFile.FullName, Encoding.UTF8);
-
                 result.Item = new Series();
                 result.HasMetadata = true;
 
-                ParseTitle(result.Item, data, info.MetadataLanguage);
-                ParseSummary(result.Item, data);
-                ParseStudio(result.Item, data);
-                ParseGenres(result.Item, data);
-                ParseAirDates(result.Item, data);
-                ParseDuration(result.Item, data);
-                ParseRating(result.Item, data);
-            }
-            catch (Exception e)
-            {
-                _logger.ErrorException("Failed to scrape {0}", e, seriesId);
+                result.Item.ProviderIds.Add(ProviderNames.AniList, aid);
+
+                var anime = await _api.GetAnime(aid);
+
+                result.Item.Name = SelectName(anime, PluginConfiguration.Instance().TitlePreference, info.MetadataLanguage ?? "en");
+                result.Item.Overview = anime.description;
+
+                DateTime start;
+                if (DateTime.TryParse(anime.start_date, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out start))
+                    result.Item.PremiereDate = start;
+
+                DateTime end;
+                if (DateTime.TryParse(anime.end_date, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out end))
+                    result.Item.EndDate = end;
+
+                if (anime.genres != null)
+                {
+                    foreach (var genre in anime.genres)
+                        result.Item.AddGenre(genre);
+
+                    if (result.Item.Genres == null || !result.Item.Genres.Contains("Animation"))
+                        result.Item.AddGenre("Animation");
+                }
+
+                if (!string.IsNullOrEmpty(anime.image_url_lge))
+                    StoreImageUrl(aid, anime.image_url_lge, "image");
+
+                if (!string.IsNullOrEmpty(anime.image_url_banner))
+                    StoreImageUrl(aid, anime.image_url_banner, "banner");
             }
 
             return result;
         }
 
-        public string Name
+        private string SelectName(Anime anime, TitlePreferenceType preference, string language)
         {
-            get { return "AniList"; }
+            if (preference == TitlePreferenceType.Localized && language == "en")
+                return anime.title_english;
+
+            if (preference == TitlePreferenceType.Japanese)
+                return anime.title_japanese;
+
+            return anime.title_romaji;
         }
 
-        public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
+        private void StoreImageUrl(string series, string url, string type)
         {
-            return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
+            var path = Path.Combine(_paths.CachePath, "anilist", type, series + ".txt");
+            var directory = Path.GetDirectoryName(path);
+            Directory.CreateDirectory(directory);
+
+            File.WriteAllText(path, url);
+        }
+
+        public static string GetSeriesImage(IApplicationPaths paths, string series, string type)
+        {
+            var path = Path.Combine(paths.CachePath, "anilist", type, series + ".txt");
+            if (File.Exists(path))
+                return File.ReadAllText(path);
+
+            return null;
         }
 
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
+    }
 
-        public static void ParseStudio(Series info, string data)
+    public class AniListSeriesImageProvider : IRemoteImageProvider
+    {
+        private readonly IHttpClient _httpClient;
+        private readonly IApplicationPaths _appPaths;
+
+        public AniListSeriesImageProvider(IHttpClient httpClient, IApplicationPaths appPaths)
         {
-            Match match = StudioRegex.Match(data);
-            if (match.Success)
-            {
-                string studio = match.Groups["studio"].Value;
-                info.Studios.Add(studio);
-            }
+            _httpClient = httpClient;
+            _appPaths = appPaths;
         }
 
-        public static void ParseTitle(Series info, string data, string preferredMetadataLanguage)
+        public string Name => "AniList";
+
+        public bool Supports(IHasImages item) => item is Series || item is Season;
+
+        public IEnumerable<ImageType> GetSupportedImages(IHasImages item)
         {
-            var titles = new List<Title>();
-
-            Match romajiMatch = RomajiTitleRegex.Match(data);
-            if (romajiMatch.Success)
-            {
-                string title = HttpUtility.HtmlDecode(romajiMatch.Groups["romaji"].Value);
-                titles.Add(new Title
-                {
-                    Name = title,
-                    Language = "x-jat",
-                    Type = "main"
-                });
-            }
-
-            Match japaneseMatch = JapaneseTitleRegex.Match(data);
-            if (japaneseMatch.Success)
-            {
-                string title = japaneseMatch.Groups["japanese"].Value;
-                titles.Add(new Title
-                {
-                    Name = title,
-                    Language = "ja",
-                    Type = "main"
-                });
-            }
-
-            Match englishMatch = EngTitleRegex.Match(data);
-            if (englishMatch.Success)
-            {
-                string title = englishMatch.Groups["eng"].Value;
-                titles.Add(new Title
-                {
-                    Name = title,
-                    Language = "en",
-                    Type = "main"
-                });
-            }
-
-            var config = PluginConfiguration.Instance != null ? PluginConfiguration.Instance() : null;
-            Title preferredTitle = titles.Localize(config != null ? PluginConfiguration.Instance().TitlePreference : TitlePreferenceType.JapaneseRomaji, preferredMetadataLanguage);
-            if (preferredTitle != null)
-            {
-                info.Name = preferredTitle.Name;
-            }
+            return new[] {ImageType.Primary, ImageType.Banner};
         }
 
-        public static void ParseSummary(Series info, string data)
+        public Task<IEnumerable<RemoteImageInfo>> GetImages(IHasImages item, CancellationToken cancellationToken)
         {
-            Match match = DescriptionRegex.Match(data);
-            if (match.Success)
-            {
-                info.Overview = StripHtml(HttpUtility.HtmlDecode(match.Groups["description"].Value));
-            }
+            var seriesId = item.GetProviderId(ProviderNames.AniList);
+            return GetImages(seriesId, cancellationToken);
         }
 
-        public static string StripHtml(string source)
+        public async Task<IEnumerable<RemoteImageInfo>> GetImages(string aid, CancellationToken cancellationToken)
         {
-            source = new[] {"<br/>", "<BR/>", "<br />", "<BR />"}.Aggregate(source, (current, lineBreak) => current.Replace(lineBreak, Environment.NewLine));
+            var list = new List<RemoteImageInfo>();
 
-            var array = new char[source.Length];
-            int arrayIndex = 0;
-            bool inside = false;
-
-            for (int i = 0; i < source.Length; i++)
+            if (!string.IsNullOrEmpty(aid))
             {
-                char c = source[i];
-                if (c == '<')
+                var primary = AniListSeriesProvider.GetSeriesImage(_appPaths, aid, "image");
+                if (!string.IsNullOrEmpty(primary))
                 {
-                    inside = true;
-                    continue;
-                }
-
-                if (c == '>')
-                {
-                    inside = false;
-                    continue;
-                }
-
-                if (!inside)
-                {
-                    array[arrayIndex] = c;
-                    arrayIndex++;
-                }
-            }
-
-            return new string(array, 0, arrayIndex);
-        }
-
-        public static void ParseGenres(Series info, string data)
-        {
-            Match genreListMatch = GenreListRegex.Match(data);
-            if (genreListMatch.Success)
-            {
-                MatchCollection genreMatches = GenreRegex.Matches(genreListMatch.Groups["genres"].Value);
-                foreach (Match match in genreMatches)
-                {
-                    if (match.Success)
+                    list.Add(new RemoteImageInfo
                     {
-                        info.Genres.Add(match.Groups["genre"].Value.Trim());
-                    }
+                        ProviderName = Name,
+                        Type = ImageType.Primary,
+                        Url = primary
+                    });
+                }
+
+                var banner = AniListSeriesProvider.GetSeriesImage(_appPaths, aid, "banner");
+                if (!string.IsNullOrEmpty(banner))
+                {
+                    list.Add(new RemoteImageInfo
+                    {
+                        ProviderName = Name,
+                        Type = ImageType.Banner,
+                        Url = banner
+                    });
                 }
             }
 
-            GenreHelper.TidyGenres(info);
-            GenreHelper.RemoveDuplicateTags(info);
+            return list;
         }
 
-        public static void ParseAirDates(Series info, string data)
+        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            Match startMatch = StartDateRegex.Match(data);
-            if (startMatch.Success)
+            return _httpClient.GetResponse(new HttpRequestOptions
             {
-                DateTime date;
-                if (DateTime.TryParse(startMatch.Groups["start"].Value, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
-                {
-                    info.PremiereDate = date;
-                }
-            }
+                CancellationToken = cancellationToken,
+                Url = url,
+                ResourcePool = AniDbSeriesProvider.ResourcePool
 
-            Match endMatch = EndDateRegex.Match(data);
-            if (endMatch.Success)
-            {
-                DateTime date;
-                if (DateTime.TryParse(endMatch.Groups["end"].Value, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
-                {
-                    info.EndDate = date;
-                }
-            }
-        }
-
-        public static void ParseDuration(Series info, string data)
-        {
-            Match match = DurationRegex.Match(data);
-            if (match.Success)
-            {
-                int duration;
-                if (int.TryParse(match.Groups["duration"].Value.Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out duration))
-                {
-                    info.RunTimeTicks = TimeSpan.FromMinutes(duration).Ticks;
-                }
-            }
-        }
-
-        public static void ParseRating(Series info, string data)
-        {
-            Match match = RatingRegex.Match(data);
-            if (match.Success)
-            {
-                info.OfficialRating = match.Groups["rating"].Value;
-            }
+            });
         }
     }
 }

@@ -352,7 +352,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                             {
                                 var firstId = ids.OrderBy(i => i).First().ToString(CultureInfo.InvariantCulture);
                                 series.ProviderIds.Add(ProviderNames.MyAnimeList, firstId);
-                                series.ProviderIds.Add(ProviderNames.AniList, firstId);
+//                                series.ProviderIds.Add(ProviderNames.AniList, firstId);
                             }
 
                             break;
