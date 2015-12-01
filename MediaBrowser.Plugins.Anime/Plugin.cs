@@ -22,13 +22,14 @@ namespace MediaBrowser.Plugins.Anime
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger logger) : base(applicationPaths, xmlSerializer)
         {
             _applicationPaths = applicationPaths;
-            AniDbTitleMatcher.DefaultInstance = new AniDbTitleMatcher(logger, new AniDbTitleDownloader(logger, applicationPaths));
-            AnidbConverter.DefaultInstance = new AnidbConverter(applicationPaths);
 
             Instance = this;
             PluginConfiguration.Instance = () => Configuration;
 
             PerformMigrations();
+
+            AniDbTitleMatcher.DefaultInstance = new AniDbTitleMatcher(logger, new AniDbTitleDownloader(logger, applicationPaths));
+            AnidbConverter.DefaultInstance = new AnidbConverter(applicationPaths);
         }
 
         public override string Name
