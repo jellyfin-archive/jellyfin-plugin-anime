@@ -13,6 +13,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
+using MediaBrowser.Model.Serialization;
 using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata;
@@ -27,10 +28,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         public int Order => -2;
         public string Name => "AniList";
 
-        public AniListSeriesProvider(IHttpClient http, IApplicationPaths paths, ILogManager logManager)
+        public AniListSeriesProvider(IHttpClient http, IApplicationPaths paths, ILogManager logManager, IJsonSerializer jsonSerializer)
         {
             _paths = paths;
-            _api = new AniListApiClient(http, logManager);
+            _api = new AniListApiClient(http, logManager, jsonSerializer);
         }
 
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)

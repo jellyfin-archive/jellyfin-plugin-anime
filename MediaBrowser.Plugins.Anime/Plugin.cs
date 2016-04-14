@@ -42,7 +42,7 @@ namespace MediaBrowser.Plugins.Anime
         private void PerformMigrations()
         {
             var previousVersion = ReadSavedVersion();
-            var currentVersion = Version.Parse(GitVersionInformation.AssemblySemVer);
+            var currentVersion = Version;
             
             try
             {

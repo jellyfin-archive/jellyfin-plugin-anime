@@ -70,7 +70,7 @@
                 loadConfiguration: function() {
                     Dashboard.showLoadingMsg();
 
-                    ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).done(function(config) {
+                    ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).then(function (config) {
                         var page = $.mobile.activePage;
 
                         $('#titleLanguage', page).val(config.TitlePreference).change();
@@ -89,7 +89,7 @@
 
                     var page = $.mobile.activePage;
 
-                    ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).done(function(config) {
+                    ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).then(function(config) {
 
                         config.TitlePreference = $('#titleLanguage', page).val();
                         config.AllowAutomaticMetadataUpdates = $('#chkAutomaticUpdates', page).prop('checked');
@@ -98,7 +98,7 @@
                         config.MoveExcessGenresToTags = $('#chkMoveExcessGenresToTags').prop('checked');
                         config.UseAnidbOrderingWithSeasons = $('#chkAnidbSeasonOne').prop('checked');
                         
-                        ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).done(function(result) {
+                        ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
                         });
                     });

@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Model.Logging;
-using ServiceStack.Text;
+using MediaBrowser.Model.Serialization;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniList
 {
@@ -30,10 +30,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
         private static string _accessToken;
         private static DateTime _accessTokenExpires;
+        private IJsonSerializer _jsonSerializer;
 
-        public AniListApiClient(IHttpClient http, ILogManager logManager)
+        public AniListApiClient(IHttpClient http, ILogManager logManager, IJsonSerializer jsonSerializer)
         {
             _http = http;
+            _jsonSerializer = jsonSerializer;
             _log = logManager.GetLogger("AniList");
         }
 
@@ -64,7 +66,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 using (var reader = new StreamReader(stream))
                 {
                     var json = reader.ReadToEnd().Trim();
-                    return JsonSerializer.DeserializeFromString<T>(json);
+                    return _jsonSerializer.DeserializeFromString<T>(json);
                 }
             }
             catch
@@ -89,7 +91,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
                 using (var response = await _http.Post(options).ConfigureAwait(false))
                 {
-                    var credentials = JsonSerializer.DeserializeFromStream<AccessToken>(response.Content);
+                    var credentials = _jsonSerializer.DeserializeFromStream<AccessToken>(response.Content);
                     _accessToken = credentials.access_token;
                     _accessTokenExpires = DateTime.Now + TimeSpan.FromSeconds(credentials.expires_in);
                 }

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Serialization;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniList
@@ -12,9 +13,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
     {
         private readonly AniListApiClient _api;
 
-        public AniListSeriesIdentityProvider(IHttpClient http, ILogManager logManager)
+        public AniListSeriesIdentityProvider(IHttpClient http, ILogManager logManager, IJsonSerializer jsonSerializer)
         {
-            _api = new AniListApiClient(http, logManager);
+            _api = new AniListApiClient(http, logManager, jsonSerializer);
         }
 
         public async Task Identify(SeriesInfo info)
