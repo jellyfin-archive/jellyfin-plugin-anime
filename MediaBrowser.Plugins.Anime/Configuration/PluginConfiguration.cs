@@ -34,8 +34,6 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         public bool AddAnimeGenre { get; set; }
         public bool UseAnidbOrderingWithSeasons { get; set; }
 
-        public static Func<PluginConfiguration> Instance { get; set; }
-
         public PluginConfiguration()
         {
             TitlePreference = TitlePreferenceType.Localized;

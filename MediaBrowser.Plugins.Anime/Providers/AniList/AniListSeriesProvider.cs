@@ -74,7 +74,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         {
             var result = new RemoteSearchResult
             {
-                Name = SelectName(anime, PluginConfiguration.Instance().TitlePreference, "en")
+                Name = SelectName(anime, Plugin.Instance.Configuration.TitlePreference, "en")
             };
 
             result.ImageUrl = anime.image_url_lge;
@@ -105,7 +105,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
                 var anime = await _api.GetAnime(aid);
 
-                result.Item.Name = SelectName(anime, PluginConfiguration.Instance().TitlePreference, info.MetadataLanguage ?? "en");
+                result.Item.Name = SelectName(anime, Plugin.Instance.Configuration.TitlePreference, info.MetadataLanguage ?? "en");
                 result.Item.Overview = anime.description;
 
                 DateTime start;

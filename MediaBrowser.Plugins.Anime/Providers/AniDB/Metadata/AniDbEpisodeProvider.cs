@@ -193,7 +193,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                     }
                 }
 
-                var title = titles.Localize(PluginConfiguration.Instance().TitlePreference, metadataLanguage).Name;
+                var title = titles.Localize(Plugin.Instance.Configuration.TitlePreference, metadataLanguage).Name;
                 if (!string.IsNullOrEmpty(title))
                     episode.Name += ", " + title;
             }
@@ -275,7 +275,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                     }
                 }
 
-                var title = titles.Localize(PluginConfiguration.Instance().TitlePreference, preferredMetadataLanguage).Name;
+                var title = titles.Localize(Plugin.Instance.Configuration.TitlePreference, preferredMetadataLanguage).Name;
                 if (!string.IsNullOrEmpty(title))
                     episode.Name = title;
             }

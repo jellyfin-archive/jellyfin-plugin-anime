@@ -8,7 +8,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
     {
         public async Task Identify(SeriesInfo info)
         {
-            if (info.ProviderIds.ContainsKey(ProviderNames.AniDb) && !Plugin.Instance.CheckForceRefreshFlag())
+            if (info.ProviderIds.ContainsKey(ProviderNames.AniDb))
                 return;
 
             var aid = await AniDbTitleMatcher.DefaultInstance.FindSeries(info.Name, CancellationToken.None);

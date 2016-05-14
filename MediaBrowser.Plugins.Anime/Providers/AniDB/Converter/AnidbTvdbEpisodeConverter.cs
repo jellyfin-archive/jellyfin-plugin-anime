@@ -31,7 +31,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Converter
 
             var overrideTvdb = string.IsNullOrEmpty(tvdb) 
                 || info.ParentIndexNumber == null
-                || (info.ParentIndexNumber < 2 && PluginConfiguration.Instance().UseAnidbOrderingWithSeasons);
+                || (info.ParentIndexNumber < 2 && Plugin.Instance.Configuration.UseAnidbOrderingWithSeasons);
 
             if (!string.IsNullOrEmpty(anidb) && overrideTvdb)
             {

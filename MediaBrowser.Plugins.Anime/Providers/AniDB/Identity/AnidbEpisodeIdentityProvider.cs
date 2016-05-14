@@ -9,11 +9,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
     {
         public async Task Identify(EpisodeInfo info)
         {
-            if (info.ProviderIds.ContainsKey(ProviderNames.AniDb) && !Plugin.Instance.CheckForceRefreshFlag())
+            if (info.ProviderIds.ContainsKey(ProviderNames.AniDb))
                 return;
 
             var inspectSeason = info.ParentIndexNumber == null ||
-                                (info.ParentIndexNumber < 2 && PluginConfiguration.Instance().UseAnidbOrderingWithSeasons);
+                                (info.ParentIndexNumber < 2 && Plugin.Instance.Configuration.UseAnidbOrderingWithSeasons);
 
             var series = info.SeriesProviderIds.GetOrDefault(ProviderNames.AniDb);
             if (!string.IsNullOrEmpty(series) && inspectSeason && info.IndexNumber != null)

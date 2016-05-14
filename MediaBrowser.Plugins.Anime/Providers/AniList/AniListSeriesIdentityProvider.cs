@@ -20,7 +20,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
         public async Task Identify(SeriesInfo info)
         {
-            if (!string.IsNullOrEmpty(info.ProviderIds.GetOrDefault(ProviderNames.AniList)) && !Plugin.Instance.CheckForceRefreshFlag())
+            if (!string.IsNullOrEmpty(info.ProviderIds.GetOrDefault(ProviderNames.AniList)) )
                 return;
 
             if (string.IsNullOrEmpty(info.Name))

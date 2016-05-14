@@ -71,7 +71,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
         public static void CleanupGenres(Series series)
         {
-            PluginConfiguration config = PluginConfiguration.Instance();
+            PluginConfiguration config = Plugin.Instance.Configuration;
 
             if (config.TidyGenreList)
             {
@@ -127,7 +127,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
         public static void TidyGenres(Series series)
         {
-            var config = PluginConfiguration.Instance != null ? PluginConfiguration.Instance() : new PluginConfiguration();
+            var config = Plugin.Instance.Configuration;
 
             var genres = new HashSet<string>();
             var tags = new HashSet<string>(series.Tags);

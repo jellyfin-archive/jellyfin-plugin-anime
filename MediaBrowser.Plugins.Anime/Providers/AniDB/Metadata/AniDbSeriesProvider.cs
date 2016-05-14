@@ -473,7 +473,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                 }
             }
 
-            return titles.Localize(PluginConfiguration.Instance().TitlePreference, preferredMetadataLangauge).Name;
+            return titles.Localize(Plugin.Instance.Configuration.TitlePreference, preferredMetadataLangauge).Name;
         }
 
         private void ParseCreators(MetadataResult<Series> series, XmlReader reader)
