@@ -91,13 +91,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             var id = AnidbEpisodeIdentity.Parse(searchInfo.ProviderIds.GetOrDefault(ProviderNames.AniDb));
             if (id == null)
             {
-                var episodeIdentifier = new AnidbEpisodeIdentityProvider();
-                await episodeIdentifier.Identify(searchInfo);
+                //var episodeIdentifier = new AnidbEpisodeIdentityProvider();
+                //await episodeIdentifier.Identify(searchInfo);
 
-                var converter = new AnidbTvdbEpisodeConverter();
-                await converter.Convert(searchInfo);
+                //var converter = new AnidbTvdbEpisodeConverter();
+                //await converter.Convert(searchInfo);
 
-                id = AnidbEpisodeIdentity.Parse(searchInfo.ProviderIds.GetOrDefault(ProviderNames.AniDb));
+                //id = AnidbEpisodeIdentity.Parse(searchInfo.ProviderIds.GetOrDefault(ProviderNames.AniDb));
             }
 
             if (id == null)
