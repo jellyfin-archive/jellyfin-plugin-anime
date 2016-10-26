@@ -1,6 +1,8 @@
-﻿using MediaBrowser.Common.Configuration;
+﻿using System.Collections.Generic;
+using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Converter;
@@ -9,7 +11,7 @@ using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
 namespace MediaBrowser.Plugins.Anime
 {
     public class Plugin
-        : BasePlugin<PluginConfiguration>
+        : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger logger) : base(applicationPaths, xmlSerializer)
         {
@@ -25,5 +27,17 @@ namespace MediaBrowser.Plugins.Anime
         }
 
         public static Plugin Instance { get; private set; }
+
+        public IEnumerable<PluginPageInfo> GetPages()
+        {
+            return new[]
+            {
+                new PluginPageInfo
+                {
+                    Name = "anime",
+                    EmbeddedResourcePath = "MediaBrowser.Plugins.Anime.Configuration.configPage.html"
+                }
+            };
+        }
     }
 }
