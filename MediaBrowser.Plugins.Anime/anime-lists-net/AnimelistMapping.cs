@@ -17,7 +17,7 @@ namespace AnimeLists
 
         /// <remarks />
         [XmlAttribute("start")]
-        public byte Start { get; set; }
+        public short Start { get; set; }
 
         /// <remarks />
         [XmlIgnore]
@@ -25,7 +25,7 @@ namespace AnimeLists
 
         /// <remarks />
         [XmlAttribute("end")]
-        public byte End { get; set; }
+        public short End { get; set; }
 
         /// <remarks />
         [XmlIgnore]
@@ -33,7 +33,7 @@ namespace AnimeLists
 
         /// <remarks />
         [XmlAttribute("offset")]
-        public sbyte Offset { get; set; }
+        public short Offset { get; set; }
 
         /// <remarks />
         [XmlIgnore]
