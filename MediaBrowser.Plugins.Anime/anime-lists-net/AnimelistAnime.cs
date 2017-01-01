@@ -44,7 +44,7 @@ namespace AnimeLists
 
         /// <remarks />
         [XmlAttribute("episodeoffset")]
-        public byte EpisodeOffset { get; set; }
+        public short EpisodeOffset { get; set; }
 
         /// <remarks />
         [XmlIgnore]
