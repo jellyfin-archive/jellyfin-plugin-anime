@@ -9,8 +9,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Converter
 {
     public class AnidbConverter
     {
-        public static AnidbConverter DefaultInstance { get; set; }
-
         public Mapper Mapper { get; private set; }
 
         public AnidbConverter(IApplicationPaths paths)
