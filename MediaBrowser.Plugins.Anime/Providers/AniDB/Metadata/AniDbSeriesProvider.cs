@@ -270,7 +270,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                                 switch (episodeSubtree.Name)
                                 {
                                     case "epno":
-                                        var epno = episodeSubtree.ReadElementContentAsString();
+                                        //var epno = episodeSubtree.ReadElementContentAsString();
                                         //EpisodeInfo info = new EpisodeInfo();
                                         //info.AnimeSeriesIndex = series.AnimeSeriesIndex;
                                         //info.IndexNumberEnd = string(epno);
