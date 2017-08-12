@@ -46,7 +46,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                 result.Item.PremiereDate = seriesResult.Item.PremiereDate;
                 result.Item.EndDate = seriesResult.Item.EndDate;
                 result.Item.CommunityRating = seriesResult.Item.CommunityRating;
-                result.Item.VoteCount = seriesResult.Item.VoteCount;
                 result.Item.Studios = seriesResult.Item.Studios;
                 result.Item.Genres = seriesResult.Item.Genres;
             }

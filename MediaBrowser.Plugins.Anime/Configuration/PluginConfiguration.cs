@@ -30,7 +30,6 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         public bool AllowAutomaticMetadataUpdates { get; set; }
         public bool TidyGenreList { get; set; }
         public int MaxGenres { get; set; }
-        public bool MoveExcessGenresToTags { get; set; }
         public bool AddAnimeGenre { get; set; }
         public bool UseAnidbOrderingWithSeasons { get; set; }
 
@@ -40,7 +39,6 @@ namespace MediaBrowser.Plugins.Anime.Configuration
             AllowAutomaticMetadataUpdates = true;
             TidyGenreList = true;
             MaxGenres = 5;
-            MoveExcessGenresToTags = true;
             AddAnimeGenre = true;
             UseAnidbOrderingWithSeasons = false;
         }

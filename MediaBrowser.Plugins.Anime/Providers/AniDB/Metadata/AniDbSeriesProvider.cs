@@ -248,7 +248,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             }
 
             GenreHelper.CleanupGenres(series);
-            GenreHelper.RemoveDuplicateTags(series);
         }
 
         private void ParseEpisodes(Series series, XmlReader reader)
@@ -434,10 +433,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                 {
                     if (reader.Name == "permanent")
                     {
-                        int count;
-                        if (int.TryParse(reader.GetAttribute("count"), NumberStyles.Any, CultureInfo.InvariantCulture, out count))
-                            series.VoteCount = count;
-
                         float rating;
                         if (float.TryParse(
                             reader.ReadElementContentAsString(),
@@ -487,7 +482,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
 
                     if (type == "Animation Work")
                     {
-                        series.Item.Studios.Add(name);
+                        series.Item.AddStudio(name);
                     }
                     else
                     {

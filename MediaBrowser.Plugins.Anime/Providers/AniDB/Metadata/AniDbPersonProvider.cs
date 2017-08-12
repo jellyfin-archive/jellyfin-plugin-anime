@@ -64,19 +64,19 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             _httpClient = httpClient;
         }
 
-        public bool Supports(IHasImages item)
+        public bool Supports(IHasMetadata item)
         {
             return item is Person;
         }
 
         public string Name => "AniDB";
 
-        public IEnumerable<ImageType> GetSupportedImages(IHasImages item)
+        public IEnumerable<ImageType> GetSupportedImages(IHasMetadata item)
         {
             yield return ImageType.Primary;
         }
 
-        public Task<IEnumerable<RemoteImageInfo>> GetImages(IHasImages item, CancellationToken cancellationToken)
+        public Task<IEnumerable<RemoteImageInfo>> GetImages(IHasMetadata item, CancellationToken cancellationToken)
         {
             var infos = new List<RemoteImageInfo>();
 

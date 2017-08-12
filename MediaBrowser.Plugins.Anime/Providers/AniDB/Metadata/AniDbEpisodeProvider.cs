@@ -254,7 +254,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                                 if (int.TryParse(reader.GetAttribute("count"), NumberStyles.Any, CultureInfo.InvariantCulture, out count) &&
                                     float.TryParse(reader.ReadElementContentAsString(), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out rating))
                                 {
-                                    episode.VoteCount = count;
                                     episode.CommunityRating = rating;
                                 }
 

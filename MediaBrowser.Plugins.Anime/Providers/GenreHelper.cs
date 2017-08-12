@@ -93,15 +93,6 @@ namespace MediaBrowser.Plugins.Anime.Providers
             
             if (config.MaxGenres > 0)
             {
-                if (config.MoveExcessGenresToTags)
-                {
-                    foreach (string genre in series.Genres.Skip(max))
-                    {
-                        if (!series.Tags.Contains(genre))
-                            series.Tags.Add(genre);
-                    }
-                }
-
                 series.Genres = series.Genres.Take(max).ToList();
             }
 
@@ -114,15 +105,6 @@ namespace MediaBrowser.Plugins.Anime.Providers
             }
 
             series.Genres.Sort();
-        }
-
-        public static void RemoveDuplicateTags(Series series)
-        {
-            for (int i = series.Tags.Count - 1; i >= 0; i--)
-            {
-                if (series.Genres.Contains(series.Tags[i]))
-                    series.Tags.RemoveAt(i);
-            }
         }
 
         public static void TidyGenres(Series series)
@@ -139,23 +121,17 @@ namespace MediaBrowser.Plugins.Anime.Providers
                     genres.Add(mapped);
                 else
                 {
-                    if (config.MoveExcessGenresToTags)
-                        tags.Add(genre);
-                    else
-                        genres.Add(genre);
+                    genres.Add(genre);
                 }
 
                 if (GenresAsTags.Contains(genre))
                 {
-                    if (config.MoveExcessGenresToTags)
-                        tags.Add(genre);
-                    else if (!genres.Contains(genre))
-                        genres.Add(genre);
+                    genres.Add(genre);
                 }
             }
 
             series.Genres = genres.ToList();
-            series.Tags = tags.ToList();
+            series.Tags = tags.ToArray();
         }
 
         public static IEnumerable<string> RemoveRedundantGenres(IEnumerable<string> genres)
