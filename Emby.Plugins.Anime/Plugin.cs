@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Logging;
@@ -37,6 +38,12 @@ namespace MediaBrowser.Plugins.Anime
                     EmbeddedResourcePath = "MediaBrowser.Plugins.Anime.Configuration.configPage.html"
                 }
             };
+        }
+
+        private Guid _id = new Guid("1d0dddf7-1877-4473-8d7b-03f7dac1e559");
+        public override Guid Id
+        {
+            get { return _id; }
         }
     }
 }
