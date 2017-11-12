@@ -172,11 +172,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 if (anime.genres != null)
                 {
                     foreach (var genre in anime.genres)
-                        if (!string.IsNullOrEmpty(genre))
-                        {
-                            result.Item.AddGenre(genre);
-                        }
-
+                    
+                    if(!string.IsNullOrEmpty(genre))
+                        result.Item.AddGenre(genre);
+                        
                     GenreHelper.CleanupGenres(result.Item);
                 }
 
