@@ -1,12 +1,12 @@
-﻿using System;
+﻿using MediaBrowser.Common.Configuration;
+using MediaBrowser.Model.Logging;
+using MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata;
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Common.Configuration;
-using MediaBrowser.Model.Logging;
-using MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
 {
@@ -22,11 +22,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
 
         private readonly IApplicationPaths _paths;
         private readonly ILogger _logger;
+        public static string s_paths;
 
         public AniDbTitleDownloader(ILogger logger, IApplicationPaths paths)
         {
             _logger = logger;
             _paths = paths;
+            s_paths = GetDataPath(paths);
         }
 
         /// <summary>
@@ -37,6 +39,23 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
         public static string GetDataPath(IApplicationPaths applicationPaths)
         {
             return Path.Combine(applicationPaths.CachePath, "anidb");
+        }
+
+        /// <summary>
+        /// Load XML static| Too prevent EXCEPTIONS
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public static async Task Load_static(CancellationToken cancellationToken)
+        {
+            var titlesFile = TitlesFilePath_;
+            var titlesFileInfo = new FileInfo(titlesFile);
+
+            // download titles if we do not already have them, or have not updated for a week
+            if (!titlesFileInfo.Exists || (DateTime.UtcNow - titlesFileInfo.LastWriteTimeUtc).TotalDays > 7)
+            {
+                await DownloadTitles_static(titlesFile).ConfigureAwait(false);
+            }
         }
 
         public async Task Load(CancellationToken cancellationToken)
@@ -72,14 +91,46 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
             }
         }
 
+        /// <summary>
+        /// static|Downloads an xml file from AniDB which contains all of the titles for every anime, and their IDs,
+        /// and saves it to disk.
+        /// </summary>
+        /// <param name="titlesFile"></param>
+        /// <returns></returns>
+        private static async Task DownloadTitles_static(string titlesFile)
+        {
+            var client = new WebClient();
+
+            await AniDbSeriesProvider.RequestLimiter.Tick();
+
+            using (var stream = await client.OpenReadTaskAsync(TitlesUrl))
+            using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
+            using (var writer = File.Open(titlesFile, FileMode.Create, FileAccess.Write))
+            {
+                await unzipped.CopyToAsync(writer).ConfigureAwait(false);
+            }
+        }
+
         public string TitlesFilePath
         {
             get
             {
-                var data = GetDataPath(_paths);
-                Directory.CreateDirectory(data);
+                Directory.CreateDirectory(s_paths);
 
-                return Path.Combine(data, "titles.xml");
+                return Path.Combine(s_paths, "titles.xml");
+            }
+        }
+
+        /// <summary>
+        /// Get the FilePath
+        /// </summary>
+        public static string TitlesFilePath_
+        {
+            get
+            {
+                Directory.CreateDirectory(s_paths);
+
+                return Path.Combine(s_paths, "titles.xml");
             }
         }
     }

@@ -1,14 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using MediaBrowser.Common.Configuration;
+﻿using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
 {
@@ -33,7 +33,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
 
         public async Task<IEnumerable<RemoteImageInfo>> GetImages(IHasMetadata item, CancellationToken cancellationToken)
         {
-            var season = (Season) item;
+            var season = (Season)item;
             var series = season.Series;
 
             var seriesId = series.ProviderIds.GetOrDefault(ProviderNames.AniDb);
@@ -45,7 +45,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
 
         public IEnumerable<ImageType> GetSupportedImages(IHasMetadata item)
         {
-            return new[] {ImageType.Primary};
+            return new[] { ImageType.Primary };
         }
 
         public string Name => "AniDB";

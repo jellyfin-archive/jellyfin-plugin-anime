@@ -12,7 +12,7 @@ namespace MediaBrowser.Plugins.Anime
         private static readonly Task Completed = Task.FromResult(true);
         private readonly Queue<TaskCompletionSource<bool>> _waiters = new Queue<TaskCompletionSource<bool>>();
         private int _currentCount;
-        
+
         public AsyncSemaphore(int initialCount)
         {
             if (initialCount < 0) throw new ArgumentOutOfRangeException("initialCount");
@@ -66,7 +66,7 @@ namespace MediaBrowser.Plugins.Anime
             Task wait = _semaphore.WaitAsync();
             return wait.IsCompleted
                 ? _releaser
-                : wait.ContinueWith((_, state) => new Releaser((AsyncLock) state),
+                : wait.ContinueWith((_, state) => new Releaser((AsyncLock)state),
                     this, CancellationToken.None,
                     TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }

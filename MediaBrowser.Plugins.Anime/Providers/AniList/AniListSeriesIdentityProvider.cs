@@ -1,13 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using MediaBrowser.Common.Net;
-using MediaBrowser.Controller.Providers;
-using MediaBrowser.Model.Logging;
-using MediaBrowser.Model.Serialization;
-using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
-
-namespace MediaBrowser.Plugins.Anime.Providers.AniList
+﻿namespace MediaBrowser.Plugins.Anime.Providers.AniList
 {
     //public class AniListSeriesIdentityProvider : IItemIdentityProvider<SeriesInfo>
     //{
@@ -38,7 +29,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
     //            if (first == null)
     //                return;
-                
+
     //            info.ProviderIds.Remove(ProviderNames.AniList);
     //            info.ProviderIds.Add(ProviderNames.AniList, first.id.ToString());
     //        }

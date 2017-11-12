@@ -1,16 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using MediaBrowser.Common.Net;
+﻿using MediaBrowser.Common.Net;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
+using System;
+using System.IO;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniList
 {
     public class AniListApiClient
     {
+        public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
+
         public class AccessToken
         {
             public string access_token { get; set; }
@@ -56,18 +58,21 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
             try
             {
+                var json = "";
                 string urlWithToken = url;
                 if (url.Contains("?"))
                     urlWithToken += $"&access_token={_accessToken}";
                 else
                     urlWithToken += $"?access_token={_accessToken}";
 
-                using (var stream = await _http.Get(urlWithToken, CancellationToken.None).ConfigureAwait(false))
-                using (var reader = new StreamReader(stream))
+                var _webRequest = WebRequest.Create(@"" + Uri.EscapeUriString(urlWithToken));
+                using (var _response = _webRequest.GetResponse())
+                using (var _content = _response.GetResponseStream())
+                using (var _reader = new StreamReader(_content))
                 {
-                    var json = reader.ReadToEnd().Trim();
-                    return _jsonSerializer.DeserializeFromString<T>(json);
+                    json = _reader.ReadToEnd().Trim();
                 }
+                return _jsonSerializer.DeserializeFromString<T>(json);
             }
             catch
             {

@@ -18,6 +18,7 @@
                                 <option id="optLanguageLocalized" value="Localized">Localized</option>
                                 <option id="optLanguageRomaji" value="JapaneseRomaji">Romaji</option>
                                 <option id="optLanguageJapanese" value="Japanese">Japanese</option>
+                                <option id="optLanguageGerman" value="German">German</option>
                             </select>
                         </li>
                         <li>
@@ -36,13 +37,25 @@
                             <label for="chkMaxGenres">
                                 Max Genres [0: unlimited]
                             </label>
-                            <input id="chkMaxGenres" name="chkMaxGenres" type="number" min="0" value="maxGenres"/>
+                            <input id="chkMaxGenres" name="chkMaxGenres" type="number" min="0" value="maxGenres" />
+                        </li>
+                        <li>
+                            <label for="chkMyAnimeList_API_Name">
+                                MyAnimeList Name. -not rly needed
+                            </label>
+                            <input id="chkMyAnimeList_API_Name" name="chkMyAnimeList_API_Name" type="text" value="" disabled/>
+                        </li>
+                        <li>
+                            <label for="chkMyAnimeList_API_Pw">
+                                MyAnimeList Pw. -not rly needed
+                            </label>
+                            <input id="chkMyAnimeList_API_Pw" name="chkMyAnimeList_API_Pw" type="password" value="" disabled/>
                         </li>
                         <li>
                             <label for="chkAnidbSeasonOne">
                                 Use AniDB Odering with Seasons
                             </label>
-                            <input id="chkAnidbSeasonOne" name="chkAnidbSeasonOne" type="checkbox" value="anidbSeasonOne"/>
+                            <input id="chkAnidbSeasonOne" name="chkAnidbSeasonOne" type="checkbox" value="anidbSeasonOne" />
                         </li>
                         <li>
                             <button type="submit" data-theme="b">Save</button>
@@ -52,12 +65,12 @@
                 </form>
             </div>
         </div>
-        
+
         <script type="text/javascript">
             var AnimeConfigurationPage =
             {
                 pluginUniqueId: "1d0dddf7-1877-4473-8d7b-03f7dac1e559",
-                
+
                 virtualFolders: [],
                 physicalFolders: [],
 
@@ -70,10 +83,12 @@
                         $('#titleLanguage', page).val(config.TitlePreference).change();
                         $('#chkAutomaticUpdates', page).checked(config.AllowAutomaticMetadataUpdates).checkboxradio("refresh");
                         $('#chkTidyGenres', page).checked(config.TidyGenreList).checkboxradio("refresh");
+                        $('#chkMyAnimeList_API_Name', page, val(config.MyAnimeList_API_Name)).change();
+                        $('#chkMyAnimeList_API_Pw', page, val(config.MyAnimeList_API_Pw)).change();
                         $('#chkMaxGenres', page).val(config.MaxGenres).change();
                         $('#chkMoveExcessGenresToTags', page).checked(config.MoveExcessGenresToTags).checkboxradio("refresh");
                         $('#chkAnidbSeasonOne', page).checked(config.UseAnidbOrderingWithSeasons).checkboxradio("refresh");
-                        
+
                         Dashboard.hideLoadingMsg();
                     });
                 },
@@ -89,9 +104,12 @@
                         config.AllowAutomaticMetadataUpdates = $('#chkAutomaticUpdates', page).prop('checked');
                         config.TidyGenreList = $('#chkTidyGenres').prop('checked');
                         config.MaxGenres = $('#chkMaxGenres').val();
+                        config.MaxGenres = $('#chkNames').val();
+                        config.MyAnimeList_API_Name = $('#chkMyAnimeList_API_Name').val();
+                        config.MyAnimeList_API_Pw= $('#chkMyAnimeList_API_Pw').val();
                         config.MoveExcessGenresToTags = $('#chkMoveExcessGenresToTags').prop('checked');
                         config.UseAnidbOrderingWithSeasons = $('#chkAnidbSeasonOne').prop('checked');
-                        
+
                         ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
                         });

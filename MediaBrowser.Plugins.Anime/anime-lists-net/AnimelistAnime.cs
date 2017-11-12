@@ -11,7 +11,7 @@ namespace AnimeLists
 
         /// <remarks />
         [XmlArray("mapping-list")]
-        [XmlArrayItem("mapping", typeof (AnimelistMapping), IsNullable = false)]
+        [XmlArrayItem("mapping", typeof(AnimelistMapping), IsNullable = false)]
         public AnimelistMapping[] Mappinglist { get; set; }
 
         /// <remarks />
@@ -25,6 +25,18 @@ namespace AnimeLists
         /// <remarks />
         [XmlAttribute("anidbid")]
         public string AnidbId { get; set; }
+
+        /// <remarks />
+        [XmlAttribute("anisearch")]
+        public string AniSearchId { get; set; }
+
+        /// <remarks />
+        [XmlAttribute("proxer")]
+        public string ProxerId { get; set; }
+
+        /// <remarks />
+        [XmlAttribute("myanimelist")]
+        public string MyAnimeListId { get; set; }
 
         /// <remarks />
         [XmlAttribute("tvdbid")]

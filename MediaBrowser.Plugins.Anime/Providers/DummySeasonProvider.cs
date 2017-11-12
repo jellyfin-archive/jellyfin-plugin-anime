@@ -33,7 +33,7 @@
 //        public async Task Run(Series series, CancellationToken cancellationToken)
 //        {
 //            await RemoveObsoleteSeasons(series).ConfigureAwait(false);
-//            
+//
 //            var hasNewSeasons = await AddDummySeasonFolders(series, cancellationToken).ConfigureAwait(false);
 //
 //            if (hasNewSeasons)
@@ -115,7 +115,7 @@
 //            };
 //
 //            season.SetParent(series);
-//            
+//
 //            await series.AddChild(season, cancellationToken).ConfigureAwait(false);
 //
 //            await season.RefreshMetadata(new MetadataRefreshOptions(), cancellationToken).ConfigureAwait(false);

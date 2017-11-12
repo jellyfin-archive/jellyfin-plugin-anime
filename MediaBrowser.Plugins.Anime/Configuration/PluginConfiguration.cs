@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using MediaBrowser.Model.Plugins;
+﻿using MediaBrowser.Model.Plugins;
 
 namespace MediaBrowser.Plugins.Anime.Configuration
 {
@@ -21,6 +18,11 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         /// Use titles in Japanese romaji.
         /// </summary>
         JapaneseRomaji,
+
+        /// <summary>
+        /// Use titles in German.
+        /// </summary>
+        German,
     }
 
     public class PluginConfiguration
@@ -32,6 +34,8 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         public int MaxGenres { get; set; }
         public bool AddAnimeGenre { get; set; }
         public bool UseAnidbOrderingWithSeasons { get; set; }
+        public string MyAnimeList_API_Name { get; set; }
+        public string MyAnimeList_API_Pw { get; set; }
 
         public PluginConfiguration()
         {
@@ -41,6 +45,8 @@ namespace MediaBrowser.Plugins.Anime.Configuration
             MaxGenres = 5;
             AddAnimeGenre = true;
             UseAnidbOrderingWithSeasons = false;
+            MyAnimeList_API_Name = "";
+            MyAnimeList_API_Pw = "";
         }
     }
 }
