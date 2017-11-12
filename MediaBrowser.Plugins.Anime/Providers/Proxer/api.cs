@@ -149,13 +149,21 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         /// <param name="title"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public static async Task<string> Search_GetSeries(string title, CancellationToken cancellationToken)
+        public static async Task<string> Search_GetSeries(string title, CancellationToken cancellationToken,bool bettersearchresults=false)
         {
             anime_search_names.Clear();
             anime_search_ids.Clear();
             string result = null;
             string result_text = null;
-            string WebContent = await WebRequestAPI(string.Format(SearchLink, Uri.EscapeUriString(title)));
+            string WebContent = "";
+            if (bettersearchresults)
+            {
+                 WebContent = await WebRequestAPI(string.Format(SearchLink, Uri.EscapeUriString(Equals_check.Half_string(title, 4,60))));
+            }
+            else
+            {
+                 WebContent = await WebRequestAPI(string.Format(SearchLink, Uri.EscapeUriString(title)));
+            }
             int x = 0;
             while (result_text != "")
             {
@@ -246,12 +254,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
                     x++;
                 }
             }
-            aid = await Search_GetSeries(Equals_check.clear_name(title), cancellationToken);
+            aid = await Search_GetSeries(Equals_check.clear_name(title), cancellationToken,true);
             if (!string.IsNullOrEmpty(aid))
             {
                 return aid;
             }
-            aid = await Search_GetSeries(Equals_check.half_string(title, 4, 70), cancellationToken);
+            aid = await Search_GetSeries(Equals_check.clear_name_step2(title), cancellationToken,true);
             if (!string.IsNullOrEmpty(aid))
             {
                 return aid;

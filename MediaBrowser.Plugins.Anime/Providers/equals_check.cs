@@ -68,6 +68,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             a = a.Replace("&", "and");
             a = a.Replace(":", "");
             a = a.Replace("␣", "");
+            a = a.Replace("2wei", "zwei");
             return a;
         }
 
@@ -92,20 +93,18 @@ namespace MediaBrowser.Plugins.Anime.Providers
         }
 
         /// <summary>
-        /// Cut the string
-        /// Example: Apple
-        /// Return: App
+        /// Cut p(%) away from the string
         /// </summary>
         /// <param name="string_"></param>
         /// <param name="min_lenght"></param>
         /// <param name="p"></param>
         /// <returns></returns>
-        public static string half_string(string string_, int min_lenght = 0, int p = 50)
+        public static string Half_string(string string_, int min_lenght = 0, int p = 50)
         {
-            int length = 0;
-            if (string_.Length - ((string_.Length / 100) * p) > min_lenght)
+            decimal length = 0;
+            if ((int)((decimal)string_.Length - (((decimal)string_.Length / 100m) * (decimal)p)) > min_lenght)
             {
-                length = string_.Length - ((string_.Length / 100) * p);
+                length = (decimal)string_.Length - (((decimal)string_.Length / 100m) * (decimal)p);
             }
             else
             {
@@ -118,7 +117,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
                     length = min_lenght;
                 }
             }
-            return string_.Substring(0, length);
+            return string_.Substring(0, (int)length);
         }
 
         /// <summary>
@@ -160,12 +159,12 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 string s2 = "-";
                 while (!string.IsNullOrEmpty(s1) && !string.IsNullOrEmpty(s2))
                 {
-                    s1 = one_line_regex(new Regex("<anime aid=" + "\"" + @"(\d+)" + "\"" + @">(?>[^<>]+|<(?!\/anime>)[^<>]*>)*?" + Regex.Escape(half_string(a, 4))), xml, 1, x);
+                    s1 = one_line_regex(new Regex("<anime aid=" + "\"" + @"(\d+)" + "\"" + @">(?>[^<>]+|<(?!\/anime>)[^<>]*>)*?" + Regex.Escape(Half_string(a, 4))), xml, 1, x);
                     if (s1 != "")
                     {
                         pre_aid.Add(s1);
                     }
-                    s2 = one_line_regex(new Regex("<anime aid=" + "\"" + @"(\d+)" + "\"" + @">(?>[^<>]+|<(?!\/anime>)[^<>]*>)*?" + Regex.Escape(half_string(b, 4))), xml, 1, x);
+                    s2 = one_line_regex(new Regex("<anime aid=" + "\"" + @"(\d+)" + "\"" + @">(?>[^<>]+|<(?!\/anime>)[^<>]*>)*?" + Regex.Escape(Half_string(b, 4))), xml, 1, x);
                     if (s1 != "")
                     {
                         if (s1 != s2)
@@ -217,12 +216,12 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 string s2 = "-";
                 while (!string.IsNullOrEmpty(s1) && !string.IsNullOrEmpty(s2))
                 {
-                    s1 = one_line_regex(new Regex("<anime aid=" + "\"" + @"(\d+)" + "\"" + @">(?>[^<>]+|<(?!\/anime>)[^<>]*>)*?" + Regex.Escape(half_string(a, 4))), xml, 1, x);
+                    s1 = one_line_regex(new Regex("<anime aid=" + "\"" + @"(\d+)" + "\"" + @">(?>[^<>]+|<(?!\/anime>)[^<>]*>)*?" + Regex.Escape(Half_string(a, 4))), xml, 1, x);
                     if (s1 != "")
                     {
                         pre_aid.Add(s1);
                     }
-                    s2 = one_line_regex(new Regex("<anime aid=" + "\"" + @"(\d+)" + "\"" + @">(?>[^<>]+|<(?!\/anime>)[^<>]*>)*?" + Regex.Escape(half_string(b, 4))), xml, 1, x);
+                    s2 = one_line_regex(new Regex("<anime aid=" + "\"" + @"(\d+)" + "\"" + @">(?>[^<>]+|<(?!\/anime>)[^<>]*>)*?" + Regex.Escape(Half_string(b, 4))), xml, 1, x);
                     if (s1 != "")
                     {
                         if (s1 != s2)

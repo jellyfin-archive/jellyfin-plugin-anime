@@ -294,13 +294,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
         /// </summary>
         public static async Task<string> WebRequestAPI(string link)
         {
-            string _strContent = "";
-            using (WebClient client = new WebClient())
-            {
-                Task<string> async_content = client.DownloadStringTaskAsync(link);
-                _strContent = await async_content;
-            }
-            return _strContent;
+                string _strContent = "";
+                using (WebClient client = new WebClient())
+                {
+                    Task<string> async_content = client.DownloadStringTaskAsync(link);
+                    _strContent = await async_content;
+                }
+                return _strContent;
         }
     }
 }
