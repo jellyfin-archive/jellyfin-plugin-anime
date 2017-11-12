@@ -16,7 +16,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
     /// </summary>
     public class AniDbTitleMatcher : IAniDbTitleMatcher
     {
-        private enum TitleType
+        public enum TitleType
         {
             Main = 0,
             Official = 1,
@@ -24,9 +24,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
             Synonym = 3
         }
 
-        private struct TitleInfo
+        public struct TitleInfo
         {
             public string AniDbId { get; set; }
+            public string Title { get; set; }
             public TitleType Type { get; set; }
         }
 
@@ -37,10 +38,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
         public static IAniDbTitleMatcher DefaultInstance { get; set; }
         
         private readonly ILogger _logger;
-        private readonly IAniDbTitleDownloader _downloader;
+        public readonly IAniDbTitleDownloader _downloader;
         private readonly AsyncLock _lock;
 
-        private Dictionary<string, TitleInfo> _titles;
+        public static Dictionary<string, TitleInfo> _titles;
         
         /// <summary>
         /// Creates a new instance of the AniDbTitleMatcher class.
@@ -81,6 +82,19 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
             }
 
             return null;
+        }
+        public static TitleInfo GetTitleInfos(string title)
+        {
+            TitleInfo info;
+            if (!string.IsNullOrEmpty(title))
+            {
+               
+                if (_titles.TryGetValue(title, out info))
+                {
+                    return info;
+                }
+            }
+            return new TitleInfo();
         }
 
         const string Remove = "\"'!`?";
@@ -194,9 +208,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
                                         var type = ParseType(reader.GetAttribute("type"));
 
                                         TitleInfo currentTitleInfo;
+                                        
                                         if (!_titles.TryGetValue(title, out currentTitleInfo) || (int)currentTitleInfo.Type < (int)type)
                                         {
-                                            _titles[title] = new TitleInfo {AniDbId = aid, Type = type};
+                                            
+                                            _titles[title] = new TitleInfo {AniDbId = aid, Type = type, Title = title };
                                         }
                                     }
                                     break;

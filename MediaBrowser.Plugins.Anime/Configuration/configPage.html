@@ -18,6 +18,7 @@
                                 <option id="optLanguageLocalized" value="Localized">Localized</option>
                                 <option id="optLanguageRomaji" value="JapaneseRomaji">Romaji</option>
                                 <option id="optLanguageJapanese" value="Japanese">Japanese</option>
+                                <option id="optLanguageGerman" value="German">German</option>
                             </select>
                         </li>
                         <li>
@@ -37,6 +38,18 @@
                                 Max Genres [0: unlimited]
                             </label>
                             <input id="chkMaxGenres" name="chkMaxGenres" type="number" min="0" value="maxGenres"/>
+                        </li>
+                        <li>
+                            <label for="chkMyAnimeList_API_Name">
+                                MyAnimeList Name. -Need too get info from MyAnimeList.com
+                            </label>
+                            <input id="chkMyAnimeList_API_Name" name="chkMyAnimeList_API_Name" type="text" value="" />
+                        </li>
+                        <li>
+                            <label for="chkMyAnimeList_API_Pw">
+                                MyAnimeList Pw. -Need too get info from MyAnimeList.com
+                            </label>
+                            <input id="chkMyAnimeList_API_Pw" name="chkMyAnimeList_API_Pw" type="password" value="" />
                         </li>
                         <li>
                             <label for="chkAnidbSeasonOne">
@@ -70,6 +83,8 @@
                         $('#titleLanguage', page).val(config.TitlePreference).change();
                         $('#chkAutomaticUpdates', page).checked(config.AllowAutomaticMetadataUpdates).checkboxradio("refresh");
                         $('#chkTidyGenres', page).checked(config.TidyGenreList).checkboxradio("refresh");
+                        $('#chkMyAnimeList_API_Name', page, val(config.MyAnimeList_API_Name)).change();
+                        $('#chkMyAnimeList_API_Pw', page, val(config.MyAnimeList_API_Pw)).change();
                         $('#chkMaxGenres', page).val(config.MaxGenres).change();
                         $('#chkMoveExcessGenresToTags', page).checked(config.MoveExcessGenresToTags).checkboxradio("refresh");
                         $('#chkAnidbSeasonOne', page).checked(config.UseAnidbOrderingWithSeasons).checkboxradio("refresh");
@@ -89,6 +104,9 @@
                         config.AllowAutomaticMetadataUpdates = $('#chkAutomaticUpdates', page).prop('checked');
                         config.TidyGenreList = $('#chkTidyGenres').prop('checked');
                         config.MaxGenres = $('#chkMaxGenres').val();
+                        config.MaxGenres = $('#chkNames').val();
+                        config.MyAnimeList_API_Name = $('#chkMyAnimeList_API_Name').val();
+                        config.MyAnimeList_API_Pw= $('#chkMyAnimeList_API_Pw').val();
                         config.MoveExcessGenresToTags = $('#chkMoveExcessGenresToTags').prop('checked');
                         config.UseAnidbOrderingWithSeasons = $('#chkAnidbSeasonOne').prop('checked');
                         

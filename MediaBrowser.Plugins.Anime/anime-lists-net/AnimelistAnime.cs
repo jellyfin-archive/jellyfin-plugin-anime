@@ -27,6 +27,17 @@ namespace AnimeLists
         public string AnidbId { get; set; }
 
         /// <remarks />
+        [XmlAttribute("anisearch")]
+        public string AniSearchId { get; set; }
+
+        /// <remarks />
+        [XmlAttribute("proxer")]
+        public string ProxerId { get; set; }
+        /// <remarks />
+        [XmlAttribute("myanimelist")]
+        public string MyAnimeListId { get; set; }
+
+        /// <remarks />
         [XmlAttribute("tvdbid")]
         public string TvdbId { get; set; }
 

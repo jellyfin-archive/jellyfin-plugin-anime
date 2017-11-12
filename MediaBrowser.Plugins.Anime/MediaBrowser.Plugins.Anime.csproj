@@ -6,6 +6,10 @@
     <FileVersion>1.2.1.1</FileVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove="Configuration\configPage.html" />
   </ItemGroup>

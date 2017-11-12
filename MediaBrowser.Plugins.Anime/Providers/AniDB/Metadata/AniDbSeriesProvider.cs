@@ -62,8 +62,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             var result = new MetadataResult<Series>();
 
             var aid = info.ProviderIds.GetOrDefault(ProviderNames.AniDb);
-            if (string.IsNullOrEmpty(aid))
-                aid = await TitleMatcher.FindSeries(info.Name, cancellationToken).ConfigureAwait(false);
+            if (string.IsNullOrEmpty(aid) && !string.IsNullOrEmpty(info.Name))
+            {
+                aid = Equals_check.Fast_xml_search(info.Name, info.Name, true);
+                aid = Equals_check.Fast_xml_search(Equals_check.clear_name(info.Name), Equals_check.clear_name(info.Name), true);
+            }
 
             if (!string.IsNullOrEmpty(aid))
             {
@@ -106,7 +109,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
 
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return _httpClient.GetResponse(new HttpRequestOptions
+            {
+                CancellationToken = cancellationToken,
+                Url = url,
+                ResourcePool = ResourcePool
+
+            });
         }
 
         public static async Task<string> GetSeriesData(IApplicationPaths appPaths, IHttpClient httpClient, string seriesId, CancellationToken cancellationToken)

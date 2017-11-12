@@ -17,6 +17,9 @@ using MediaBrowser.Model.Serialization;
 using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata;
+using MediaBrowser.Plugins.Anime.Providers;
+using System.Xml;
+using System.Text;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniList
 {
@@ -24,14 +27,18 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
     {
         private readonly IApplicationPaths _paths;
         private readonly AniListApiClient _api;
-
+        private readonly IHttpClient _httpClient;
+        private readonly ILogger _log;
+        public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
         public int Order => -2;
         public string Name => "AniList";
 
         public AniListSeriesProvider(IHttpClient http, IApplicationPaths paths, ILogManager logManager, IJsonSerializer jsonSerializer)
         {
+            _httpClient = http;
             _paths = paths;
             _api = new AniListApiClient(http, logManager, jsonSerializer);
+            _log = logManager.GetLogger("AniList");
         }
 
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
@@ -88,13 +95,66 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             return result;
         }
 
-        public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
+            public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
 
             var aid = info.ProviderIds.GetOrDefault(ProviderNames.AniList);
-            if (string.IsNullOrEmpty(aid))
-                return result;
+            if (string.IsNullOrEmpty(aid) && !string.IsNullOrEmpty(info.Name))
+            {
+              
+                var search = await _api.Search(info.Name);
+                foreach (var a in search)
+                {
+                    if (string.IsNullOrEmpty(aid))
+                    {
+                        if (Equals_check.Compare_strings(a.title_english,info.Name))
+                            aid = a.id.ToString();
+
+                        if (Equals_check.Compare_strings(a.title_japanese,info.Name))
+                            aid = a.id.ToString();
+
+                        if (Equals_check.Compare_strings(a.title_romaji,info.Name))
+                            aid = a.id.ToString();
+                        _log.Log(LogSeverity.Info, a.title_romaji + "vs" + info.Name);
+                    }
+                }
+                    if (string.IsNullOrEmpty(aid)){ 
+                        var cleaned = AniDbTitleMatcher.GetComparableName(Equals_check.clear_name(info.Name));
+                        if (String.Compare(cleaned, info.Name, StringComparison.OrdinalIgnoreCase) != 0)
+                        {
+                            search = await _api.Search(cleaned);
+                            foreach (var b in search)
+                            {
+                            if (Equals_check.Compare_strings(b.title_english, info.Name))
+                                aid = b.id.ToString();
+
+                            if (Equals_check.Compare_strings(b.title_japanese, info.Name))
+                                aid = b.id.ToString();
+
+                            if (Equals_check.Compare_strings(b.title_romaji, info.Name))
+                                aid = b.id.ToString();
+                        }
+                        }
+                    }
+                if (string.IsNullOrEmpty(aid))
+                {
+                    search = await _api.Search(Equals_check.clear_name(info.Name));
+                    foreach (var b in search)
+                    {
+                        if (Equals_check.Compare_strings(b.title_english, info.Name))
+                            aid = b.id.ToString();
+
+                        if (Equals_check.Compare_strings(b.title_japanese, info.Name))
+                            aid = b.id.ToString();
+
+                        if (Equals_check.Compare_strings(b.title_romaji, info.Name))
+                            aid = b.id.ToString();
+                    }
+                }
+
+                }
+               
 
             if (!string.IsNullOrEmpty(aid))
             {
@@ -119,7 +179,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 if (anime.genres != null)
                 {
                     foreach (var genre in anime.genres)
-                        result.Item.AddGenre(genre);
+                        if (!string.IsNullOrEmpty(genre))
+                        {
+                            result.Item.AddGenre(genre);
+                        }
 
                     GenreHelper.CleanupGenres(result.Item);
                 }
@@ -129,6 +192,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
 
                 if (!string.IsNullOrEmpty(anime.image_url_banner))
                     StoreImageUrl(aid, anime.image_url_banner, "banner");
+
+                if (string.IsNullOrEmpty(result.Item.Name))
+                {
+                    if (!string.IsNullOrEmpty(anime.title_romaji))
+                    {
+                        result.Item.Name = anime.title_romaji;
+                    }
+                }
             }
 
             return result;
@@ -154,88 +225,94 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             File.WriteAllText(path, url);
         }
 
-        public static string GetSeriesImage(IApplicationPaths paths, string series, string type)
+        public static async Task<string> GetSeriesImage(IApplicationPaths paths, string series, string type)
         {
             var path = Path.Combine(paths.CachePath, "anilist", type, series + ".txt");
             if (File.Exists(path))
-                return File.ReadAllText(path);
+                return await Task.Run(() => File.ReadAllText(path));
 
             return null;
         }
 
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
-        }
-    }
+            return _httpClient.GetResponse(new HttpRequestOptions
+                {
+                    CancellationToken = cancellationToken,
+                    Url = url,
+                    ResourcePool = ResourcePool
 
-    public class AniListSeriesImageProvider : IRemoteImageProvider
-    {
-        private readonly IHttpClient _httpClient;
-        private readonly IApplicationPaths _appPaths;
-
-        public AniListSeriesImageProvider(IHttpClient httpClient, IApplicationPaths appPaths)
-        {
-            _httpClient = httpClient;
-            _appPaths = appPaths;
+                });
         }
 
-        public string Name => "AniList";
-
-        public bool Supports(IHasMetadata item) => item is Series || item is Season;
-
-        public IEnumerable<ImageType> GetSupportedImages(IHasMetadata item)
+        public class AniListSeriesImageProvider : IRemoteImageProvider
         {
-            return new[] {ImageType.Primary, ImageType.Banner};
-        }
+            private readonly IHttpClient _httpClient;
+            private readonly IApplicationPaths _appPaths;
 
-        public Task<IEnumerable<RemoteImageInfo>> GetImages(IHasMetadata item, CancellationToken cancellationToken)
-        {
-            var seriesId = item.GetProviderId(ProviderNames.AniList);
-            return GetImages(seriesId, cancellationToken);
-        }
-
-        public async Task<IEnumerable<RemoteImageInfo>> GetImages(string aid, CancellationToken cancellationToken)
-        {
-            var list = new List<RemoteImageInfo>();
-
-            if (!string.IsNullOrEmpty(aid))
+            public AniListSeriesImageProvider(IHttpClient httpClient, IApplicationPaths appPaths)
             {
-                var primary = AniListSeriesProvider.GetSeriesImage(_appPaths, aid, "image");
-                if (!string.IsNullOrEmpty(primary))
-                {
-                    list.Add(new RemoteImageInfo
-                    {
-                        ProviderName = Name,
-                        Type = ImageType.Primary,
-                        Url = primary
-                    });
-                }
-
-                var banner = AniListSeriesProvider.GetSeriesImage(_appPaths, aid, "banner");
-                if (!string.IsNullOrEmpty(banner))
-                {
-                    list.Add(new RemoteImageInfo
-                    {
-                        ProviderName = Name,
-                        Type = ImageType.Banner,
-                        Url = banner
-                    });
-                }
+                _httpClient = httpClient;
+                _appPaths = appPaths;
             }
 
-            return list;
-        }
+            public string Name => "AniList";
 
-        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
-        {
-            return _httpClient.GetResponse(new HttpRequestOptions
+            public bool Supports(IHasMetadata item) => item is Series || item is Season;
+
+            public IEnumerable<ImageType> GetSupportedImages(IHasMetadata item)
             {
-                CancellationToken = cancellationToken,
-                Url = url,
-                ResourcePool = AniDbSeriesProvider.ResourcePool
+                return new[] { ImageType.Primary, ImageType.Banner };
+            }
 
-            });
+            public Task<IEnumerable<RemoteImageInfo>> GetImages(IHasMetadata item, CancellationToken cancellationToken)
+            {
+                var seriesId = item.GetProviderId(ProviderNames.AniList);
+                return GetImages(seriesId, cancellationToken);
+            }
+
+            public async Task<IEnumerable<RemoteImageInfo>> GetImages(string aid, CancellationToken cancellationToken)
+            {
+                var list = new List<RemoteImageInfo>();
+
+                if (!string.IsNullOrEmpty(aid))
+                {
+                    var primary = await GetSeriesImage(_appPaths, aid, "image");
+                    if (!string.IsNullOrEmpty(primary))
+                    {
+                        list.Add(new RemoteImageInfo
+                        {
+                            ProviderName = Name,
+                            Type = ImageType.Primary,
+                            Url = primary
+                        });
+                    }
+
+                    var banner = await GetSeriesImage(_appPaths, aid, "banner");
+                    if (!string.IsNullOrEmpty(banner))
+                    {
+                        list.Add(new RemoteImageInfo
+                        {
+                            ProviderName = Name,
+                            Type = ImageType.Banner,
+                            Url = banner
+                        });
+                    }
+                }
+
+                return list;
+            }
+
+            public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+            {
+                return _httpClient.GetResponse(new HttpRequestOptions
+                {
+                    CancellationToken = cancellationToken,
+                    Url = url,
+                    ResourcePool = ResourcePool
+
+                });
+            }
         }
     }
 }
