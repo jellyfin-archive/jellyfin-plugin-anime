@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using MediaBrowser.Model.Plugins;
+﻿using MediaBrowser.Model.Plugins;
 
 namespace MediaBrowser.Plugins.Anime.Configuration
 {
@@ -39,7 +36,8 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         public bool UseAnidbOrderingWithSeasons { get; set; }
         public string MyAnimeList_API_Name { get; set; }
         public string MyAnimeList_API_Pw { get; set; }
-    public PluginConfiguration()
+
+        public PluginConfiguration()
         {
             TitlePreference = TitlePreferenceType.Localized;
             AllowAutomaticMetadataUpdates = true;
@@ -48,7 +46,7 @@ namespace MediaBrowser.Plugins.Anime.Configuration
             AddAnimeGenre = true;
             UseAnidbOrderingWithSeasons = false;
             MyAnimeList_API_Name = "";
-            MyAnimeList_API_Pw= "";
+            MyAnimeList_API_Pw = "";
         }
     }
 }

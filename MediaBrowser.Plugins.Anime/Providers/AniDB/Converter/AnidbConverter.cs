@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using AnimeLists;
+﻿using AnimeLists;
 using MediaBrowser.Common.Configuration;
+using System.IO;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Converter
 {

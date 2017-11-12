@@ -10,7 +10,7 @@ using System.Xml.Linq;
 
 namespace MediaBrowser.Plugins.Anime.Providers
 {
-    class Equals_check
+    internal class Equals_check
     {
         public readonly ILogger _logger;
 
@@ -18,6 +18,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
         {
             _logger = logger;
         }
+
         /// <summary>
         /// Clear name
         /// </summary>
@@ -34,18 +35,18 @@ namespace MediaBrowser.Plugins.Anime.Providers
             a = a.Replace(".", " ");
             a = a.Replace("-", " ");
             a = a.Replace("`", "");
-            a = a.Replace("'","");
+            a = a.Replace("'", "");
             a = a.Replace("&", "and");
             try
             {
                 a = a.Replace(one_line_regex(new Regex(@"(?s)(S[0-9]+)"), a.Trim()), one_line_regex(new Regex(@"(?s)S([0-9]+)"), a.Trim()));
-                    }
+            }
             catch (Exception)
             {
-
             }
             return a;
         }
+
         /// <summary>
         /// Clear name heavy.
         /// Example: Text & Text to Text and Text
@@ -69,6 +70,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             a = a.Replace("␣", "");
             return a;
         }
+
         /// <summary>
         /// If a and b match it return true
         /// </summary>
@@ -88,6 +90,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             }
             return false;
         }
+
         /// <summary>
         /// Cut the string
         /// Example: Apple
@@ -97,10 +100,10 @@ namespace MediaBrowser.Plugins.Anime.Providers
         /// <param name="min_lenght"></param>
         /// <param name="p"></param>
         /// <returns></returns>
-        public static string half_string(string string_, int min_lenght = 0,int p= 50)
+        public static string half_string(string string_, int min_lenght = 0, int p = 50)
         {
             int length = 0;
-            if (string_.Length - ((string_.Length/100)*p) > min_lenght)
+            if (string_.Length - ((string_.Length / 100) * p) > min_lenght)
             {
                 length = string_.Length - ((string_.Length / 100) * p);
             }
@@ -117,6 +120,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             }
             return string_.Substring(0, length);
         }
+
         /// <summary>
         /// simple regex
         /// </summary>
@@ -139,11 +143,12 @@ namespace MediaBrowser.Plugins.Anime.Providers
             }
             return "";
         }
+
         /// <summary>
         ///Return true if a and b match return false if not
         ///It loads the titles.xml on exceptions
         /// </summary>
-        private static bool Fast_xml_search(string a, string b, bool return_AniDBid=false,bool retry=false)
+        private static bool Fast_xml_search(string a, string b, bool return_AniDBid = false, bool retry = false)
         {
             //Get AID aid=\"([s\S].*)\">
             try
@@ -169,7 +174,6 @@ namespace MediaBrowser.Plugins.Anime.Providers
                         }
                     }
                     x++;
-
                 }
                 foreach (string _aid in pre_aid)
                 {
@@ -195,16 +199,17 @@ namespace MediaBrowser.Plugins.Anime.Providers
                     Task.Run(() => AniDbTitleDownloader.Load_static(new System.Threading.CancellationToken()));
                     return Fast_xml_search(a, b, false, true);
                 }
-                
             }
         }
+
         /// <summary>
         /// Return the AniDB ID if a and b match
         /// </summary>
-        public static string Fast_xml_search(string a, string b, bool return_AniDBid,int x_=0)
+        public static string Fast_xml_search(string a, string b, bool return_AniDBid, int x_ = 0)
         {
             //Get AID aid=\"([s\S].*)\">
-            try { 
+            try
+            {
                 List<string> pre_aid = new List<string>();
                 string xml = File.ReadAllText(get_anidb_xml_file());
                 int x = 0;
@@ -251,10 +256,9 @@ namespace MediaBrowser.Plugins.Anime.Providers
                     Task.Run(() => AniDbTitleDownloader.Load_static(new System.Threading.CancellationToken()));
                     return Fast_xml_search(a, b, true, 1);
                 }
-                
             }
-
         }
+
         /// <summary>
         /// get file Path from anidb xml file
         /// </summary>
@@ -263,6 +267,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
         {
             return AniDbTitleDownloader.TitlesFilePath_;
         }
+
         /// <summary>
         /// Compare 2 Strings, and it just works
         /// SeriesA S2 == SeriesA Second Season | True;
@@ -287,6 +292,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
             return false;
         }
+
         /// <summary>
         /// Compare 2 Strings, and it just works
         /// </summary>
@@ -310,21 +316,21 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 return true;
             if (convert_symbols_too_numbers(a, "I") == convert_symbols_too_numbers(b, "I"))
                 return true;
-            if (convert_symbols_too_numbers(a, "!")== convert_symbols_too_numbers(b, "!"))
+            if (convert_symbols_too_numbers(a, "!") == convert_symbols_too_numbers(b, "!"))
                 return true;
             if (a.Replace("ndseason", "") == b.Replace("ndseason", ""))
                 return true;
             if (a.Replace("ndseason", "") == b)
                 return true;
-            if (one_line_regex(new Regex(@"((.*)s([0 - 9]))"), a,2) + one_line_regex(new Regex(@"((.*)s([0 - 9]))"), a,3) == one_line_regex(new Regex(@"((.*)s([0 - 9]))"), b, 2) + one_line_regex(new Regex(@"((.*)s([0 - 9]))"), b, 3))
-                if(!string.IsNullOrEmpty(one_line_regex(new Regex(@"((.*)s([0 - 9]))"), a, 2) + one_line_regex(new Regex(@"((.*)s([0 - 9]))"), a, 3)))
-                return true;
+            if (one_line_regex(new Regex(@"((.*)s([0 - 9]))"), a, 2) + one_line_regex(new Regex(@"((.*)s([0 - 9]))"), a, 3) == one_line_regex(new Regex(@"((.*)s([0 - 9]))"), b, 2) + one_line_regex(new Regex(@"((.*)s([0 - 9]))"), b, 3))
+                if (!string.IsNullOrEmpty(one_line_regex(new Regex(@"((.*)s([0 - 9]))"), a, 2) + one_line_regex(new Regex(@"((.*)s([0 - 9]))"), a, 3)))
+                    return true;
             if (one_line_regex(new Regex(@"((.*)s([0 - 9]))"), a, 2) + one_line_regex(new Regex(@"((.*)s([0 - 9]))"), a, 3) == b)
                 if (!string.IsNullOrEmpty(one_line_regex(new Regex(@"((.*)s([0 - 9]))"), a, 2) + one_line_regex(new Regex(@"((.*)s([0 - 9]))"), a, 3)))
                     return true;
             if (a.Replace("rdseason", "") == b.Replace("rdseason", ""))
                 return true;
-            if (a.Replace("rdseason", "")== b)
+            if (a.Replace("rdseason", "") == b)
                 return true;
             try
             {
@@ -400,13 +406,14 @@ namespace MediaBrowser.Plugins.Anime.Providers
             }
             return false;
         }
+
         /// <summary>
         /// Example: Convert II to 2
         /// </summary>
         /// <param name="input"></param>
         /// <param name="symbol"></param>
         /// <returns></returns>
-        private static string convert_symbols_too_numbers(string input,string symbol)
+        private static string convert_symbols_too_numbers(string input, string symbol)
         {
             try
             {
@@ -439,6 +446,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 return input;
             }
         }
+
         /// <summary>
         /// Simple Compare a XElemtent with a string
         /// </summary>

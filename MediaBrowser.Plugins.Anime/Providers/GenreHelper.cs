@@ -1,8 +1,8 @@
-﻿using System;
+﻿using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Plugins.Anime.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Plugins.Anime.Configuration;
 
 namespace MediaBrowser.Plugins.Anime.Providers
 {
@@ -65,7 +65,6 @@ namespace MediaBrowser.Plugins.Anime.Providers
             {"Historisch", "Period & Historical"},
             //Proxer
             {"Slice_of_Life", "Slice of Life"},
-
         };
 
         private static readonly string[] GenresAsTags =
@@ -203,10 +202,6 @@ namespace MediaBrowser.Plugins.Anime.Providers
             "Survival",
             "Fanservice",
             "Schlauer Protagonist",
-
-
-
-
         };
 
         private static readonly Dictionary<string, string> IgnoreIfPresent = new Dictionary<string, string>
@@ -235,7 +230,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
 
                 max = Math.Max(max - 1, 0);
             }
-            
+
             if (config.MaxGenres > 0)
             {
                 series.Genres = series.Genres.Take(max).ToList();

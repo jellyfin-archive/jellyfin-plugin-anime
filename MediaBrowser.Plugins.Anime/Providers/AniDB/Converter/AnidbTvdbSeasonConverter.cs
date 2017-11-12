@@ -1,7 +1,3 @@
-using System.Threading.Tasks;
-using AnimeLists;
-using MediaBrowser.Controller.Providers;
-
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Converter
 {
     //public class AnidbTvdbSeasonConverter : IItemIdentityConverter<SeasonInfo>
@@ -39,7 +35,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Converter
     //                }
     //            }
     //        }
-            
+
     //        return false;
     //    }
 

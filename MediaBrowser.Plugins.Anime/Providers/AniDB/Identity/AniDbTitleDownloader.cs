@@ -1,12 +1,12 @@
-﻿using System;
+﻿using MediaBrowser.Common.Configuration;
+using MediaBrowser.Model.Logging;
+using MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata;
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Common.Configuration;
-using MediaBrowser.Model.Logging;
-using MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
 {
@@ -40,6 +40,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
         {
             return Path.Combine(applicationPaths.CachePath, "anidb");
         }
+
         /// <summary>
         /// Load XML static| Too prevent EXCEPTIONS
         /// </summary>
@@ -56,6 +57,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
                 await DownloadTitles_static(titlesFile).ConfigureAwait(false);
             }
         }
+
         public async Task Load(CancellationToken cancellationToken)
         {
             var titlesFile = TitlesFilePath;
@@ -88,6 +90,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
                 await unzipped.CopyToAsync(writer).ConfigureAwait(false);
             }
         }
+
         /// <summary>
         /// static|Downloads an xml file from AniDB which contains all of the titles for every anime, and their IDs,
         /// and saves it to disk.
@@ -96,7 +99,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
         /// <returns></returns>
         private static async Task DownloadTitles_static(string titlesFile)
         {
-
             var client = new WebClient();
 
             await AniDbSeriesProvider.RequestLimiter.Tick();
@@ -118,6 +120,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
                 return Path.Combine(s_paths, "titles.xml");
             }
         }
+
         /// <summary>
         /// Get the FilePath
         /// </summary>

@@ -39,7 +39,7 @@ namespace AnimeLists
             List<AnimelistAnime> animeList;
             if (!_tvdbMappings.TryGetValue(tvdb.Series, out animeList))
                 return null;
-            
+
             // look for exact mapping in mapping list
             foreach (var anime in animeList.Where(x => x.Mappinglist != null))
             {
@@ -61,9 +61,9 @@ namespace AnimeLists
             }
 
             var seasonMatch = animeList
-                .Select(x => new {Season = Parse(x.DefaultTvdbSeason), Match = x})
+                .Select(x => new { Season = Parse(x.DefaultTvdbSeason), Match = x })
                 .Where(x => x.Season == tvdb.Season)
-                .Select(x => new {Offset = x.Match.EpisodeOffsetSpecified ? x.Match.EpisodeOffset : 0, x.Match})
+                .Select(x => new { Offset = x.Match.EpisodeOffsetSpecified ? x.Match.EpisodeOffset : 0, x.Match })
                 .Where(x => x.Offset <= tvdb.Index)
                 .OrderByDescending(x => x.Offset)
                 .FirstOrDefault();
@@ -101,7 +101,7 @@ namespace AnimeLists
 
             return null;
         }
-        
+
         public TvdbEpisode ToTvdb(AnidbEpisode anidb)
         {
             AnimelistAnime anime;

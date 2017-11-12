@@ -11,7 +11,7 @@ namespace AnimeLists
 
         /// <remarks />
         [XmlArray("mapping-list")]
-        [XmlArrayItem("mapping", typeof (AnimelistMapping), IsNullable = false)]
+        [XmlArrayItem("mapping", typeof(AnimelistMapping), IsNullable = false)]
         public AnimelistMapping[] Mappinglist { get; set; }
 
         /// <remarks />
@@ -33,6 +33,7 @@ namespace AnimeLists
         /// <remarks />
         [XmlAttribute("proxer")]
         public string ProxerId { get; set; }
+
         /// <remarks />
         [XmlAttribute("myanimelist")]
         public string MyAnimeListId { get; set; }

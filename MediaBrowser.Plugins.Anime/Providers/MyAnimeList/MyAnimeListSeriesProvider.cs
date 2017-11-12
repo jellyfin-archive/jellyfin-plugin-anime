@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using MediaBrowser.Common.Configuration;
+﻿using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -13,7 +6,11 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
-using MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
 {
@@ -26,12 +23,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
         public static string provider_name = ProviderNames.MyAnimeList;
         public int Order => -5;
         public string Name => "MyAnimeList";
+
         public MyAnimeListSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogManager logManager)
         {
             _log = logManager.GetLogger("MyAnimeList");
             _httpClient = httpClient;
             _paths = appPaths;
         }
+
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
@@ -69,6 +68,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
             }
             return result;
         }
+
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
         {
             var results = new Dictionary<string, RemoteSearchResult>();
@@ -77,7 +77,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
             if (!string.IsNullOrEmpty(aid))
             {
                 if (!results.ContainsKey(aid))
-                    results.Add(aid, await api.GetAnime(aid,cancellationToken));
+                    results.Add(aid, await api.GetAnime(aid, cancellationToken));
             }
 
             if (!string.IsNullOrEmpty(searchInfo.Name))
@@ -85,7 +85,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
                 List<string> ids = await api.Search_GetSeries_list(searchInfo.Name, cancellationToken);
                 foreach (string a in ids)
                 {
-                    results.Add(a, await api.GetAnime(a,cancellationToken));
+                    results.Add(a, await api.GetAnime(a, cancellationToken));
                 }
             }
 
@@ -100,6 +100,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
 
             File.WriteAllText(path, url);
         }
+
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClient.GetResponse(new HttpRequestOptions
@@ -107,10 +108,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
                 CancellationToken = cancellationToken,
                 Url = url,
                 ResourcePool = ResourcePool
-
             });
         }
     }
+
     public class MyAnimeListSeriesImageProvider : IRemoteImageProvider
     {
         private readonly IHttpClient _httpClient;
@@ -126,7 +127,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
         public string Name => "MyAnimeList";
 
         public bool Supports(IHasMetadata item) => item is Series || item is Season;
-
 
         public IEnumerable<ImageType> GetSupportedImages(IHasMetadata item)
         {
@@ -152,11 +152,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
                     Type = ImageType.Primary,
                     Url = primary
                 });
-
             }
             return list;
-
         }
+
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClient.GetResponse(new HttpRequestOptions
@@ -164,9 +163,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
                 CancellationToken = cancellationToken,
                 Url = url,
                 ResourcePool = MyAnimeListSeriesProvider.ResourcePool
-
             });
         }
     }
-
 }

@@ -1,8 +1,3 @@
-using System.Threading.Tasks;
-using MediaBrowser.Controller.Providers;
-using MediaBrowser.Plugins.Anime.Configuration;
-using MediaBrowser.Plugins.Anime.Providers.AniDB.Converter;
-
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
 {
     //public class AnidbEpisodeIdentityProvider : IItemIdentityProvider<EpisodeInfo>

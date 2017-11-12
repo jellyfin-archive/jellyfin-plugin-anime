@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MediaBrowser.Model.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,7 +7,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using MediaBrowser.Model.Logging;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
 {
@@ -36,13 +36,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
         /// Gets or sets the global <see cref="IAniDbTitleMatcher"/> instance.
         /// </summary>
         public static IAniDbTitleMatcher DefaultInstance { get; set; }
-        
+
         private readonly ILogger _logger;
         public readonly IAniDbTitleDownloader _downloader;
         private readonly AsyncLock _lock;
 
         public static Dictionary<string, TitleInfo> _titles;
-        
+
         /// <summary>
         /// Creates a new instance of the AniDbTitleMatcher class.
         /// </summary>
@@ -59,7 +59,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
         {
             return FindSeries(title, CancellationToken.None);
         }
-        
+
         public async Task<string> FindSeries(string title, CancellationToken cancellationToken)
         {
             using (await _lock.LockAsync())
@@ -76,19 +76,19 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
         private string LookupAniDbId(string title)
         {
             TitleInfo info;
-            if (_titles.TryGetValue(title, out info)) 
+            if (_titles.TryGetValue(title, out info))
             {
                 return info.AniDbId;
             }
 
             return null;
         }
+
         public static TitleInfo GetTitleInfos(string title)
         {
             TitleInfo info;
             if (!string.IsNullOrEmpty(title))
             {
-               
                 if (_titles.TryGetValue(title, out info))
                 {
                     return info;
@@ -97,8 +97,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
             return new TitleInfo();
         }
 
-        const string Remove = "\"'!`?";
-        const string Spacers = "/,.:;\\(){}[]+-_=–*";  // (there are not actually two - in the they are different char codes)
+        private const string Remove = "\"'!`?";
+        private const string Spacers = "/,.:;\\(){}[]+-_=–*";  // (there are not actually two - in the they are different char codes)
 
         internal static string GetComparableName(string name)
         {
@@ -109,7 +109,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
             {
                 if (c >= 0x2B0 && c <= 0x0333)
                 {
-                    // skip char modifier and diacritics 
+                    // skip char modifier and diacritics
                 }
                 else if (Remove.IndexOf(c) > -1)
                 {
@@ -147,7 +147,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
         {
             get { return _titles != null; }
         }
-        
+
         private async Task Load(CancellationToken cancellationToken)
         {
             if (_titles == null)
@@ -169,7 +169,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
                 _logger.ErrorException("Failed to load AniDB titles", e);
             }
         }
-        
+
         private Task ReadTitlesFile()
         {
             return Task.Run(() =>
@@ -201,18 +201,18 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
                                     reader.MoveToAttribute("aid");
                                     aid = reader.Value;
                                     break;
+
                                 case "title":
                                     var title = reader.ReadElementContentAsString();
-                                    if (!string.IsNullOrEmpty(aid) && !string.IsNullOrEmpty(title)) 
+                                    if (!string.IsNullOrEmpty(aid) && !string.IsNullOrEmpty(title))
                                     {
                                         var type = ParseType(reader.GetAttribute("type"));
 
                                         TitleInfo currentTitleInfo;
-                                        
+
                                         if (!_titles.TryGetValue(title, out currentTitleInfo) || (int)currentTitleInfo.Type < (int)type)
                                         {
-                                            
-                                            _titles[title] = new TitleInfo {AniDbId = aid, Type = type, Title = title };
+                                            _titles[title] = new TitleInfo { AniDbId = aid, Type = type, Title = title };
                                         }
                                     }
                                     break;
@@ -224,7 +224,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
                 var comparable = (from pair in _titles
                                   let comp = GetComparableName(pair.Key)
                                   where !_titles.ContainsKey(comp)
-                                  select new {Title = comp, Id = pair.Value})
+                                  select new { Title = comp, Id = pair.Value })
                                  .ToArray();
 
                 foreach (var pair in comparable)
@@ -236,13 +236,17 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
 
         private TitleType ParseType(string type)
         {
-            switch (type) {
+            switch (type)
+            {
                 case "main":
                     return TitleType.Main;
+
                 case "official":
                     return TitleType.Official;
+
                 case "short":
                     return TitleType.Short;
+
                 case "syn":
                     return TitleType.Synonym;
             }

@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using MediaBrowser.Common.Configuration;
+﻿using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Plugins.Anime.Configuration;
-using MediaBrowser.Plugins.Anime.Providers.AniDB.Converter;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
+using System;
+using System.Collections.Generic;
 
 namespace MediaBrowser.Plugins.Anime
 {
@@ -41,6 +40,7 @@ namespace MediaBrowser.Plugins.Anime
         }
 
         private Guid _id = new Guid("1d0dddf7-1877-4473-8d7b-03f7dac1e559");
+
         public override Guid Id
         {
             get { return _id; }

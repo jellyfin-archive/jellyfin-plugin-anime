@@ -1,8 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using MediaBrowser.Controller.Providers;
-
-namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
+﻿namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
 {
     //public class AnidbSeriesIdentityProvider : IItemIdentityProvider<SeriesInfo>
     //{

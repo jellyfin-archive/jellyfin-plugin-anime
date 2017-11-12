@@ -1,8 +1,3 @@
-using System.Threading.Tasks;
-using AnimeLists;
-using MediaBrowser.Controller.Providers;
-using MediaBrowser.Plugins.Anime.Configuration;
-
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Converter
 {
     //public class AnidbTvdbEpisodeConverter : IItemIdentityConverter<EpisodeInfo>
@@ -29,7 +24,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Converter
     //            }
     //        }
 
-    //        var overrideTvdb = string.IsNullOrEmpty(tvdb) 
+    //        var overrideTvdb = string.IsNullOrEmpty(tvdb)
     //            || info.ParentIndexNumber == null
     //            || (info.ParentIndexNumber < 2 && Plugin.Instance.Configuration.UseAnidbOrderingWithSeasons);
 

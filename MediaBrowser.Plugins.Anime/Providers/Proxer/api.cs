@@ -1,12 +1,12 @@
-﻿using System;
+﻿using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Providers;
+using MediaBrowser.Plugins.Anime.Configuration;
+using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Providers;
-using MediaBrowser.Plugins.Anime.Configuration;
-using System.Net;
 
 namespace MediaBrowser.Plugins.Anime.Providers.Proxer
 {
@@ -14,12 +14,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
     /// API for http://proxer.me/ german anime database.
     /// 🛈 Proxer does not have an API interface to work with
     /// </summary>
-    class api
-    {   
+    internal class api
+    {
         public static List<string> anime_search_names = new List<string>();
         public static List<string> anime_search_ids = new List<string>();
         public static string SearchLink = "http://proxer.me/search?s=search&name={0}&typ=all-anime&tags=&notags=#top";
         public static string Proxer_anime_link = "http://proxer.me/info/";
+
         /// <summary>
         /// API call to get a anime with the id
         /// </summary>
@@ -28,18 +29,16 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         public static async Task<RemoteSearchResult> GetAnime(string id)
         {
             string WebContent = await WebRequestAPI(Proxer_anime_link + id);
-            
+
             var result = new RemoteSearchResult
             {
                 Name = await SelectName(WebContent, Plugin.Instance.Configuration.TitlePreference, "en")
             };
 
-
             result.SearchProviderName = await one_line_regex(new Regex(@">([\S\s]*?)<"), await one_line_regex(new Regex(@"<td><b>Original Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
             result.ImageUrl = await Get_ImageUrl(WebContent);
             result.SetProviderId(ProxerSeriesProvider.provider_name, id);
             result.Overview = await Get_Overview(WebContent);
-            
 
             return result;
         }
@@ -64,6 +63,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
 
             return await Get_title("jap_r", WebContent);
         }
+
         /// <summary>
         /// API call to get the name in the called lang
         /// </summary>
@@ -78,7 +78,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
                     return await one_line_regex(new Regex(@">([\S\s]*?)<"), await one_line_regex(new Regex(@"<td><b>Englischer Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
 
                 case "de":
-                    
+
                     return await one_line_regex(new Regex(@">([\S\s]*?)<"), await one_line_regex(new Regex(@"<td><b>Deutscher Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
 
                 case "jap":
@@ -87,9 +87,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
                 //Default is jap_r
                 default:
                     return await one_line_regex(new Regex(@">([\S\s]*?)<"), await one_line_regex(new Regex(@"<td><b>Original Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
-
             }
         }
+
         /// <summary>
         /// API call to get the genres of the anime
         /// </summary>
@@ -103,7 +103,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
             string Proxer_Genre = null;
             while (Proxer_Genre != "")
             {
-                
                 Proxer_Genre = await one_line_regex(new Regex("\">" + @"((?:.*?\r?\n?)*)<"), Genres, 1, x);
                 if (Proxer_Genre != "")
                 {
@@ -113,15 +112,17 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
             }
             return result;
         }
+
         /// <summary>
         /// API call to get the ratings of the anime
         /// </summary>
         /// <param name="WebContent"></param>
         /// <returns></returns>
-        public static async Task<string> Get_Rating(string WebContent) {
-
-            return await one_line_regex(new Regex("<span class=\"average\">"+@"(.*?)<"), WebContent);
+        public static async Task<string> Get_Rating(string WebContent)
+        {
+            return await one_line_regex(new Regex("<span class=\"average\">" + @"(.*?)<"), WebContent);
         }
+
         /// <summary>
         /// API call to get the ImageUrl if the anime
         /// </summary>
@@ -129,8 +130,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         /// <returns></returns>
         public static async Task<string> Get_ImageUrl(string WebContent)
         {
-            return "http://" + await one_line_regex(new Regex("<img src=\""+@"\/\/((?:.*?\r?\n?)*)" + "\""), WebContent);
+            return "http://" + await one_line_regex(new Regex("<img src=\"" + @"\/\/((?:.*?\r?\n?)*)" + "\""), WebContent);
         }
+
         /// <summary>
         /// API call to get the description of the anime
         /// </summary>
@@ -140,6 +142,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         {
             return await one_line_regex(new Regex(@"Beschreibung:<\/b><br>((?:.*?\r?\n?)*)<\/td>"), WebContent);
         }
+
         /// <summary>
         /// Search a title and return the right one back
         /// </summary>
@@ -162,7 +165,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
                     //get id
                     string id = await one_line_regex(new Regex("class=\"entry" + @"(.*?)" + "\">"), result_text);
                     string a_name = await one_line_regex(new Regex("#top\">" + @"(.*?)</a>"), result_text);
-                    if (Equals_check.Compare_strings(a_name,title))
+                    if (Equals_check.Compare_strings(a_name, title))
                     {
                         result = id;
                         return result;
@@ -179,6 +182,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
 
             return result;
         }
+
         /// <summary>
         /// Search a title and return a list back
         /// </summary>
@@ -193,12 +197,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
             int x = 0;
             while (result_text != "")
             {
-               
                 result_text = await one_line_regex(new Regex("<tr align=\"" + @"left(.*?)tr>"), WebContent, 1, x);
                 if (result_text != "")
                 {
                     //get id
-                    
+
                     string id = await one_line_regex(new Regex("class=\"entry" + @"(.*?)" + "\">"), result_text);
                     string a_name = await one_line_regex(new Regex("#top\">" + @"(.*?)</a>"), result_text);
                     if (Equals_check.Compare_strings(a_name, title))
@@ -216,6 +219,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
             }
             return result;
         }
+
         /// <summary>
         /// API call too find a series
         /// </summary>
@@ -253,8 +257,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
                 return aid;
             }
             return null;
-
         }
+
         /// <summary>
         /// Simple async regex call
         /// </summary>
@@ -278,6 +282,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
             }
             return "";
         }
+
         /// <summary>
         /// Need too get the Webcontent for some API calls.
         /// </summary>
@@ -285,17 +290,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         /// <returns></returns>
         public static async Task<string> WebRequestAPI(string link)
         {
-            string _strContent="";
+            string _strContent = "";
             using (WebClient client = new WebClient())
             {
                 client.Headers.Add(HttpRequestHeader.Cookie, "Adult=1");
-                Task <string> async_content = client.DownloadStringTaskAsync(link);
+                Task<string> async_content = client.DownloadStringTaskAsync(link);
                 _strContent = await async_content;
             }
             return _strContent;
-                
-            
         }
-
     }
 }

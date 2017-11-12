@@ -7,11 +7,11 @@ namespace AnimeLists
     public class AnimelistSupplementalinfo
     {
         /// <remarks />
-        [XmlElement("credits", typeof (string))]
-        [XmlElement("director", typeof (string))]
-        [XmlElement("fanart", typeof (AnimelistSupplementalinfoFanart))]
-        [XmlElement("genre", typeof (string))]
-        [XmlElement("studio", typeof (string))]
+        [XmlElement("credits", typeof(string))]
+        [XmlElement("director", typeof(string))]
+        [XmlElement("fanart", typeof(AnimelistSupplementalinfoFanart))]
+        [XmlElement("genre", typeof(string))]
+        [XmlElement("studio", typeof(string))]
         [XmlChoiceIdentifier("ItemsElementName")]
         public object[] Items { get; set; }
 

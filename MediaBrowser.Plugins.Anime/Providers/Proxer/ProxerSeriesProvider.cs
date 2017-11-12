@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using MediaBrowser.Common.Configuration;
+﻿using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -13,6 +6,11 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MediaBrowser.Plugins.Anime.Providers.Proxer
 {
@@ -25,12 +23,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
         public int Order => -4;
         public string Name => "Proxer";
+
         public ProxerSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogManager logManager)
         {
             _log = logManager.GetLogger("Proxer");
             _httpClient = httpClient;
             _paths = appPaths;
         }
+
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
@@ -63,6 +63,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
             }
             return result;
         }
+
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
         {
             var results = new Dictionary<string, RemoteSearchResult>();
@@ -94,6 +95,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
 
             File.WriteAllText(path, url);
         }
+
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClient.GetResponse(new HttpRequestOptions
@@ -101,10 +103,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
                 CancellationToken = cancellationToken,
                 Url = url,
                 ResourcePool = ResourcePool
-
             });
         }
     }
+
     public class ProxerSeriesImageProvider : IRemoteImageProvider
     {
         private readonly IHttpClient _httpClient;
@@ -119,7 +121,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         public string Name => "Proxer";
 
         public bool Supports(IHasMetadata item) => item is Series || item is Season;
-
 
         public IEnumerable<ImageType> GetSupportedImages(IHasMetadata item)
         {
@@ -145,11 +146,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
                     Type = ImageType.Primary,
                     Url = await primary
                 });
-
             }
             return list;
-
         }
+
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClient.GetResponse(new HttpRequestOptions
@@ -160,5 +160,4 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
             });
         }
     }
-
 }

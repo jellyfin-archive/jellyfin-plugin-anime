@@ -1,18 +1,16 @@
-﻿using System;
+﻿using MediaBrowser.Common.Net;
+using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Providers;
+using MediaBrowser.Plugins.Anime.Providers.AniDB.Converter;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using MediaBrowser.Common.Net;
-using MediaBrowser.Controller.Configuration;
-using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Controller.Providers;
-using MediaBrowser.Model.Providers;
-using MediaBrowser.Plugins.Anime.Configuration;
-using MediaBrowser.Plugins.Anime.Providers.AniDB.Converter;
-using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
 {
@@ -177,6 +175,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                                 }
 
                                 break;
+
                             case "title":
                                 var language = reader.GetAttribute("xml:lang");
                                 var name = reader.ReadElementContentAsString();
@@ -238,6 +237,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                                 }
 
                                 break;
+
                             case "airdate":
                                 var airdate = reader.ReadElementContentAsString();
                                 if (!string.IsNullOrEmpty(airdate))
@@ -248,6 +248,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                                 }
 
                                 break;
+
                             case "rating":
                                 int count;
                                 float rating;
@@ -258,6 +259,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                                 }
 
                                 break;
+
                             case "title":
                                 var language = reader.GetAttribute("xml:lang");
                                 var name = reader.ReadElementContentAsString();

@@ -1,27 +1,30 @@
-﻿using System;
+﻿using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Providers;
+using MediaBrowser.Plugins.Anime.Configuration;
+using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Providers;
-using MediaBrowser.Plugins.Anime.Configuration;
-using System.Net;
 
 namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
 {
     /// <summary>
     /// This API use the WebContent of MyAnimelist and the API of MyAnimelist
     /// </summary>
-    class api
+    internal class api
     {
         public static List<string> anime_search_names = new List<string>();
         public static List<string> anime_search_ids = new List<string>();
+
         //Use API too search
         public static string SearchLink = "https://myanimelist.net/api/anime/search.xml?q={0}";
+
         //No API funktion exist too get anime
         public static string anime_link = "https://myanimelist.net/anime/info/";
+
         /// <summary>
         /// WebContent API call to get a anime with id
         /// </summary>
@@ -37,12 +40,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
                 Name = await SelectName(WebContent, Plugin.Instance.Configuration.TitlePreference, "en", cancellationToken)
             };
 
-
-            result.SearchProviderName = WebUtility.HtmlDecode(await one_line_regex(new Regex("<span itemprop=\"name\">"+@"(.*?)<"), WebContent));
+            result.SearchProviderName = WebUtility.HtmlDecode(await one_line_regex(new Regex("<span itemprop=\"name\">" + @"(.*?)<"), WebContent));
             result.ImageUrl = await Get_ImageUrlAsync(WebContent);
             result.SetProviderId(MyAnimeListSeriesProvider.provider_name, id);
             result.Overview = await Get_OverviewAsync(WebContent);
-
 
             return result;
         }
@@ -68,13 +69,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
 
             return await Get_title("jap_r", WebContent);
         }
+
         /// <summary>
         /// WebContent API call get a specific title
         /// </summary>
         /// <param name="lang"></param>
         /// <param name="WebContent"></param>
         /// <returns></returns>
-        public static async Task<string>  Get_title(string lang, string WebContent)
+        public static async Task<string> Get_title(string lang, string WebContent)
         {
             switch (lang)
             {
@@ -87,9 +89,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
                 //Default is jap_r
                 default:
                     return WebUtility.HtmlDecode(await one_line_regex(new Regex("<span itemprop=\"name\">" + @"(.*?)<"), WebContent));
-
             }
         }
+
         /// <summary>
         /// WebContent API call get genre
         /// </summary>
@@ -120,14 +122,16 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
                 return test;
             }
         }
+
         /// <summary>
         /// WebContent API call get rating
         /// </summary>
         /// <param name="WebContent"></param>
         public static async Task<string> Get_RatingAsync(string WebContent)
         {
-            return await one_line_regex(new Regex("<span itemprop=\"ratingValue\">"+@"(.*?)<"), WebContent);
+            return await one_line_regex(new Regex("<span itemprop=\"ratingValue\">" + @"(.*?)<"), WebContent);
         }
+
         /// <summary>
         /// WebContent API call to get the imgurl
         /// </summary>
@@ -135,8 +139,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
         /// <returns></returns>
         public static async Task<string> Get_ImageUrlAsync(string WebContent)
         {
-            return await one_line_regex(new Regex("src=\""+@"(?s)(.*?)"+"\""), await one_line_regex(new Regex(" < div style=\"text - align: center; \">"+@"(?s)(.*?)alt="), WebContent));
+            return await one_line_regex(new Regex("src=\"" + @"(?s)(.*?)" + "\""), await one_line_regex(new Regex(" < div style=\"text - align: center; \">" + @"(?s)(.*?)alt="), WebContent));
         }
+
         /// <summary>
         /// WebContent API call to get the description
         /// </summary>
@@ -144,8 +149,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
         /// <returns></returns>
         public static async Task<string> Get_OverviewAsync(string WebContent)
         {
-            return System.Net.WebUtility.HtmlDecode(await one_line_regex(new Regex("\"og: description\" content=\""+@"(.*?)"+"\">"), WebContent));
+            return System.Net.WebUtility.HtmlDecode(await one_line_regex(new Regex("\"og: description\" content=\"" + @"(.*?)" + "\">"), WebContent));
         }
+
         /// <summary>
         /// MyAnimeListAPI call to search the right series
         /// </summary>
@@ -190,7 +196,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
                         }
                     }
 
-                    
                     int n;
                     if (Int32.TryParse(id, out n))
                     {
@@ -202,6 +207,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
             }
             return result;
         }
+
         /// <summary>
         /// MyAnimeListAPI call to search the series and return a list
         /// </summary>
@@ -216,7 +222,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
             int x = 0;
             while (result_text != "")
             {
-
                 result_text = await one_line_regex(new Regex(@"<entry>(.*?)<\/entry>"), WebContent, 1, x);
                 if (result_text != "")
                 {
@@ -254,6 +259,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
             }
             return result;
         }
+
         /// <summary>
         /// MyAnimeListAPI call to find a series
         /// </summary>
@@ -287,10 +293,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
             }
 
             return null;
-
         }
+
         /// <summary>
-        /// simple regex 
+        /// simple regex
         /// </summary>
         /// <param name="regex"></param>
         /// <param name="match"></param>
@@ -312,6 +318,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
             }
             return "";
         }
+
         /// <summary>
         /// A WebRequestAPI too handle the Webcontent and the API of MyAnimeList
         /// </summary>
@@ -319,7 +326,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
         /// <param name="name"></param>
         /// <param name="pw"></param>
         /// <returns></returns>
-        public static async Task<string> WebRequestAPI(string link,string name=null,string pw=null)
+        public static async Task<string> WebRequestAPI(string link, string name = null, string pw = null)
         {
             try
             {
@@ -341,6 +348,5 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
                 return "";
             }
         }
-
     }
 }

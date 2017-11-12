@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using MediaBrowser.Common.Configuration;
+﻿using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -11,6 +6,11 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
 {
@@ -29,15 +29,16 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
             _httpClient = httpClient;
             _paths = appPaths;
         }
-            public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
+
+        public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
 
             var aid = info.ProviderIds.GetOrDefault(ProviderNames.AniSearch);
             if (string.IsNullOrEmpty(aid))
             {
-                _log.Info("Start AniSearch... Searching("+ info.Name + ")");
-               aid = await  api.FindSeries(info.Name, cancellationToken);
+                _log.Info("Start AniSearch... Searching(" + info.Name + ")");
+                aid = await api.FindSeries(info.Name, cancellationToken);
             }
 
             if (!string.IsNullOrEmpty(aid))
@@ -51,7 +52,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
                 try
                 {
                     //AniSearch has a max rating of 5
-                    result.Item.CommunityRating = (float.Parse(await api.Get_Rating(WebContent), System.Globalization.CultureInfo.InvariantCulture)*2);
+                    result.Item.CommunityRating = (float.Parse(await api.Get_Rating(WebContent), System.Globalization.CultureInfo.InvariantCulture) * 2);
                 }
                 catch (Exception) { }
                 foreach (var genre in await api.Get_Genre(WebContent))
@@ -61,6 +62,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
             }
             return result;
         }
+
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
         {
             var results = new Dictionary<string, RemoteSearchResult>();
@@ -74,17 +76,16 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
 
             if (!string.IsNullOrEmpty(searchInfo.Name))
             {
-
                 List<string> ids = await api.Search_GetSeries_list(searchInfo.Name, cancellationToken);
                 foreach (string a in ids)
                 {
                     results.Add(a, await api.GetAnime(a));
                 }
-
             }
 
             return results.Values;
         }
+
         private void StoreImageUrl(string series, string url, string type)
         {
             var path = Path.Combine(_paths.CachePath, "anisearch", type, series + ".txt");
@@ -93,6 +94,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
 
             File.WriteAllText(path, url);
         }
+
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClient.GetResponse(new HttpRequestOptions
@@ -100,12 +102,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
                 CancellationToken = cancellationToken,
                 Url = url,
                 ResourcePool = ResourcePool
-
             });
         }
     }
-        public class AniSearchSeriesImageProvider : IRemoteImageProvider
-        {
+
+    public class AniSearchSeriesImageProvider : IRemoteImageProvider
+    {
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _appPaths;
 
@@ -119,36 +121,34 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
 
         public bool Supports(IHasMetadata item) => item is Series || item is Season;
 
-        
         public IEnumerable<ImageType> GetSupportedImages(IHasMetadata item)
-            {
-                return new[] { ImageType.Primary };
-            }
+        {
+            return new[] { ImageType.Primary };
+        }
 
-            public Task<IEnumerable<RemoteImageInfo>> GetImages(IHasMetadata item, CancellationToken cancellationToken)
-            {
-                var seriesId = item.GetProviderId(ProviderNames.AniSearch);
-                return GetImages(seriesId, cancellationToken);
-            }
+        public Task<IEnumerable<RemoteImageInfo>> GetImages(IHasMetadata item, CancellationToken cancellationToken)
+        {
+            var seriesId = item.GetProviderId(ProviderNames.AniSearch);
+            return GetImages(seriesId, cancellationToken);
+        }
 
-            public async Task<IEnumerable<RemoteImageInfo>> GetImages(string aid, CancellationToken cancellationToken)
-            {
-                var list = new List<RemoteImageInfo>();
+        public async Task<IEnumerable<RemoteImageInfo>> GetImages(string aid, CancellationToken cancellationToken)
+        {
+            var list = new List<RemoteImageInfo>();
 
-                if (!string.IsNullOrEmpty(aid))
+            if (!string.IsNullOrEmpty(aid))
+            {
+                var primary = await api.Get_ImageUrl(await api.WebRequestAPI(api.AniSearch_anime_link + aid));
+                list.Add(new RemoteImageInfo
                 {
-                    var primary = await api.Get_ImageUrl(await api.WebRequestAPI(api.AniSearch_anime_link + aid));
-                    list.Add(new RemoteImageInfo
-                    {
-                        ProviderName = Name,
-                        Type = ImageType.Primary,
-                        Url = primary
-                    });
-
-                }
-            return list;
-
+                    ProviderName = Name,
+                    Type = ImageType.Primary,
+                    Url = primary
+                });
             }
+            return list;
+        }
+
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClient.GetResponse(new HttpRequestOptions
@@ -156,9 +156,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
                 CancellationToken = cancellationToken,
                 Url = url,
                 ResourcePool = AniSearchSeriesProvider.ResourcePool
-
             });
         }
     }
-    
 }

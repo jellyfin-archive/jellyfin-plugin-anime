@@ -31,7 +31,7 @@ namespace AnimeLists
                 }
             }
 
-            XmlSerializer serializer = new XmlSerializer(typeof (Animelist));
+            XmlSerializer serializer = new XmlSerializer(typeof(Animelist));
 
             using (var stream = File.OpenRead(_temp))
                 return serializer.Deserialize(stream) as Animelist;

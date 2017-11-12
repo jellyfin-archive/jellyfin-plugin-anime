@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using MediaBrowser.Common.Configuration;
+﻿using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -16,10 +9,12 @@ using MediaBrowser.Model.Providers;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
-using MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata;
-using MediaBrowser.Plugins.Anime.Providers;
-using System.Xml;
-using System.Text;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MediaBrowser.Plugins.Anime.Providers.AniList
 {
@@ -95,37 +90,37 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             return result;
         }
 
-            public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
+        public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
 
             var aid = info.ProviderIds.GetOrDefault(ProviderNames.AniList);
             if (string.IsNullOrEmpty(aid) && !string.IsNullOrEmpty(info.Name))
             {
-              
                 var search = await _api.Search(info.Name);
                 foreach (var a in search)
                 {
                     if (string.IsNullOrEmpty(aid))
                     {
-                        if (Equals_check.Compare_strings(a.title_english,info.Name))
+                        if (Equals_check.Compare_strings(a.title_english, info.Name))
                             aid = a.id.ToString();
 
-                        if (Equals_check.Compare_strings(a.title_japanese,info.Name))
+                        if (Equals_check.Compare_strings(a.title_japanese, info.Name))
                             aid = a.id.ToString();
 
-                        if (Equals_check.Compare_strings(a.title_romaji,info.Name))
+                        if (Equals_check.Compare_strings(a.title_romaji, info.Name))
                             aid = a.id.ToString();
                         _log.Log(LogSeverity.Info, a.title_romaji + "vs" + info.Name);
                     }
                 }
-                    if (string.IsNullOrEmpty(aid)){ 
-                        var cleaned = AniDbTitleMatcher.GetComparableName(Equals_check.clear_name(info.Name));
-                        if (String.Compare(cleaned, info.Name, StringComparison.OrdinalIgnoreCase) != 0)
+                if (string.IsNullOrEmpty(aid))
+                {
+                    var cleaned = AniDbTitleMatcher.GetComparableName(Equals_check.clear_name(info.Name));
+                    if (String.Compare(cleaned, info.Name, StringComparison.OrdinalIgnoreCase) != 0)
+                    {
+                        search = await _api.Search(cleaned);
+                        foreach (var b in search)
                         {
-                            search = await _api.Search(cleaned);
-                            foreach (var b in search)
-                            {
                             if (Equals_check.Compare_strings(b.title_english, info.Name))
                                 aid = b.id.ToString();
 
@@ -135,8 +130,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                             if (Equals_check.Compare_strings(b.title_romaji, info.Name))
                                 aid = b.id.ToString();
                         }
-                        }
                     }
+                }
                 if (string.IsNullOrEmpty(aid))
                 {
                     search = await _api.Search(Equals_check.clear_name(info.Name));
@@ -152,9 +147,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                             aid = b.id.ToString();
                     }
                 }
-
-                }
-               
+            }
 
             if (!string.IsNullOrEmpty(aid))
             {
@@ -237,12 +230,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClient.GetResponse(new HttpRequestOptions
-                {
-                    CancellationToken = cancellationToken,
-                    Url = url,
-                    ResourcePool = ResourcePool
-
-                });
+            {
+                CancellationToken = cancellationToken,
+                Url = url,
+                ResourcePool = ResourcePool
+            });
         }
 
         public class AniListSeriesImageProvider : IRemoteImageProvider
@@ -310,7 +302,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                     CancellationToken = cancellationToken,
                     Url = url,
                     ResourcePool = ResourcePool
-
                 });
             }
         }

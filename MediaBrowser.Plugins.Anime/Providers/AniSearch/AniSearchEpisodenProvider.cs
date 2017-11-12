@@ -58,16 +58,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
             {
                 for (var i = id.Value.EpisodeNumber + 1; i <= id.Value.EpisodeNumberEnd; i++)
                 {
-                    
                     string episode = await api.One_line_regex(new System.Text.RegularExpressions.Regex("<span itemprop=\"name\" lang=\"de\" class=\"bold\">" + @"(.*?)<"), web_content, 1, i);
                     if(episode == "")
                     {
-
                     }
                     else
                     {
-                        
-
                     }
                 }
             }
