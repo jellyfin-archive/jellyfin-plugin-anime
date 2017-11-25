@@ -37,6 +37,8 @@ namespace MediaBrowser.Plugins.Anime.Providers
             a = a.Replace("`", "");
             a = a.Replace("'", "");
             a = a.Replace("&", "and");
+            a = a.Replace("(", "");
+            a = a.Replace(")", "");
             try
             {
                 a = a.Replace(one_line_regex(new Regex(@"(?s)(S[0-9]+)"), a.Trim()), one_line_regex(new Regex(@"(?s)S([0-9]+)"), a.Trim()));
@@ -69,6 +71,8 @@ namespace MediaBrowser.Plugins.Anime.Providers
             a = a.Replace(":", "");
             a = a.Replace("␣", "");
             a = a.Replace("2wei", "zwei");
+            a = a.Replace("3rei", "drei");
+            a = a.Replace("4ier", "vier");
             return a;
         }
 
@@ -454,12 +458,58 @@ namespace MediaBrowser.Plugins.Anime.Providers
         /// <returns></returns>
         private static bool simple_compare(IEnumerable<XElement> a_, string b)
         {
-            foreach (XElement a in a_)
+            bool ignore_date = true;
+            string a_date = "";
+            string b_date = "";
+
+            string b_date_ = one_line_regex(new Regex(@"([0-9][0-9][0-9][0-9])"), b);
+            if (!string.IsNullOrEmpty(b_date_))
             {
-                if (simple_compare(a.Value, b, true))
-                    return true;
+                b_date = b_date_;
             }
-            return false;
+            if (!string.IsNullOrEmpty(b_date))
+            {
+                foreach (XElement a in a_)
+                {
+                    if (ignore_date)
+                    {
+                        string a_date_ = one_line_regex(new Regex(@"([0-9][0-9][0-9][0-9])"), a.Value);
+                        if (!string.IsNullOrEmpty(a_date_))
+                        {
+                            a_date = a_date_;
+                            ignore_date = false;
+                        }
+                    }
+                }
+            }
+            if (!ignore_date)
+            {
+                if (a_date.Trim()==b_date.Trim())
+                {
+                    foreach (XElement a in a_)
+                    {
+                            if (simple_compare(a.Value, b, true))
+                                return true;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+                return false;
+            }
+            else
+            {
+                foreach (XElement a in a_)
+                {
+                    if (ignore_date)
+                    {
+                        if (simple_compare(a.Value, b, true))
+                            return true;
+                    }
+                }
+                return false;
+            }
         }
     }
 }

@@ -67,7 +67,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             if (string.IsNullOrEmpty(aid) && !string.IsNullOrEmpty(info.Name))
             {
                 aid = Equals_check.Fast_xml_search(info.Name, info.Name, true);
-                aid = Equals_check.Fast_xml_search(Equals_check.clear_name(info.Name), Equals_check.clear_name(info.Name), true);
+                if (string.IsNullOrEmpty(aid))
+                {
+                    aid = Equals_check.Fast_xml_search(Equals_check.clear_name(info.Name), Equals_check.clear_name(info.Name), true);
+                }
             }
 
             if (!string.IsNullOrEmpty(aid))
