@@ -119,14 +119,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
 
         public string Name => "AniSearch";
 
-        public bool Supports(IHasMetadata item) => item is Series || item is Season;
+        public bool Supports(BaseItem item) => item is Series || item is Season;
 
-        public IEnumerable<ImageType> GetSupportedImages(IHasMetadata item)
+        public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
         {
             return new[] { ImageType.Primary };
         }
 
-        public Task<IEnumerable<RemoteImageInfo>> GetImages(IHasMetadata item, CancellationToken cancellationToken)
+        public Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
         {
             var seriesId = item.GetProviderId(ProviderNames.AniSearch);
             return GetImages(seriesId, cancellationToken);
