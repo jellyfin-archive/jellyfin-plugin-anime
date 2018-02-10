@@ -95,7 +95,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             }
             return false;
         }
-    
+
         /// <summary>
         /// Cut p(%) away from the string
         /// </summary>
