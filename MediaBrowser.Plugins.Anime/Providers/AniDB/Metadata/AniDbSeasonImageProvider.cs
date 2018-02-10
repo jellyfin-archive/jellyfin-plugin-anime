@@ -31,7 +31,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             return new AniDbSeriesImagesProvider(_httpClient, _appPaths).GetImageResponse(url, cancellationToken);
         }
 
-        public async Task<IEnumerable<RemoteImageInfo>> GetImages(IHasMetadata item, CancellationToken cancellationToken)
+        public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
         {
             var season = (Season)item;
             var series = season.Series;
@@ -43,14 +43,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             return await new AniDbSeriesImagesProvider(_httpClient, _appPaths).GetImages(seriesId, cancellationToken);
         }
 
-        public IEnumerable<ImageType> GetSupportedImages(IHasMetadata item)
+        public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
         {
             return new[] { ImageType.Primary };
         }
 
         public string Name => "AniDB";
 
-        public bool Supports(IHasMetadata item)
+        public bool Supports(BaseItem item)
         {
             return item is Season;
         }

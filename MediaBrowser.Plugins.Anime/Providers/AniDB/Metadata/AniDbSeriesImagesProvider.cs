@@ -37,7 +37,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             }).ConfigureAwait(false);
         }
 
-        public Task<IEnumerable<RemoteImageInfo>> GetImages(IHasMetadata item, CancellationToken cancellationToken)
+        public Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
         {
             var series = (Series)item;
             var seriesId = series.GetProviderId(ProviderNames.AniDb);
@@ -66,14 +66,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             return list;
         }
 
-        public IEnumerable<ImageType> GetSupportedImages(IHasMetadata item)
+        public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
         {
             return new[] { ImageType.Primary };
         }
 
         public string Name => "AniDB";
 
-        public bool Supports(IHasMetadata item)
+        public bool Supports(BaseItem item)
         {
             return item is Series;
         }
