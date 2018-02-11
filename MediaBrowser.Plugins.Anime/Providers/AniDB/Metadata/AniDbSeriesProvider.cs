@@ -558,7 +558,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             };
 
             await RequestLimiter.Tick();
-
+            await Task.Run(() => Thread.Sleep(Plugin.Instance.Configuration.AniDB_wait_time));
             using (var stream = await httpClient.Get(requestOptions).ConfigureAwait(false))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var reader = new StreamReader(unzipped, Encoding.UTF8, true))

@@ -82,7 +82,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
             var client = new WebClient();
 
             await AniDbSeriesProvider.RequestLimiter.Tick();
-
+            await Task.Run(() => Thread.Sleep(Plugin.Instance.Configuration.AniDB_wait_time));
             using (var stream = await client.OpenReadTaskAsync(TitlesUrl))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var writer = File.Open(titlesFile, FileMode.Create, FileAccess.Write))
@@ -102,7 +102,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
             var client = new WebClient();
 
             await AniDbSeriesProvider.RequestLimiter.Tick();
-
+            await Task.Run(() => Thread.Sleep(Plugin.Instance.Configuration.AniDB_wait_time));
             using (var stream = await client.OpenReadTaskAsync(TitlesUrl))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var writer = File.Open(titlesFile, FileMode.Create, FileAccess.Write))

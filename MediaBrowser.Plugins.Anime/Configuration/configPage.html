@@ -43,13 +43,19 @@
                             <label for="chkMyAnimeList_API_Name">
                                 MyAnimeList Name. -not rly needed
                             </label>
-                            <input id="chkMyAnimeList_API_Name" name="chkMyAnimeList_API_Name" type="text" value="" disabled/>
+                            <input id="chkMyAnimeList_API_Name" name="chkMyAnimeList_API_Name" type="text" value="" disabled />
                         </li>
                         <li>
                             <label for="chkMyAnimeList_API_Pw">
                                 MyAnimeList Pw. -not rly needed
                             </label>
-                            <input id="chkMyAnimeList_API_Pw" name="chkMyAnimeList_API_Pw" type="password" value="" disabled/>
+                            <input id="chkMyAnimeList_API_Pw" name="chkMyAnimeList_API_Pw" type="password" value="" disabled />
+                        </li>
+                        <li>
+                            <label for="chkAniDB_wait_time">
+                                AniDB wait time too prevent IP ban (in ms (1000 = 1 Second))
+                            </label>
+                            <input id="chkAniDB_wait_time" name="chkAniDB_wait_time" type="number" value="0"/>
                         </li>
                         <li>
                             <label for="chkAnidbSeasonOne">
@@ -88,6 +94,7 @@
                         $('#chkMaxGenres', page).val(config.MaxGenres).change();
                         $('#chkMoveExcessGenresToTags', page).checked(config.MoveExcessGenresToTags).checkboxradio("refresh");
                         $('#chkAnidbSeasonOne', page).checked(config.UseAnidbOrderingWithSeasons).checkboxradio("refresh");
+                        $('#chkAniDB_wait_time', page).val(config.AniDB_wait_time).change();
 
                         Dashboard.hideLoadingMsg();
                     });
@@ -109,7 +116,7 @@
                         config.MyAnimeList_API_Pw= $('#chkMyAnimeList_API_Pw').val();
                         config.MoveExcessGenresToTags = $('#chkMoveExcessGenresToTags').prop('checked');
                         config.UseAnidbOrderingWithSeasons = $('#chkAnidbSeasonOne').prop('checked');
-
+                        config.AniDB_wait_time = $('chkAniDB_wait_time').val();
                         ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
                         });
