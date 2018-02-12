@@ -151,7 +151,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
         /// <returns></returns>
         public async Task<string> Get_OverviewAsync(string WebContent)
         {
-            return System.Net.WebUtility.HtmlDecode(await One_line_regex(new Regex("\"og: description\" content=\"" + @"(.*?)" + "\">"), WebContent));
+            return System.Net.WebUtility.HtmlDecode(await One_line_regex(new Regex("itemprop=\\"+'"'+"description\\"+'"'+@">(.*?)<\/span>"), WebContent));
         }
 
         /// <summary>
@@ -215,8 +215,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
                 while (!string.IsNullOrEmpty(Regex_id))
                 {
                     Regex_id = "";
-                    Regex_id = await One_line_regex(new Regex(@"(#revInfo(.*?)" + '"' + "(> (.*?) <))"), WebContent, 2, x);
-                    String Regex_name = await One_line_regex(new Regex(@"(#revInfo(.*?)" + '"' + "(> (.*?) <))"), WebContent, 4, x);
+                    Regex_id = await One_line_regex(new Regex(@"(#revInfo(.*?)" + '"' + "(>(.*?)<))"), WebContent, 2, x);
+                    String Regex_name = await One_line_regex(new Regex(@"(#revInfo(.*?)" + '"' + "(>(.*?)<))"), WebContent, 4, x);
                     if (!string.IsNullOrEmpty(Regex_id) && !string.IsNullOrEmpty(Regex_name))
                     {
                         try
@@ -305,14 +305,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
                 while (!string.IsNullOrEmpty(regex_id))
                 {
                     regex_id = "";
-                    regex_id=await One_line_regex(new Regex(@"(#revInfo(.*?)"+'"'+"(> (.*?) <))"), WebContent, 2, x);
+                    regex_id=await One_line_regex(new Regex(@"(#revInfo(.*?)"+'"'+"(>(.*?)<))"), WebContent, 2, x);
                     if (!string.IsNullOrEmpty(regex_id))
                     {
                         try
                         {
                             int.Parse(regex_id);
 
-                            if (await Equals_check.Compare_strings(await One_line_regex(new Regex(@"(#revInfo(.*?)" + '"' + "(> (.*?) <))"), WebContent, 4, x), title, cancellationToken))
+                            if (await Equals_check.Compare_strings(await One_line_regex(new Regex(@"(#revInfo(.*?)" + '"' + "(>(.*?)<))"), WebContent, 4, x), title, cancellationToken))
                             {
                                 result.Add(regex_id);
                                 return result;
