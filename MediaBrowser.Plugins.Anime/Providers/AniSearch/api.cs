@@ -14,7 +14,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
     /// API for http://anisearch.de a german anime database
     /// 🛈 Anisearch does not have an API interface to work with
     /// </summary>
-    internal class api
+    internal class Api
     {
         public static List<string> anime_search_names = new List<string>();
         public static List<string> anime_search_ids = new List<string>();
@@ -172,12 +172,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
                             a_name = Regex.Replace(await One_line_regex(new Regex(@"((<a|<d).*?>)(.*?)(<\/a>|<\/div>)"), result_text, 3, _x), "<.*?>", String.Empty);
                             if (a_name != "")
                             {
-                                if (await Task.Run(() => Equals_check.Compare_strings(a_name, title)))
+                                if (await Equals_check.Compare_strings(a_name, title, cancellationToken))
                                 {
                                     return id;
                                 }
-                                int n;
-                                if (Int32.TryParse(id, out n))
+                                if (Int32.TryParse(id, out int n))
                                 {
                                     anime_search_names.Add(a_name);
                                     anime_search_ids.Add(id);
@@ -220,13 +219,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
                         a_name = Regex.Replace(await One_line_regex(new Regex(@"((<a|<d).*?>)(.*?)(<\/a>|<\/div>)"), result_text, 3, _x), "<.*?>", String.Empty);
                         if (a_name != "")
                         {
-                            if (Equals_check.Compare_strings(a_name, title))
+                            if (await Equals_check.Compare_strings(a_name, title, cancellationToken))
                             {
                                 result.Add(id);
                                 return result;
                             }
-                            int n;
-                            if (Int32.TryParse(id, out n))
+                            if (Int32.TryParse(id, out int n))
                             {
                                 result.Add(id);
                             }
@@ -255,14 +253,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
 
                 foreach (string a_name in anime_search_names)
                 {
-                    if (Equals_check.Compare_strings(a_name, title))
+                    if (await Equals_check.Compare_strings(a_name, title, cancellationToken))
                     {
                         return anime_search_ids[x];
                     }
                     x++;
                 }
             }
-            aid = await Search_GetSeries(Equals_check.clear_name(title), cancellationToken);
+            aid = await Search_GetSeries(await Equals_check.Clear_name(title, cancellationToken), cancellationToken);
             if (!string.IsNullOrEmpty(aid))
             {
                 return aid;

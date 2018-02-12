@@ -19,12 +19,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
     /// 🛈 https://anilist.gitbooks.io/anilist-apiv2-docs
     /// 🛈 THIS IS AN UNOFFICAL API INTERFACE FOR EMBY
     /// </summary>
-    public class api
+    public class Api
     {
         private static IJsonSerializer _jsonSerializer;
-        public List<string> anime_search_names = new List<string>();
-        public List<string> anime_search_ids = new List<string>();
-        public string SearchLink = @"https://graphql.anilist.co/api/v2?query=
+        private const string SearchLink = @"https://graphql.anilist.co/api/v2?query=
 query ($query: String, $type: MediaType) {
   Page {
     media(search: $query, type: $type) {
@@ -103,7 +101,7 @@ query ($query: String, $type: MediaType) {
     }
         }
     }&variables={ ""id"":""{0}"",""type"":""ANIME""}";
-        public string AniList_anime_char_link = @"https://graphql.anilist.co/api/v2?query=query($id: Int!, $type: MediaType, $page: Int = 1) {
+        private const string AniList_anime_char_link = @"https://graphql.anilist.co/api/v2?query=query($id: Int!, $type: MediaType, $page: Int = 1) {
   Media(id: $id, type: $type) {
     id
     characters(page: $page, sort: [ROLE]) {
@@ -144,7 +142,7 @@ query ($query: String, $type: MediaType) {
     }
   }
 }&variables={ ""id"":""{0}"",""type"":""ANIME""}";
-        public api(IJsonSerializer jsonSerializer)
+        public Api(IJsonSerializer jsonSerializer)
         {
             _jsonSerializer = jsonSerializer;
         }
@@ -208,7 +206,7 @@ query ($query: String, $type: MediaType) {
                    return WebContent.data.Media.title.romaji;
             }
         }
-        public async Task<List<PersonInfo>> getPersonInfo(int id)
+        public async Task<List<PersonInfo>> GetPersonInfo(int id, CancellationToken cancellationToken)
         {
             List<PersonInfo> lpi = new List<PersonInfo>();
             RootObject WebContent = await WebRequestAPI(AniList_anime_char_link.Replace("{0}", id.ToString()));
@@ -216,7 +214,7 @@ query ($query: String, $type: MediaType) {
             {
                 PersonInfo pi = new PersonInfo();
                 pi.Name = edge.node.name.first+" "+ edge.node.name.last;
-                pi.ItemId = ToGuid(edge.node.id);
+                pi.ItemId = await ToGuid(edge.node.id, cancellationToken);
                 pi.ImageUrl = edge.node.image.large;
                 pi.Role = edge.role;
             }
@@ -227,10 +225,10 @@ query ($query: String, $type: MediaType) {
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static Guid ToGuid(int value)
+        public async static Task<Guid> ToGuid(int value, CancellationToken cancellationToken)
         {
             byte[] bytes = new byte[16];
-            BitConverter.GetBytes(value).CopyTo(bytes, 0);
+            await Task.Run(() => BitConverter.GetBytes(value).CopyTo(bytes, 0), cancellationToken);
             return new Guid(bytes);
         }
         /// <summary>
@@ -282,8 +280,6 @@ query ($query: String, $type: MediaType) {
         /// <returns></returns>
         public async Task<string> Search_GetSeries(string title, CancellationToken cancellationToken)
         {
-            anime_search_names.Clear();
-            anime_search_ids.Clear();
             string result = null;
             RootObject WebContent = await WebRequestAPI(SearchLink.Replace("{0}", title));
             foreach (Medium media in WebContent.data.Page.media) {
@@ -292,11 +288,11 @@ query ($query: String, $type: MediaType) {
                 try
                 {
 
-                    if (await Task.Run(() => Equals_check.Compare_strings(media.title.romaji, title)))
+                    if (await Equals_check.Compare_strings(media.title.romaji, title, cancellationToken))
                     {
                         return media.id.ToString();
                     }
-                    if (await Task.Run(() => Equals_check.Compare_strings(media.title.english, title)))
+                    if (await Equals_check.Compare_strings(media.title.english, title, cancellationToken))
                     {
                         return media.id.ToString();
                     }
@@ -305,12 +301,6 @@ query ($query: String, $type: MediaType) {
                     {
                         return media.id.ToString();
                     }*/
-                    int n;
-                    if (Int32.TryParse(media.id.ToString(), out n))
-                    {
-                        anime_search_names.Add(media.title.romaji);
-                        anime_search_ids.Add(media.id.ToString());
-                    }
                 }
 
                 catch (Exception) { }
@@ -336,11 +326,11 @@ query ($query: String, $type: MediaType) {
                 try
                 {
 
-                    if (await Task.Run(() => Equals_check.Compare_strings(media.title.romaji, title)))
+                    if (await Equals_check.Compare_strings(media.title.romaji, title, cancellationToken))
                     {
                         result.Add(media.id.ToString());
                     }
-                    if (await Task.Run(() => Equals_check.Compare_strings(media.title.english, title)))
+                    if (await Equals_check.Compare_strings(media.title.english, title, cancellationToken))
                     {
                         result.Add(media.id.ToString());
                     }
@@ -366,31 +356,12 @@ query ($query: String, $type: MediaType) {
             {
                 return aid;
             }
-            aid = await Search_GetSeries(Equals_check.clear_name(title), cancellationToken);
+            aid = await Search_GetSeries(await Equals_check.Clear_name(title, cancellationToken), cancellationToken);
             if (!string.IsNullOrEmpty(aid))
             {
                 return aid;
             }
             return null;
-        }
-
-        /// <summary>
-        /// Simple regex
-        /// </summary>
-        public async Task<string> One_line_regex(Regex regex, string match, int group = 1, int match_int = 0)
-        {
-            Regex _regex = regex;
-            int x = 0;
-            MatchCollection matches = await Task.Run(() => regex.Matches(match));
-            foreach (Match _match in matches)
-            {
-                if (x == match_int)
-                {
-                    return await Task.Run(() => _match.Groups[group].Value.ToString());
-                }
-                x++;
-            }
-            return "";
         }
 
         /// <summary>

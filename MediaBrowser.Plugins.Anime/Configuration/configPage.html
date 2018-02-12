@@ -39,100 +39,104 @@
                             </label>
                             <input id="chkMaxGenres" name="chkMaxGenres" type="number" min="0" value="maxGenres" />
                         </li>
-                        <li>
-                            <label for="chkMyAnimeList_API_Name">
-                                MyAnimeList Name. -not rly needed
-                            </label>
-                            <input id="chkMyAnimeList_API_Name" name="chkMyAnimeList_API_Name" type="text" value="" disabled />
-                        </li>
-                        <li>
-                            <label for="chkMyAnimeList_API_Pw">
-                                MyAnimeList Pw. -not rly needed
-                            </label>
-                            <input id="chkMyAnimeList_API_Pw" name="chkMyAnimeList_API_Pw" type="password" value="" disabled />
-                        </li>
-                        <li>
-                            <label for="chkAniDB_wait_time">
-                                AniDB wait time too prevent IP ban (in ms (1000 = 1 Second))
-                            </label>
-                            <input id="chkAniDB_wait_time" name="chkAniDB_wait_time" type="number" value="0"/>
-                        </li>
-                        <li>
-                            <label for="chkAnidbSeasonOne">
-                                Use AniDB Odering with Seasons
-                            </label>
-                            <input id="chkAnidbSeasonOne" name="chkAnidbSeasonOne" type="checkbox" value="anidbSeasonOne" />
-                        </li>
-                        <li>
-                            <button type="submit" data-theme="b">Save</button>
-                            <button type="button" onclick=" history.back(); ">Cancel</button>
-                        </li>
-                    </ul>
-                </form>
+                        <!--
+                            
+                        
+                            <li>
+                                <label for="chkMyAnimeList_API_Name">
+                                    MyAnimeList Name. -not rly needed
+                                </label>
+                                <input id="chkMyAnimeList_API_Name" name="chkMyAnimeList_API_Name" type="text" value="" disabled />
+                            </li>
+                            <li>
+                                <label for="chkMyAnimeList_API_Pw">
+                                    MyAnimeList Pw. -not rly needed
+                                </label>
+                                <input id="chkMyAnimeList_API_Pw" name="chkMyAnimeList_API_Pw" type="password" value="" disabled />
+                            </li>
+                            -->
+                            <li>
+                                <label for="chkAniDB_wait_time">
+                                    AniDB wait time too prevent IP ban (in ms (1000 = 1 Second))
+                                </label>
+                                <input id="chkAniDB_wait_time" name="chkAniDB_wait_time" type="number" value="0"/>
+                            </li>
+                            <li>
+                                <label for="chkAnidbSeasonOne">
+                                    Use AniDB Odering with Seasons
+                                </label>
+                                <input id="chkAnidbSeasonOne" name="chkAnidbSeasonOne" type="checkbox" value="anidbSeasonOne" />
+                            </li>
+                            <li>
+                                <button type="submit" data-theme="b">Save</button>
+                                <button type="button" onclick=" history.back(); ">Cancel</button>
+                            </li>
+                        </ul>
+                    </form>
+                </div>
             </div>
-        </div>
 
-        <script type="text/javascript">
-            var AnimeConfigurationPage =
-            {
-                pluginUniqueId: "1d0dddf7-1877-4473-8d7b-03f7dac1e559",
+            <script type="text/javascript">
+                var AnimeConfigurationPage =
+                {
+                    pluginUniqueId: "1d0dddf7-1877-4473-8d7b-03f7dac1e559",
 
-                virtualFolders: [],
-                physicalFolders: [],
+                    virtualFolders: [],
+                    physicalFolders: [],
 
-                loadConfiguration: function() {
-                    Dashboard.showLoadingMsg();
+                    loadConfiguration: function() {
+                        Dashboard.showLoadingMsg();
 
-                    ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).then(function (config) {
+                        ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).then(function (config) {
+                            var page = $.mobile.activePage;
+
+                            $('#titleLanguage', page).val(config.TitlePreference).change();
+                            $('#chkAutomaticUpdates', page).checked(config.AllowAutomaticMetadataUpdates).checkboxradio("refresh");
+                            $('#chkTidyGenres', page).checked(config.TidyGenreList).checkboxradio("refresh");
+                            //$('#chkMyAnimeList_API_Name', page, val(config.MyAnimeList_API_Name)).change();
+                            //$('#chkMyAnimeList_API_Pw', page, val(config.MyAnimeList_API_Pw)).change();
+                            $('#chkMaxGenres', page).val(config.MaxGenres).change();
+                            $('#chkMoveExcessGenresToTags', page).checked(config.MoveExcessGenresToTags).checkboxradio("refresh");
+                            $('#chkAnidbSeasonOne', page).checked(config.UseAnidbOrderingWithSeasons).checkboxradio("refresh");
+                            $('#chkAniDB_wait_time', page).val(config.AniDB_wait_time).change();
+
+                            Dashboard.hideLoadingMsg();
+                        });
+                    },
+
+                    saveConfiguration: function() {
+                        Dashboard.showLoadingMsg();
+
                         var page = $.mobile.activePage;
 
-                        $('#titleLanguage', page).val(config.TitlePreference).change();
-                        $('#chkAutomaticUpdates', page).checked(config.AllowAutomaticMetadataUpdates).checkboxradio("refresh");
-                        $('#chkTidyGenres', page).checked(config.TidyGenreList).checkboxradio("refresh");
-                        $('#chkMyAnimeList_API_Name', page, val(config.MyAnimeList_API_Name)).change();
-                        $('#chkMyAnimeList_API_Pw', page, val(config.MyAnimeList_API_Pw)).change();
-                        $('#chkMaxGenres', page).val(config.MaxGenres).change();
-                        $('#chkMoveExcessGenresToTags', page).checked(config.MoveExcessGenresToTags).checkboxradio("refresh");
-                        $('#chkAnidbSeasonOne', page).checked(config.UseAnidbOrderingWithSeasons).checkboxradio("refresh");
-                        $('#chkAniDB_wait_time', page).val(config.AniDB_wait_time).change();
+                        ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).then(function(config) {
 
-                        Dashboard.hideLoadingMsg();
-                    });
-                },
-
-                saveConfiguration: function() {
-                    Dashboard.showLoadingMsg();
-
-                    var page = $.mobile.activePage;
-
-                    ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).then(function(config) {
-
-                        config.TitlePreference = $('#titleLanguage', page).val();
-                        config.AllowAutomaticMetadataUpdates = $('#chkAutomaticUpdates', page).prop('checked');
-                        config.TidyGenreList = $('#chkTidyGenres').prop('checked');
-                        config.MaxGenres = $('#chkMaxGenres').val();
-                        config.MaxGenres = $('#chkNames').val();
-                        config.MyAnimeList_API_Name = $('#chkMyAnimeList_API_Name').val();
-                        config.MyAnimeList_API_Pw= $('#chkMyAnimeList_API_Pw').val();
-                        config.MoveExcessGenresToTags = $('#chkMoveExcessGenresToTags').prop('checked');
-                        config.UseAnidbOrderingWithSeasons = $('#chkAnidbSeasonOne').prop('checked');
-                        config.AniDB_wait_time = $('chkAniDB_wait_time').val();
-                        ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).then(function (result) {
-                            Dashboard.processPluginConfigurationUpdateResult(result);
+                            config.TitlePreference = $('#titleLanguage', page).val();
+                            config.AllowAutomaticMetadataUpdates = $('#chkAutomaticUpdates', page).prop('checked');
+                            config.TidyGenreList = $('#chkTidyGenres').prop('checked');
+                            config.MaxGenres = $('#chkMaxGenres').val();
+                            config.MaxGenres = $('#chkNames').val();
+                            //config.MyAnimeList_API_Name = $('#chkMyAnimeList_API_Name').val();
+                            //config.MyAnimeList_API_Pw= $('#chkMyAnimeList_API_Pw').val();
+                            config.MoveExcessGenresToTags = $('#chkMoveExcessGenresToTags').prop('checked');
+                            config.UseAnidbOrderingWithSeasons = $('#chkAnidbSeasonOne').prop('checked');
+                            config.AniDB_wait_time = $('chkAniDB_wait_time').val();
+                            ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).then(function (result) {
+                                Dashboard.processPluginConfigurationUpdateResult(result);
+                            });
                         });
-                    });
-                },
-            };
+                    },
+                };
 
-            $('#animeConfigurationPage').on('pageshow', function () {
-                AnimeConfigurationPage.loadConfiguration();
-            });
+                $('#animeConfigurationPage').on('pageshow', function () {
+                    AnimeConfigurationPage.loadConfiguration();
+                });
 
-            $('#animeConfigurationForm').on('submit', function () {
-                AnimeConfigurationPage.saveConfiguration();
-                return false;
-            });
-        </script>
-    </div>
-</body>
-</html>
+                $('#animeConfigurationForm').on('submit', function () {
+                    AnimeConfigurationPage.saveConfiguration();
+                    return false;
+                });
+            </script>
+        </div>
+    </body>
+    </html>

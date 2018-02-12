@@ -75,8 +75,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
 
         private string LookupAniDbId(string title)
         {
-            TitleInfo info;
-            if (_titles.TryGetValue(title, out info))
+            if (_titles.TryGetValue(title, out TitleInfo info))
             {
                 return info.AniDbId;
             }
@@ -86,10 +85,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
 
         public static TitleInfo GetTitleInfos(string title)
         {
-            TitleInfo info;
             if (!string.IsNullOrEmpty(title))
             {
-                if (_titles.TryGetValue(title, out info))
+                if (_titles.TryGetValue(title, out TitleInfo info))
                 {
                     return info;
                 }
@@ -208,9 +206,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
                                     {
                                         var type = ParseType(reader.GetAttribute("type"));
 
-                                        TitleInfo currentTitleInfo;
-
-                                        if (!_titles.TryGetValue(title, out currentTitleInfo) || (int)currentTitleInfo.Type < (int)type)
+                                        if (!_titles.TryGetValue(title, out TitleInfo currentTitleInfo) || (int)currentTitleInfo.Type < (int)type)
                                         {
                                             _titles[title] = new TitleInfo { AniDbId = aid, Type = type, Title = title };
                                         }

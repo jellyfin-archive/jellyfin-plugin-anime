@@ -21,7 +21,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _paths;
         private readonly ILogger _log;
-        private readonly api _api;
+        private readonly Api _api;
         public int Order => -2;
         public string Name => "AniList";
         public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
@@ -30,7 +30,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         {
             _log = logManager.GetLogger("AniList");
             _httpClient = httpClient;
-            _api = new api(jsonSerializer);
+            _api = new Api(jsonSerializer);
             _paths = appPaths;
         }
 
@@ -51,7 +51,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
                 result.Item = new Series();
                 result.HasMetadata = true;
                
-                result.People = await _api.getPersonInfo(WebContent.data.Media.id);
+                result.People = await _api.GetPersonInfo(WebContent.data.Media.id, cancellationToken);
                 result.Item.ProviderIds.Add(ProviderNames.AniList, aid);
                 result.Item.Overview = WebContent.data.Media.description;
                 try
@@ -115,12 +115,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
     {
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _appPaths;
-        private readonly api _api;
+        private readonly Api _api;
         public AniListSeriesImageProvider(IHttpClient httpClient, IApplicationPaths appPaths, IJsonSerializer jsonSerializer)
         {
             _httpClient = httpClient;
             _appPaths = appPaths;
-            _api = new api(jsonSerializer);
+            _api = new Api(jsonSerializer);
         }
 
         public string Name => "AniList";
