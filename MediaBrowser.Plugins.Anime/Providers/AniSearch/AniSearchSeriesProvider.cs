@@ -38,27 +38,27 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
             if (string.IsNullOrEmpty(aid))
             {
                 _log.Info("Start AniSearch... Searching(" + info.Name + ")");
-                aid = await api.FindSeries(info.Name, cancellationToken);
+                aid = await Api.FindSeries(info.Name, cancellationToken);
             }
 
             if (!string.IsNullOrEmpty(aid))
             {
-                string WebContent = await api.WebRequestAPI(api.AniSearch_anime_link + aid);
+                string WebContent = await Api.WebRequestAPI(Api.AniSearch_anime_link + aid);
                 result.Item = new Series();
                 result.HasMetadata = true;
 
                 result.Item.ProviderIds.Add(ProviderNames.AniSearch, aid);
-                result.Item.Overview = await api.Get_Overview(WebContent);
+                result.Item.Overview = await Api.Get_Overview(WebContent);
                 try
                 {
                     //AniSearch has a max rating of 5
-                    result.Item.CommunityRating = (float.Parse(await api.Get_Rating(WebContent), System.Globalization.CultureInfo.InvariantCulture) * 2);
+                    result.Item.CommunityRating = (float.Parse(await Api.Get_Rating(WebContent), System.Globalization.CultureInfo.InvariantCulture) * 2);
                 }
                 catch (Exception) { }
-                foreach (var genre in await api.Get_Genre(WebContent))
+                foreach (var genre in await Api.Get_Genre(WebContent))
                     result.Item.AddGenre(genre);
                 GenreHelper.CleanupGenres(result.Item);
-                StoreImageUrl(aid, await api.Get_ImageUrl(WebContent), "image");
+                StoreImageUrl(aid, await Api.Get_ImageUrl(WebContent), "image");
             }
             return result;
         }
@@ -71,15 +71,15 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
             if (!string.IsNullOrEmpty(aid))
             {
                 if (!results.ContainsKey(aid))
-                    results.Add(aid, await api.GetAnime(aid));
+                    results.Add(aid, await Api.GetAnime(aid));
             }
 
             if (!string.IsNullOrEmpty(searchInfo.Name))
             {
-                List<string> ids = await api.Search_GetSeries_list(searchInfo.Name, cancellationToken);
+                List<string> ids = await Api.Search_GetSeries_list(searchInfo.Name, cancellationToken);
                 foreach (string a in ids)
                 {
-                    results.Add(a, await api.GetAnime(a));
+                    results.Add(a, await Api.GetAnime(a));
                 }
             }
 
@@ -138,7 +138,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
 
             if (!string.IsNullOrEmpty(aid))
             {
-                var primary = await api.Get_ImageUrl(await api.WebRequestAPI(api.AniSearch_anime_link + aid));
+                var primary = await Api.Get_ImageUrl(await Api.WebRequestAPI(Api.AniSearch_anime_link + aid));
                 list.Add(new RemoteImageInfo
                 {
                     ProviderName = Name,

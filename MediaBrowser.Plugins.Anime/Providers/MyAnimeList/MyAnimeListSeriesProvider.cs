@@ -19,6 +19,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
         private readonly ILogger _log;
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _paths;
+        private readonly Api _api;
         public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
         public static string provider_name = ProviderNames.MyAnimeList;
         public int Order => -5;
@@ -26,6 +27,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
 
         public MyAnimeListSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogManager logManager)
         {
+            _api = new Api(logManager);
             _log = logManager.GetLogger("MyAnimeList");
             _httpClient = httpClient;
             _paths = appPaths;
@@ -39,24 +41,24 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
             if (string.IsNullOrEmpty(aid))
             {
                 _log.Info("Start MyAnimeList... Searching(" + info.Name + ")");
-                aid = await api.FindSeries(info.Name, cancellationToken);
+                aid = await _api.FindSeries(info.Name, cancellationToken);
             }
 
             if (!string.IsNullOrEmpty(aid))
             {
-                string WebContent = await api.WebRequestAPI(api.anime_link + aid);
+                string WebContent = await _api.WebRequestAPI(_api.anime_link + aid, cancellationToken);
                 result.Item = new Series();
                 result.HasMetadata = true;
 
                 result.Item.ProviderIds.Add(provider_name, aid);
-                result.Item.Overview = await api.Get_OverviewAsync(WebContent);
+                result.Item.Overview = await _api.Get_OverviewAsync(WebContent);
                 result.ResultLanguage = "eng";
                 try
                 {
-                    result.Item.CommunityRating = float.Parse(await api.Get_RatingAsync(WebContent), System.Globalization.CultureInfo.InvariantCulture);
+                    result.Item.CommunityRating = float.Parse(await _api.Get_RatingAsync(WebContent), System.Globalization.CultureInfo.InvariantCulture);
                 }
                 catch (Exception) { }
-                foreach (var genre in await api.Get_GenreAsync(WebContent))
+                foreach (var genre in await _api.Get_GenreAsync(WebContent))
                 {
                     if (!string.IsNullOrEmpty(genre))
                     {
@@ -64,7 +66,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
                     }
                 }
                 GenreHelper.CleanupGenres(result.Item);
-                StoreImageUrl(aid, await api.Get_ImageUrlAsync(WebContent), "image");
+                StoreImageUrl(aid, await _api.Get_ImageUrlAsync(WebContent), "image");
             }
             return result;
         }
@@ -77,15 +79,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
             if (!string.IsNullOrEmpty(aid))
             {
                 if (!results.ContainsKey(aid))
-                    results.Add(aid, await api.GetAnime(aid, cancellationToken));
+                    results.Add(aid, await _api.GetAnime(aid, cancellationToken));
             }
-
             if (!string.IsNullOrEmpty(searchInfo.Name))
             {
-                List<string> ids = await api.Search_GetSeries_list(searchInfo.Name, cancellationToken);
+                List<string> ids = await _api.Search_GetSeries_list(searchInfo.Name, cancellationToken);
                 foreach (string a in ids)
                 {
-                    results.Add(a, await api.GetAnime(a, cancellationToken));
+                    results.Add(a, await _api.GetAnime(a, cancellationToken));
                 }
             }
 
@@ -116,10 +117,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
     {
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _appPaths;
+        private readonly Api _api;
         public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
 
-        public MyAnimeListSeriesImageProvider(IHttpClient httpClient, IApplicationPaths appPaths)
+        public MyAnimeListSeriesImageProvider(IHttpClient httpClient, IApplicationPaths appPaths, ILogManager logManager)
         {
+            _api = new Api(logManager);
             _httpClient = httpClient;
             _appPaths = appPaths;
         }
@@ -145,7 +148,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
 
             if (!string.IsNullOrEmpty(aid))
             {
-                var primary = await api.Get_ImageUrlAsync(await api.WebRequestAPI(api.anime_link + aid));
+                var primary = await _api.Get_ImageUrlAsync(await _api.WebRequestAPI(_api.anime_link + aid, cancellationToken));
                 list.Add(new RemoteImageInfo
                 {
                     ProviderName = Name,

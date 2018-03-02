@@ -66,8 +66,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             var aid = info.ProviderIds.GetOrDefault(ProviderNames.AniDb);
             if (string.IsNullOrEmpty(aid) && !string.IsNullOrEmpty(info.Name))
             {
-                aid = Equals_check.Fast_xml_search(info.Name, info.Name, true);
-                aid = Equals_check.Fast_xml_search(Equals_check.clear_name(info.Name), Equals_check.clear_name(info.Name), true);
+                aid = await Equals_check.Fast_xml_search(info.Name, info.Name, cancellationToken, true);
+                if (string.IsNullOrEmpty(aid))
+                {
+                    aid = await Equals_check.Fast_xml_search(await Equals_check.Clear_name(info.Name, cancellationToken), await Equals_check.Clear_name(info.Name, cancellationToken), cancellationToken, true);
+                }
             }
 
             if (!string.IsNullOrEmpty(aid))
@@ -166,8 +169,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
 
                                 if (!string.IsNullOrWhiteSpace(val))
                                 {
-                                    DateTime date;
-                                    if (DateTime.TryParse(val, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out date))
+                            
+                                    if (DateTime.TryParse(val, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out DateTime date))
                                     {
                                         date = date.ToUniversalTime();
                                         series.PremiereDate = date;
@@ -181,8 +184,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
 
                                 if (!string.IsNullOrWhiteSpace(endDate))
                                 {
-                                    DateTime date;
-                                    if (DateTime.TryParse(endDate, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out date))
+                                    if (DateTime.TryParse(endDate, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out DateTime date))
                                     {
                                         date = date.ToUniversalTime();
                                         series.EndDate = date;
@@ -276,8 +278,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "episode")
                 {
-                    int id;
-                    if (int.TryParse(reader.GetAttribute("id"), out id) && IgnoredCategoryIds.Contains(id))
+        
+                    if (int.TryParse(reader.GetAttribute("id"), out int id) && IgnoredCategoryIds.Contains(id))
                         continue;
 
                     using (var episodeSubtree = reader.ReadSubtree())
@@ -312,16 +314,14 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "category")
                 {
-                    int weight;
-                    if (!int.TryParse(reader.GetAttribute("weight"), out weight) || weight < 400)
+               
+                    if (!int.TryParse(reader.GetAttribute("weight"), out int weight) || weight < 400)
                         continue;
 
-                    int id;
-                    if (int.TryParse(reader.GetAttribute("id"), out id) && IgnoredCategoryIds.Contains(id))
+                    if (int.TryParse(reader.GetAttribute("id"), out int id) && IgnoredCategoryIds.Contains(id))
                         continue;
 
-                    int parentId;
-                    if (int.TryParse(reader.GetAttribute("parentid"), out parentId) && IgnoredCategoryIds.Contains(parentId))
+                    if (int.TryParse(reader.GetAttribute("parentid"), out int parentId) && IgnoredCategoryIds.Contains(parentId))
                         continue;
 
                     using (var categorySubtree = reader.ReadSubtree())
@@ -360,8 +360,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                                 {
                                     if (idSubtree.NodeType == XmlNodeType.Element && idSubtree.Name == "identifier")
                                     {
-                                        int id;
-                                        if (int.TryParse(idSubtree.ReadElementContentAsString(), out id))
+                                        if (int.TryParse(idSubtree.ReadElementContentAsString(), out int id))
                                             ids.Add(id);
                                     }
                                 }
@@ -455,12 +454,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                 {
                     if (reader.Name == "permanent")
                     {
-                        float rating;
+    
                         if (float.TryParse(
                             reader.ReadElementContentAsString(),
                             NumberStyles.AllowDecimalPoint,
                             CultureInfo.InvariantCulture,
-                            out rating))
+                            out float rating))
                         {
                             series.CommunityRating = (float)Math.Round(rating, 1);
                         }
@@ -518,8 +517,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
         {
             // todo find nationality of person and conditionally reverse name order
 
-            string mappedType;
-            if (!_typeMappings.TryGetValue(type, out mappedType))
+            if (!_typeMappings.TryGetValue(type, out string mappedType))
             {
                 mappedType = type;
             }
@@ -555,7 +553,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             };
 
             await RequestLimiter.Tick();
-
+            await Task.Run(() => Thread.Sleep(Plugin.Instance.Configuration.AniDB_wait_time));
             using (var stream = await httpClient.Get(requestOptions).ConfigureAwait(false))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var reader = new StreamReader(unzipped, Encoding.UTF8, true))

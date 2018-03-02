@@ -14,7 +14,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
     /// API for http://proxer.me/ german anime database.
     /// 🛈 Proxer does not have an API interface to work with
     /// </summary>
-    internal class api
+    internal class Api
     {
         public static List<string> anime_search_names = new List<string>();
         public static List<string> anime_search_ids = new List<string>();
@@ -35,7 +35,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
                 Name = await SelectName(WebContent, Plugin.Instance.Configuration.TitlePreference, "en")
             };
 
-            result.SearchProviderName = await one_line_regex(new Regex(@">([\S\s]*?)<"), await one_line_regex(new Regex(@"<td><b>Original Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
+            result.SearchProviderName = await One_line_regex(new Regex(@">([\S\s]*?)<"), await One_line_regex(new Regex(@"<td><b>Original Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
             result.ImageUrl = await Get_ImageUrl(WebContent);
             result.SetProviderId(ProxerSeriesProvider.provider_name, id);
             result.Overview = await Get_Overview(WebContent);
@@ -75,18 +75,18 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
             switch (lang)
             {
                 case "en":
-                    return await one_line_regex(new Regex(@">([\S\s]*?)<"), await one_line_regex(new Regex(@"<td><b>Englischer Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
+                    return await One_line_regex(new Regex(@">([\S\s]*?)<"), await One_line_regex(new Regex(@"<td><b>Englischer Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
 
                 case "de":
 
-                    return await one_line_regex(new Regex(@">([\S\s]*?)<"), await one_line_regex(new Regex(@"<td><b>Deutscher Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
+                    return await One_line_regex(new Regex(@">([\S\s]*?)<"), await One_line_regex(new Regex(@"<td><b>Deutscher Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
 
                 case "jap":
-                    return await one_line_regex(new Regex(@">([\S\s]*?)<"), await one_line_regex(new Regex(@"<td><b>Japanischer Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
+                    return await One_line_regex(new Regex(@">([\S\s]*?)<"), await One_line_regex(new Regex(@"<td><b>Japanischer Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
 
                 //Default is jap_r
                 default:
-                    return await one_line_regex(new Regex(@">([\S\s]*?)<"), await one_line_regex(new Regex(@"<td><b>Original Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
+                    return await One_line_regex(new Regex(@">([\S\s]*?)<"), await One_line_regex(new Regex(@"<td><b>Original Titel<\/b><\/td>([\S\s]*?)\/td>"), WebContent));
             }
         }
 
@@ -98,12 +98,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         public static async Task<List<string>> Get_Genre(string WebContent)
         {
             List<string> result = new List<string>();
-            string Genres = await one_line_regex(new Regex(@"<b>Genre<\/b>((?:.*?\r?\n?)*)<\/tr>"), WebContent);
+            string Genres = await One_line_regex(new Regex(@"<b>Genre<\/b>((?:.*?\r?\n?)*)<\/tr>"), WebContent);
             int x = 1;
             string Proxer_Genre = null;
             while (Proxer_Genre != "")
             {
-                Proxer_Genre = await one_line_regex(new Regex("\">" + @"((?:.*?\r?\n?)*)<"), Genres, 1, x);
+                Proxer_Genre = await One_line_regex(new Regex("\">" + @"((?:.*?\r?\n?)*)<"), Genres, 1, x);
                 if (Proxer_Genre != "")
                 {
                     result.Add(Proxer_Genre);
@@ -120,7 +120,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         /// <returns></returns>
         public static async Task<string> Get_Rating(string WebContent)
         {
-            return await one_line_regex(new Regex("<span class=\"average\">" + @"(.*?)<"), WebContent);
+            return await One_line_regex(new Regex("<span class=\"average\">" + @"(.*?)<"), WebContent);
         }
 
         /// <summary>
@@ -130,7 +130,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         /// <returns></returns>
         public static async Task<string> Get_ImageUrl(string WebContent)
         {
-            return "http://" + await one_line_regex(new Regex("<img src=\"" + @"\/\/((?:.*?\r?\n?)*)" + "\""), WebContent);
+            return "http://" + await One_line_regex(new Regex("<img src=\"" + @"\/\/((?:.*?\r?\n?)*)" + "\""), WebContent);
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         /// <returns></returns>
         public static async Task<string> Get_Overview(string WebContent)
         {
-            return await one_line_regex(new Regex(@"Beschreibung:<\/b><br>((?:.*?\r?\n?)*)<\/td>"), WebContent);
+            return await One_line_regex(new Regex(@"Beschreibung:<\/b><br>((?:.*?\r?\n?)*)<\/td>"), WebContent);
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
             string WebContent = "";
             if (bettersearchresults)
             {
-                 WebContent = await WebRequestAPI(string.Format(SearchLink, Uri.EscapeUriString(Equals_check.Half_string(title, 4,60))));
+                 WebContent = await WebRequestAPI(string.Format(SearchLink, Uri.EscapeUriString(await Equals_check.Half_string(title, cancellationToken, 4,60))));
             }
             else
             {
@@ -167,19 +167,18 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
             int x = 0;
             while (result_text != "")
             {
-                result_text = await one_line_regex(new Regex("<tr align=\"" + @"left(.*?)tr>"), WebContent, 1, x);
+                result_text = await One_line_regex(new Regex("<tr align=\"" + @"left(.*?)tr>"), WebContent, 1, x);
                 if (result_text != "")
                 {
                     //get id
-                    string id = await one_line_regex(new Regex("class=\"entry" + @"(.*?)" + "\">"), result_text);
-                    string a_name = await one_line_regex(new Regex("#top\">" + @"(.*?)</a>"), result_text);
-                    if (Equals_check.Compare_strings(a_name, title))
+                    string id = await One_line_regex(new Regex("class=\"entry" + @"(.*?)" + "\">"), result_text);
+                    string a_name = await One_line_regex(new Regex("#top\">" + @"(.*?)</a>"), result_text);
+                    if (await Equals_check.Compare_strings(a_name, title, cancellationToken))
                     {
                         result = id;
                         return result;
                     }
-                    int n;
-                    if (Int32.TryParse(id, out n))
+                    if (Int32.TryParse(id, out int n))
                     {
                         anime_search_names.Add(a_name);
                         anime_search_ids.Add(id);
@@ -205,20 +204,19 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
             int x = 0;
             while (result_text != "")
             {
-                result_text = await one_line_regex(new Regex("<tr align=\"" + @"left(.*?)tr>"), WebContent, 1, x);
+                result_text = await One_line_regex(new Regex("<tr align=\"" + @"left(.*?)tr>"), WebContent, 1, x);
                 if (result_text != "")
                 {
                     //get id
 
-                    string id = await one_line_regex(new Regex("class=\"entry" + @"(.*?)" + "\">"), result_text);
-                    string a_name = await one_line_regex(new Regex("#top\">" + @"(.*?)</a>"), result_text);
-                    if (Equals_check.Compare_strings(a_name, title))
+                    string id = await One_line_regex(new Regex("class=\"entry" + @"(.*?)" + "\">"), result_text);
+                    string a_name = await One_line_regex(new Regex("#top\">" + @"(.*?)</a>"), result_text);
+                    if (await Equals_check.Compare_strings(a_name, title, cancellationToken))
                     {
                         result.Add(id);
                         return result;
                     }
-                    int n;
-                    if (Int32.TryParse(id, out n))
+                    if (Int32.TryParse(id, out int n))
                     {
                         result.Add(id);
                     }
@@ -247,19 +245,19 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
 
                 foreach (string a_name in anime_search_names)
                 {
-                    if (Equals_check.Compare_strings(a_name, title))
+                    if (await Equals_check.Compare_strings(a_name, title, cancellationToken))
                     {
                         return anime_search_ids[x];
                     }
                     x++;
                 }
             }
-            aid = await Search_GetSeries(Equals_check.clear_name(title), cancellationToken,true);
+            aid = await Search_GetSeries(await Equals_check.Clear_name(title, cancellationToken), cancellationToken,true);
             if (!string.IsNullOrEmpty(aid))
             {
                 return aid;
             }
-            aid = await Search_GetSeries(Equals_check.clear_name_step2(title), cancellationToken,true);
+            aid = await Search_GetSeries(await Equals_check.Clear_name_step2(title, cancellationToken), cancellationToken,true);
             if (!string.IsNullOrEmpty(aid))
             {
                 return aid;
@@ -275,7 +273,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         /// <param name="group"></param>
         /// <param name="match_int"></param>
         /// <returns></returns>
-        public static async Task<string> one_line_regex(Regex regex, string match, int group = 1, int match_int = 0)
+        public static async Task<string> One_line_regex(Regex regex, string match, int group = 1, int match_int = 0)
         {
             Regex _regex = regex;
             int x = 0;

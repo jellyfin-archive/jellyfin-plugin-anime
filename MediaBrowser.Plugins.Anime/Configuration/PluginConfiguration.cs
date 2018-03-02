@@ -36,7 +36,7 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         public bool UseAnidbOrderingWithSeasons { get; set; }
         public string MyAnimeList_API_Name { get; set; }
         public string MyAnimeList_API_Pw { get; set; }
-
+        public int AniDB_wait_time { get; set; }
         public PluginConfiguration()
         {
             TitlePreference = TitlePreferenceType.Localized;
@@ -47,6 +47,7 @@ namespace MediaBrowser.Plugins.Anime.Configuration
             UseAnidbOrderingWithSeasons = false;
             MyAnimeList_API_Name = "";
             MyAnimeList_API_Pw = "";
+            AniDB_wait_time = 0;
         }
     }
 }
