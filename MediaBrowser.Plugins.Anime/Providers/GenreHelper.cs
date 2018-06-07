@@ -217,7 +217,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
             {
                 series.Genres = RemoveRedundantGenres(series.Genres)
                                            .Distinct()
-                                           .ToList();
+                                           .ToArray();
 
                 TidyGenres(series);
             }
@@ -225,26 +225,24 @@ namespace MediaBrowser.Plugins.Anime.Providers
             var max = config.MaxGenres;
             if (config.AddAnimeGenre)
             {
-                series.Genres.Remove("Animation");
-                series.Genres.Remove("Anime");
+                series.Genres = series.Genres.Except(new[] { "Animation", "Anime" }).ToArray();
 
                 max = Math.Max(max - 1, 0);
             }
 
             if (config.MaxGenres > 0)
             {
-                series.Genres = series.Genres.Take(max).ToList();
+                series.Genres = series.Genres.Take(max).ToArray();
             }
 
             if (!series.Genres.Contains("Anime") && config.AddAnimeGenre)
             {
-                if (series.Genres.Contains("Animation"))
-                    series.Genres.Remove("Animation");
+                series.Genres = series.Genres.Except(new[] { "Animation" }).ToArray();
 
                 series.AddGenre("Anime");
             }
 
-            series.Genres.Sort();
+            series.Genres = series.Genres.OrderBy(i => i).ToArray();
         }
 
         public static void TidyGenres(Series series)
@@ -270,7 +268,7 @@ namespace MediaBrowser.Plugins.Anime.Providers
                 }
             }
 
-            series.Genres = genres.ToList();
+            series.Genres = genres.ToArray();
             series.Tags = tags.ToArray();
         }
 

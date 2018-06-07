@@ -338,7 +338,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                 }
             }
 
-            series.Genres = genres.OrderBy(g => g.Weight).Select(g => g.Name).ToList();
+            series.Genres = genres.OrderBy(g => g.Weight).Select(g => g.Name).ToArray();
         }
 
         private void ParseResources(Series series, XmlReader reader)
