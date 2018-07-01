@@ -380,7 +380,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                             {
                                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "url")
                                 {
-                                    series.HomePageUrl = reader.ReadElementContentAsString();
+                                    reader.ReadElementContentAsString();
                                     break;
                                 }
                             }
