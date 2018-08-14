@@ -58,6 +58,10 @@ namespace MediaBrowser.Plugins.Anime.Providers
         /// <returns></returns>
         public async static Task<string> Clear_name_step2(string a, CancellationToken cancellationToken)
         {
+            if(a.Contains("Gekijyouban"))
+               a= (a.Replace("Gekijyouban", "") + " Movie").Trim();
+            if (a.Contains("gekijyouban"))
+               a = (a.Replace("gekijyouban", "") + " Movie").Trim();
             try
             {
                 a = a.Trim().Replace(await One_line_regex(new Regex(@"(?s) \(.*?\)"), a.Trim(), cancellationToken, 0), "");
@@ -236,12 +240,39 @@ namespace MediaBrowser.Plugins.Anime.Providers
                     }
                     x++;
                 }
+                if (pre_aid.Count == 1)
+                {
+                    if (!string.IsNullOrEmpty(pre_aid[0]))
+                    {
+                        return pre_aid[0];
+                    }
+                }
+                int biggestcount = 0;
+                string cache_aid="";
+                if (a == b)
+                {
+                    foreach (string _aid in pre_aid)
+                    {
+                       string result= await One_line_regex(new Regex(@"<anime aid=" + "\"" + _aid + "\"" + @"((?s).*?)<\/anime>"), xml, cancellationToken);
+                       int count = (result.Length - result.Replace(a, "").Length)/a.Length;
+                       if(biggestcount< count)
+                       {
+                            biggestcount = count;
+                            cache_aid =_aid;
+                       }
+                    }
+                    if (!string.IsNullOrEmpty(cache_aid))
+                    {
+                        return cache_aid;
+                    }
+                }
                 foreach (string _aid in pre_aid)
                 {
                     XElement doc = XElement.Parse("<?xml version=\"1.0\" encoding=\"UTF - 8\"?>" + "<animetitles>" +await One_line_regex(new Regex("<anime aid=\"" + _aid + "\">" + @"(?s)(.*?)<\/anime>"), xml, cancellationToken,0, 0) + "</animetitles>");
                     var a_ = from page in doc.Elements("anime")
                              where _aid == page.Attribute("aid").Value
                              select page;
+                    
                     if (await Simple_compare(a_.Elements("title"), b, cancellationToken) && await Simple_compare(a_.Elements("title"), a, cancellationToken))
                     {
                         return _aid;
