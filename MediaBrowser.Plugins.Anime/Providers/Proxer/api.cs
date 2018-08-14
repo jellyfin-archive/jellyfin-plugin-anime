@@ -130,7 +130,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         /// <returns></returns>
         public static async Task<string> Get_ImageUrl(string WebContent)
         {
-            return "http://" + await One_line_regex(new Regex("<img src=\"" + @"\/\/((?:.*?\r?\n?)*)" + "\""), WebContent);
+            string url =  "http://" + await One_line_regex(new Regex("<img src=\"" + @"\/\/((?:.*?\r?\n?)*)" + "\""), WebContent);
+
+            if (url.Contains("cdn.proxer.me/cover"))
+                return url;
+
+            return "";
         }
 
         /// <summary>
