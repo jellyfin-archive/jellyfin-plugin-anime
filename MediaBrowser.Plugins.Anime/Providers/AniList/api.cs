@@ -214,7 +214,6 @@ query ($query: String, $type: MediaType) {
             {
                 PersonInfo pi = new PersonInfo();
                 pi.Name = edge.node.name.first+" "+ edge.node.name.last;
-                pi.ItemId = await ToGuid(edge.node.id, cancellationToken);
                 pi.ImageUrl = edge.node.image.large;
                 pi.Role = edge.role;
             }

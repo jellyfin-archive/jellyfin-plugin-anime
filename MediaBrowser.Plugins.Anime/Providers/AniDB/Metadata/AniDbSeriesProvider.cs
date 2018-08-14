@@ -38,11 +38,11 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
         private readonly IApplicationPaths _appPaths;
         private readonly IHttpClient _httpClient;
 
-        private readonly Dictionary<string, string> _typeMappings = new Dictionary<string, string>
+        private readonly Dictionary<string, PersonType> _typeMappings = new Dictionary<string, PersonType>
         {
             {"Direction", PersonType.Director},
             {"Music", PersonType.Composer},
-            {"Chief Animation Direction", "Chief Animation Director"}
+            {"Chief Animation Direction", PersonType.Director}
         };
 
         public AniDbSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient)
@@ -516,16 +516,30 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
         private PersonInfo CreatePerson(string name, string type, string role = null)
         {
             // todo find nationality of person and conditionally reverse name order
+            PersonType mappedType;
 
-            if (!_typeMappings.TryGetValue(type, out string mappedType))
+            if (!_typeMappings.TryGetValue(type, out  mappedType))
             {
-                mappedType = type;
+                if (!Enum.TryParse(type, true, out mappedType))
+                {
+                    mappedType = PersonType.Actor;
+                }
             }
 
             return new PersonInfo
             {
                 Name = ReverseNameOrder(name),
                 Type = mappedType,
+                Role = role
+            };
+        }
+
+        private PersonInfo CreatePerson(string name, PersonType type, string role = null)
+        {
+            return new PersonInfo
+            {
+                Name = ReverseNameOrder(name),
+                Type = type,
                 Role = role
             };
         }
