@@ -7,13 +7,11 @@ using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
 using System;
 using System.Collections.Generic;
-using MediaBrowser.Model.Drawing;
-using System.IO;
 
 namespace MediaBrowser.Plugins.Anime
 {
     public class Plugin
-        : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
+        : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger logger) : base(applicationPaths, xmlSerializer)
         {
@@ -46,20 +44,6 @@ namespace MediaBrowser.Plugins.Anime
         public override Guid Id
         {
             get { return _id; }
-        }
-
-        public Stream GetThumbImage()
-        {
-            var type = GetType();
-            return type.Assembly.GetManifestResourceStream(type.Namespace + ".thumb.png");
-        }
-
-        public ImageFormat ThumbImageFormat
-        {
-            get
-            {
-                return ImageFormat.Png;
-            }
         }
     }
 }
