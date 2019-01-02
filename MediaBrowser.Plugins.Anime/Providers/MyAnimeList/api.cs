@@ -1,5 +1,4 @@
 ﻿using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
 using MediaBrowser.Plugins.Anime.Configuration;
 using System;
@@ -19,7 +18,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
     {
         public List<string> anime_search_names = new List<string>();
         public List<string> anime_search_ids = new List<string>();
-        private static ILogManager _log;
         //Use API too search
         public string SearchLink = "https://myanimelist.net/api/anime/search.xml?q={0}";
         //Web Fallback search
@@ -27,17 +25,12 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
         //No API funktion exist too get anime
         public string anime_link = "https://myanimelist.net/anime/";
 
-
         /// <summary>
         /// WebContent API call to get a anime with id
         /// </summary>
         /// <param name="id"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Api(ILogManager logManager)
-        {
-            _log = logManager;
-        }
         public async Task<RemoteSearchResult> GetAnime(string id, CancellationToken cancellationToken)
         {
             string WebContent = await WebRequestAPI(anime_link + id, cancellationToken);

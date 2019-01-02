@@ -1,6 +1,6 @@
 ﻿using MediaBrowser.Common.Configuration;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -77,7 +77,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
         /// <param name="titlesFile">The destination file name.</param>
         private async Task DownloadTitles(string titlesFile)
         {
-            _logger.Debug("Downloading new AniDB titles file.");
+            _logger.LogDebug("Downloading new AniDB titles file.");
 
             var client = new WebClient();
 

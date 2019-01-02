@@ -1,5 +1,5 @@
-﻿using MediaBrowser.Model.Logging;
-using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
+﻿using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
