@@ -1,4 +1,4 @@
-﻿using MediaBrowser.Model.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -164,7 +164,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
             }
             catch (Exception e)
             {
-                _logger.ErrorException("Failed to load AniDB titles", e);
+                _logger.LogError(e, "Failed to load AniDB titles");
             }
         }
 
@@ -172,7 +172,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
         {
             return Task.Run(() =>
             {
-                _logger.Debug("Loading AniDB titles");
+                _logger.LogDebug("Loading AniDB titles");
 
                 var titlesFile = _downloader.TitlesFilePath;
 

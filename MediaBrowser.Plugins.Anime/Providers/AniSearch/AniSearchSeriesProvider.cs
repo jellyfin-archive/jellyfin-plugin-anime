@@ -4,8 +4,8 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,9 +23,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
         public string Name => "AniSearch";
         public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
 
-        public AniSearchSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogManager logManager)
+        public AniSearchSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILoggerFactory loggerFactory)
         {
-            _log = logManager.GetLogger("AniSearch");
+            _log = loggerFactory.CreateLogger("AniSearch");
             _httpClient = httpClient;
             _paths = appPaths;
         }
@@ -37,7 +37,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
             var aid = info.ProviderIds.GetOrDefault(ProviderNames.AniSearch);
             if (string.IsNullOrEmpty(aid))
             {
-                _log.Info("Start AniSearch... Searching(" + info.Name + ")");
+                _log.LogInformation("Start AniSearch... Searching({Name})", info.Name);
                 aid = await Api.FindSeries(info.Name, cancellationToken);
             }
 

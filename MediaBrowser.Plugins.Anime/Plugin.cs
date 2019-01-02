@@ -1,10 +1,10 @@
 ﻿using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Plugins.Anime.Configuration;
 using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 
