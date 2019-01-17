@@ -38,7 +38,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
         private readonly IApplicationPaths _appPaths;
         private readonly IHttpClient _httpClient;
 
-        private readonly Dictionary<string, PersonType> _typeMappings = new Dictionary<string, PersonType>
+        private readonly Dictionary<string, string> _typeMappings = new Dictionary<string, string>()
         {
             {"Direction", PersonType.Director},
             {"Music", PersonType.Composer},
@@ -169,7 +169,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
 
                                 if (!string.IsNullOrWhiteSpace(val))
                                 {
-                            
                                     if (DateTime.TryParse(val, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out DateTime date))
                                     {
                                         date = date.ToUniversalTime();
@@ -278,7 +277,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "episode")
                 {
-        
                     if (int.TryParse(reader.GetAttribute("id"), out int id) && IgnoredCategoryIds.Contains(id))
                         continue;
 
@@ -314,7 +312,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "category")
                 {
-               
                     if (!int.TryParse(reader.GetAttribute("weight"), out int weight) || weight < 400)
                         continue;
 
@@ -454,7 +451,6 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                 {
                     if (reader.Name == "permanent")
                     {
-    
                         if (float.TryParse(
                             reader.ReadElementContentAsString(),
                             NumberStyles.AllowDecimalPoint,
@@ -513,33 +509,18 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
             }
         }
 
-        private PersonInfo CreatePerson(string name, string type, string role = null)
-        {
+        private PersonInfo CreatePerson(string name, string type, string role = null) {
             // todo find nationality of person and conditionally reverse name order
-            PersonType mappedType;
 
-            if (!_typeMappings.TryGetValue(type, out  mappedType))
+            if (!_typeMappings.TryGetValue(type, out string mappedType))
             {
-                if (!Enum.TryParse(type, true, out mappedType))
-                {
-                    mappedType = PersonType.Actor;
-                }
+                mappedType = type;
             }
 
             return new PersonInfo
             {
                 Name = ReverseNameOrder(name),
                 Type = mappedType,
-                Role = role
-            };
-        }
-
-        private PersonInfo CreatePerson(string name, PersonType type, string role = null)
-        {
-            return new PersonInfo
-            {
-                Name = ReverseNameOrder(name),
-                Type = type,
                 Role = role
             };
         }

@@ -4,8 +4,8 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,10 +25,10 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
         public int Order => -5;
         public string Name => "MyAnimeList";
 
-        public MyAnimeListSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogManager logManager)
+        public MyAnimeListSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILoggerFactory loggerFactory)
         {
-            _api = new Api(logManager);
-            _log = logManager.GetLogger("MyAnimeList");
+            _api = new Api();
+            _log = loggerFactory.CreateLogger("MyAnimeList");
             _httpClient = httpClient;
             _paths = appPaths;
         }
@@ -40,7 +40,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
             var aid = info.ProviderIds.GetOrDefault(provider_name);
             if (string.IsNullOrEmpty(aid))
             {
-                _log.Info("Start MyAnimeList... Searching(" + info.Name + ")");
+                _log.LogInformation("Start MyAnimeList... Searching({Name})", info.Name);
                 aid = await _api.FindSeries(info.Name, cancellationToken);
             }
 
@@ -120,9 +120,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.MyAnimeList
         private readonly Api _api;
         public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
 
-        public MyAnimeListSeriesImageProvider(IHttpClient httpClient, IApplicationPaths appPaths, ILogManager logManager)
+        public MyAnimeListSeriesImageProvider(IHttpClient httpClient, IApplicationPaths appPaths)
         {
-            _api = new Api(logManager);
+            _api = new Api();
             _httpClient = httpClient;
             _appPaths = appPaths;
         }

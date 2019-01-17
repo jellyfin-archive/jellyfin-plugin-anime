@@ -4,15 +4,16 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
+using MediaBrowser.Model.Serialization;
+using MediaBrowser.Plugins.Anime.Providers.AniList.MediaBrowser.Plugins.Anime.Providers.AniList;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Plugins.Anime.Providers.AniList.MediaBrowser.Plugins.Anime.Providers.AniList;
-using MediaBrowser.Model.Serialization;
+
 //API v2
 namespace MediaBrowser.Plugins.Anime.Providers.AniList
 {
@@ -26,9 +27,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
         public string Name => "AniList";
         public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
 
-        public AniListSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogManager logManager, IJsonSerializer jsonSerializer)
+        public AniListSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILoggerFactory loggerFactory, IJsonSerializer jsonSerializer)
         {
-            _log = logManager.GetLogger("AniList");
+            _log = loggerFactory.CreateLogger("AniList");
             _httpClient = httpClient;
             _api = new Api(jsonSerializer);
             _paths = appPaths;
@@ -41,13 +42,13 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniList
             var aid = info.ProviderIds.GetOrDefault(ProviderNames.AniList);
             if (string.IsNullOrEmpty(aid))
             {
-                _log.Info("Start AniList... Searching(" + info.Name + ")");
+                _log.LogInformation("Start AniList... Searching({Name})", info.Name);
                 aid = await _api.FindSeries(info.Name, cancellationToken);
             }
 
             if (!string.IsNullOrEmpty(aid))
             {
-                RootObject  WebContent = await _api.WebRequestAPI(_api.AniList_anime_link.Replace("{0}",aid));
+                RootObject WebContent = await _api.WebRequestAPI(_api.AniList_anime_link.Replace("{0}", aid));
                 result.Item = new Series();
                 result.HasMetadata = true;
                

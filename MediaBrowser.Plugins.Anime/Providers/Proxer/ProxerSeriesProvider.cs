@@ -4,8 +4,8 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,9 +24,9 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
         public int Order => -4;
         public string Name => "Proxer";
 
-        public ProxerSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogManager logManager)
+        public ProxerSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILoggerFactory loggerFactory)
         {
-            _log = logManager.GetLogger("Proxer");
+            _log = loggerFactory.CreateLogger("Proxer");
             _httpClient = httpClient;
             _paths = appPaths;
         }
@@ -38,7 +38,7 @@ namespace MediaBrowser.Plugins.Anime.Providers.Proxer
             var aid = info.ProviderIds.GetOrDefault(provider_name);
             if (string.IsNullOrEmpty(aid))
             {
-                _log.Info("Start Proxer... Searching(" + info.Name + ")");
+                _log.LogInformation("Start Proxer... Searching({Name})", info.Name);
                 aid = await Api.FindSeries(info.Name, cancellationToken);
             }
 
