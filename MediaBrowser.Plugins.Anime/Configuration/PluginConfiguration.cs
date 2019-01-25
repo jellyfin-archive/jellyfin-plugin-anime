@@ -34,6 +34,8 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         public int MaxGenres { get; set; }
         public bool AddAnimeGenre { get; set; }
         public bool UseAnidbOrderingWithSeasons { get; set; }
+        public string MyAnimeList_API_Name { get; set; }
+        public string MyAnimeList_API_Pw { get; set; }
         public int AniDB_wait_time { get; set; }
         public PluginConfiguration()
         {
