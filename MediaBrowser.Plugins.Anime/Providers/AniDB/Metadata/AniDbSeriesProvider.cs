@@ -366,8 +366,8 @@ namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
                             if (ids.Count > 0)
                             {
                                 var firstId = ids.OrderBy(i => i).First().ToString(CultureInfo.InvariantCulture);
-                                series.ProviderIds.Add(ProviderNames.MyAnimeList, firstId);
-                                //                                series.ProviderIds.Add(ProviderNames.AniList, firstId);
+                                // TODO Investigate why Anilist was commented out
+                                series.ProviderIds.Add(ProviderNames.AniList, firstId);
                             }
 
                             break;

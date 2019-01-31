@@ -35,10 +35,6 @@ namespace AnimeLists
         public string ProxerId { get; set; }
 
         /// <remarks />
-        [XmlAttribute("myanimelist")]
-        public string MyAnimeListId { get; set; }
-
-        /// <remarks />
         [XmlAttribute("tvdbid")]
         public string TvdbId { get; set; }
 
