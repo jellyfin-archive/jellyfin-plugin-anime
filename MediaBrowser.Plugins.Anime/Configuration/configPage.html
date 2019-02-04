@@ -22,12 +22,6 @@
                             </select>
                         </li>
                         <li>
-                            <label for="chkAutomaticUpdates">
-                                Allow Automatic Metadata Updates
-                            </label>
-                            <input id="chkAutomaticUpdates" name="chkAutomaticUpdates" type="checkbox" value="automaticUpdates" />
-                        </li>
-                        <li>
                             <label for="chkTidyGenres">
                                 Tidy Genre List
                             </label>
@@ -73,7 +67,6 @@
                             var page = $.mobile.activePage;
 
                             $('#titleLanguage', page).val(config.TitlePreference).change();
-                            $('#chkAutomaticUpdates', page).checked(config.AllowAutomaticMetadataUpdates).checkboxradio("refresh");
                             $('#chkTidyGenres', page).checked(config.TidyGenreList).checkboxradio("refresh");
                             $('#chkMaxGenres', page).val(config.MaxGenres).change();
                             $('#chkMoveExcessGenresToTags', page).checked(config.MoveExcessGenresToTags).checkboxradio("refresh");
@@ -92,7 +85,6 @@
                         ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).then(function(config) {
 
                             config.TitlePreference = $('#titleLanguage', page).val();
-                            config.AllowAutomaticMetadataUpdates = $('#chkAutomaticUpdates', page).prop('checked');
                             config.TidyGenreList = $('#chkTidyGenres').prop('checked');
                             config.MaxGenres = $('#chkMaxGenres').val();
                             config.MaxGenres = $('#chkNames').val();

@@ -29,7 +29,6 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         : BasePluginConfiguration
     {
         public TitlePreferenceType TitlePreference { get; set; }
-        public bool AllowAutomaticMetadataUpdates { get; set; }
         public bool TidyGenreList { get; set; }
         public int MaxGenres { get; set; }
         public bool AddAnimeGenre { get; set; }
@@ -38,7 +37,6 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         public PluginConfiguration()
         {
             TitlePreference = TitlePreferenceType.Localized;
-            AllowAutomaticMetadataUpdates = true;
             TidyGenreList = true;
             MaxGenres = 5;
             AddAnimeGenre = true;
