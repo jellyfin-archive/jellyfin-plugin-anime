@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
+namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 {
     public class AniDbSeriesImagesProvider : IRemoteImageProvider
     {

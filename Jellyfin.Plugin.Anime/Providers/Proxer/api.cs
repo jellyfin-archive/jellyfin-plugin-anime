@@ -1,6 +1,6 @@
 ﻿using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
-using MediaBrowser.Plugins.Anime.Configuration;
+using Jellyfin.Plugin.Anime.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MediaBrowser.Plugins.Anime.Providers.Proxer
+namespace Jellyfin.Plugin.Anime.Providers.Proxer
 {
     /// <summary>
     /// API for http://proxer.me/ german anime database.

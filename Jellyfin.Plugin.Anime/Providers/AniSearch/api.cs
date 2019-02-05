@@ -1,6 +1,6 @@
 ﻿using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
-using MediaBrowser.Plugins.Anime.Configuration;
+using Jellyfin.Plugin.Anime.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
+namespace Jellyfin.Plugin.Anime.Providers.AniSearch
 {
     /// <summary>
     /// API for http://anisearch.de a german anime database

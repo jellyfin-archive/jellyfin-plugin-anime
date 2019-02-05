@@ -1,10 +1,10 @@
 ﻿using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Plugins.Anime.Configuration;
+using Jellyfin.Plugin.Anime.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MediaBrowser.Plugins.Anime.Providers
+namespace Jellyfin.Plugin.Anime.Providers
 {
     public static class GenreHelper
     {

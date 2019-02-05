@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MediaBrowser.Plugins.Anime
+namespace Jellyfin.Plugin.Anime
 {
     public static class DictionaryExtensions
     {

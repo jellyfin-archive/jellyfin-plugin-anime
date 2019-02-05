@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
+namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
 {
     /// <summary>
     /// The <see cref="AniDbTitleMatcher"/> class loads series titles from the series.xml file in the application data anidb folder,

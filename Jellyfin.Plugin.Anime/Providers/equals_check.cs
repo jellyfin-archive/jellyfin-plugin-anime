@@ -1,4 +1,4 @@
-﻿using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
+﻿using Jellyfin.Plugin.Anime.Providers.AniDB.Identity;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace MediaBrowser.Plugins.Anime.Providers
+namespace Jellyfin.Plugin.Anime.Providers
 {
     internal class Equals_check
     {

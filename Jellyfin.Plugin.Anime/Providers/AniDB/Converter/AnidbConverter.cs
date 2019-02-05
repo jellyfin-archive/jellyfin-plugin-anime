@@ -2,7 +2,7 @@
 using MediaBrowser.Common.Configuration;
 using System.IO;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Converter
+namespace Jellyfin.Plugin.Anime.Providers.AniDB.Converter
 {
     public class AnidbConverter
     {

@@ -12,7 +12,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MediaBrowser.Plugins.Anime.Providers.Proxer
+namespace Jellyfin.Plugin.Anime.Providers.Proxer
 {
     public class ProxerSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder
     {

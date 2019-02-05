@@ -2,13 +2,13 @@
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-using MediaBrowser.Plugins.Anime.Configuration;
-using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
+using Jellyfin.Plugin.Anime.Configuration;
+using Jellyfin.Plugin.Anime.Providers.AniDB.Identity;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 
-namespace MediaBrowser.Plugins.Anime
+namespace Jellyfin.Plugin.Anime
 {
     public class Plugin
         : BasePlugin<PluginConfiguration>, IHasWebPages
@@ -34,7 +34,7 @@ namespace MediaBrowser.Plugins.Anime
                 new PluginPageInfo
                 {
                     Name = "anime",
-                    EmbeddedResourcePath = "MediaBrowser.Plugins.Anime.Configuration.configPage.html"
+                    EmbeddedResourcePath = "Jellyfin.Plugin.Anime.Configuration.configPage.html"
                 }
             };
         }

@@ -1,5 +1,5 @@
 ﻿using MediaBrowser.Common.Configuration;
-using MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata;
+using Jellyfin.Plugin.Anime.Providers.AniDB.Metadata;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
@@ -8,7 +8,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Identity
+namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
 {
     /// <summary>
     /// The AniDbTitleDownloader class downloads the anime titles file from AniDB and stores it.

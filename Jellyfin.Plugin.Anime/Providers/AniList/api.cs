@@ -1,6 +1,6 @@
 ﻿using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
-using MediaBrowser.Plugins.Anime.Configuration;
+using Jellyfin.Plugin.Anime.Configuration;
 using MediaBrowser.Model.Serialization;
 using System;
 using System.Collections.Generic;
@@ -8,10 +8,10 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Plugins.Anime.Providers.AniList.MediaBrowser.Plugins.Anime.Providers.AniList;
+using Jellyfin.Plugin.Anime.Providers.AniList;
 using MediaBrowser.Controller.Entities;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniList
+namespace Jellyfin.Plugin.Anime.Providers.AniList
 {
     /// <summary>
     /// Based on the new API from AniList

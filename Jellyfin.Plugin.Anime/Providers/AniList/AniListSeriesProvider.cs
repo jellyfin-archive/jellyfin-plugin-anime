@@ -6,7 +6,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using MediaBrowser.Model.Serialization;
-using MediaBrowser.Plugins.Anime.Providers.AniList.MediaBrowser.Plugins.Anime.Providers.AniList;
+using Jellyfin.Plugin.Anime.Providers.AniList;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 //API v2
-namespace MediaBrowser.Plugins.Anime.Providers.AniList
+namespace Jellyfin.Plugin.Anime.Providers.AniList
 {
     public class AniListSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder
     {

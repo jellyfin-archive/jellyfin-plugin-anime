@@ -1,6 +1,6 @@
 using System;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Converter
+namespace Jellyfin.Plugin.Anime.Providers.AniDB.Converter
 {
     public struct TvdbEpisodeIdentity
     {

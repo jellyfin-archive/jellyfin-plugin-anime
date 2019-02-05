@@ -2,7 +2,7 @@
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 
-namespace MediaBrowser.Plugins.Anime.Providers.Proxer
+namespace Jellyfin.Plugin.Anime.Providers.Proxer
 {
     public class ProxerExternalId : IExternalId
     {

@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniList
+namespace Jellyfin.Plugin.Anime.Providers.AniList
 {
     using System.Collections.Generic;
 
-    namespace MediaBrowser.Plugins.Anime.Providers.AniList
+    namespace Jellyfin.Plugin.Anime.Providers.AniList
     {
         public class Title
         {

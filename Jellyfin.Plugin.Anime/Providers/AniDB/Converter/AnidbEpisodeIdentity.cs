@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Converter
+namespace Jellyfin.Plugin.Anime.Providers.AniDB.Converter
 {
     public struct AnidbEpisodeIdentity
     {

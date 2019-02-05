@@ -2,7 +2,7 @@
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
+namespace Jellyfin.Plugin.Anime.Providers.AniSearch
 {
     public class AniSearchExternalId : IExternalId
     {

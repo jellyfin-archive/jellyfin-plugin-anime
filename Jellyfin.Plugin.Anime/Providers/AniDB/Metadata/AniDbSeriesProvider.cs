@@ -5,8 +5,8 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
-using MediaBrowser.Plugins.Anime.Configuration;
-using MediaBrowser.Plugins.Anime.Providers.AniDB.Identity;
+using Jellyfin.Plugin.Anime.Configuration;
+using Jellyfin.Plugin.Anime.Providers.AniDB.Identity;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -21,7 +21,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniDB.Metadata
+namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 {
     public class AniDbSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder
     {

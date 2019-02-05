@@ -12,7 +12,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MediaBrowser.Plugins.Anime.Providers.AniSearch
+namespace Jellyfin.Plugin.Anime.Providers.AniSearch
 {
     public class AniSearchSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder
     {
