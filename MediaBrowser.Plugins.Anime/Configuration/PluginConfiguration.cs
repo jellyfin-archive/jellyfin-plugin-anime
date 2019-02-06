@@ -19,10 +19,6 @@ namespace MediaBrowser.Plugins.Anime.Configuration
         /// </summary>
         JapaneseRomaji,
 
-        /// <summary>
-        /// Use titles in German.
-        /// </summary>
-        German,
     }
 
     public class PluginConfiguration
