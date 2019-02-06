@@ -43,7 +43,7 @@ namespace MediaBrowser.Plugins.Anime.Configuration
             MaxGenres = 5;
             AddAnimeGenre = true;
             UseAnidbOrderingWithSeasons = false;
-            AniDB_wait_time = 0;
+            AniDB_wait_time = 2000;
         }
     }
 }
