@@ -6,47 +6,46 @@
     <title>Anime Configuration</title>
 </head>
 <body>
-    <div id="animeConfigurationPage" data-role="page" class="page type-interior pluginConfigurationPage">
-        <div data-role="content">
-            <div class="content-primary">
+        <div id="animeConfigurationPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+            <div data-role="content">
+                <div class="content-primary">
 
-                <form id="animeConfigurationForm">
-                    <ul class="ulForm" data-role="listview">
-                        <li>
-                            <label for="titleLanguage">Title Language:</label>
-                            <select id="titleLanguage" name="titleLanguage">
+                    <form id="animeConfigurationForm">
+                        <div class="selectContainer"
+                            <label class="selectLabel" for="titleLanguage">Title Language:</label>
+                            <select is="emby-select" id="titleLanguage" name="titleLanguage" class="emby-select-withcolor emby-select">
                                 <option id="optLanguageLocalized" value="Localized">Localized</option>
                                 <option id="optLanguageRomaji" value="JapaneseRomaji">Romaji</option>
                                 <option id="optLanguageJapanese" value="Japanese">Japanese</option>
                             </select>
-                        </li>
-                        <li>
-                            <label for="chkTidyGenres">
-                                Tidy Genre List
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputeLabel inputLabelUnfocused" for="chkMaxGenres">Max Genres:</label>
+                            <input id="chkMaxGenres" name="chkMaxGenres" type="number" is="emby-input" min="0"/>
+                            <div class="fieldDescription">[0: unlimited]</div>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputeLabel inputLabelUnfocused" for="chkAniDB_wait_time">AniDB wait time:</label>
+                            <input id="chkAniDB_wait_time" name="chkAniDB_wait_time" type="number" is="emby-input"/>
+                            <div class="fieldDescription">AniDB sleep time to prevent IP ban (ms)</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescripton">
+                            <label class="emby-checkbox-label">
+                                <input id="chkAnidbSeasonOne" name="chkAnidbSeasonOne" type="checkbox" is="emby-checkbox"/>
+                                <span>Use AniDB Ordering with Seasons</span>
                             </label>
-                            <input id="chkTidyGenres" name="chkTidyGenres" type="checkbox" value="tidyGenres" />
-                        </li>
-                        <li>
-                            <label for="chkMaxGenres">
-                                Max Genres [0: unlimited]
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescripton">
+                            <label class="emby-checkbox-label">
+                                <input id="chkTidyGenres" name="chkTidyGenres" type="checkbox" is="emby-checkbox"/>
+                                <span>Tidy Genre List</span>
                             </label>
-                            <input id="chkMaxGenres" name="chkMaxGenres" type="number" min="0" value="maxGenres" />
-                        </li>
-                            <li>
-                                <label for="chkAniDB_wait_time">
-                                    AniDB sleep time to prevent IP ban (ms)
-                                </label>
-                                <input id="chkAniDB_wait_time" name="chkAniDB_wait_time" type="number" value="2000"/>
-                            </li>
-                            <li>
-                                <label for="chkAnidbSeasonOne">
-                                    Use AniDB Ordering with Seasons
-                                </label>
-                                <input id="chkAnidbSeasonOne" name="chkAnidbSeasonOne" type="checkbox" value="anidbSeasonOne" />
-                            </li>
-                        </ul>
-                        <button type="submit" data-theme="b">Save</button>
-                        <button type="button" onclick=" history.back(); ">Cancel</button>
+                        </div>
+                        <div>
+                            <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                                <span>Save</span>
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -68,7 +67,6 @@
                             $('#titleLanguage', page).val(config.TitlePreference).change();
                             $('#chkTidyGenres', page).checked(config.TidyGenreList).checkboxradio("refresh");
                             $('#chkMaxGenres', page).val(config.MaxGenres).change();
-                            $('#chkMoveExcessGenresToTags', page).checked(config.MoveExcessGenresToTags).checkboxradio("refresh");
                             $('#chkAnidbSeasonOne', page).checked(config.UseAnidbOrderingWithSeasons).checkboxradio("refresh");
                             $('#chkAniDB_wait_time', page).val(config.AniDB_wait_time).change();
 
@@ -86,8 +84,6 @@
                             config.TitlePreference = $('#titleLanguage', page).val();
                             config.TidyGenreList = $('#chkTidyGenres').prop('checked');
                             config.MaxGenres = $('#chkMaxGenres').val();
-                            config.MaxGenres = $('#chkNames').val();
-                            config.MoveExcessGenresToTags = $('#chkMoveExcessGenresToTags').prop('checked');
                             config.UseAnidbOrderingWithSeasons = $('#chkAnidbSeasonOne').prop('checked');
                             config.AniDB_wait_time = $('chkAniDB_wait_time').val();
                             ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).then(function (result) {
