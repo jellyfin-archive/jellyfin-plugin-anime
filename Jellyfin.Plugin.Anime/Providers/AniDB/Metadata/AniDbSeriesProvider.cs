@@ -366,8 +366,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                             if (ids.Count > 0)
                             {
                                 var firstId = ids.OrderBy(i => i).First().ToString(CultureInfo.InvariantCulture);
-                                // TODO Investigate why Anilist was commented out
-                                series.ProviderIds.Add(ProviderNames.AniList, firstId);
+                                series.ProviderIds.Add(ProviderNames.MyAnimeList, firstId);
                             }
 
                             break;
