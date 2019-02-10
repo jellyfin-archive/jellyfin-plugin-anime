@@ -39,7 +39,7 @@ namespace Jellyfin.Plugin.Anime
             };
         }
 
-        private Guid _id = new Guid("1d0dddf7-1877-4473-8d7b-03f7dac1e559");
+        private Guid _id = new Guid("a4df60c5-6ab4-412a-8f79-2cab93fb2bc5");
 
         public override Guid Id
         {
