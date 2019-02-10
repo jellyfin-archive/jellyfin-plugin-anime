@@ -1,0 +1,14 @@
+---
+name: "jellyfin-plugin-anime"
+guid: "a4df60c5-6ab4-412a-8f79-2cab93fb2bc5"
+version: "0.0.1"
+nicename: "Anime"
+description: "Manage your Anime in Jellyfin"
+overview: "Manage your Anime in Jellyfin"
+category: "General"
+artifacts:
+  - "Jellyfin.Plugin.Anime.dll"
+build_type: "dotnet"
+dotnet_runtime: "linux-x64"
+dotnet_configuration: "Release"
+dotnet_framework: "netstandard2.0"
