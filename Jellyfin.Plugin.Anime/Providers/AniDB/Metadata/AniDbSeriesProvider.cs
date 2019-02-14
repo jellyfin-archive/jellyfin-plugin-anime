@@ -33,7 +33,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
 
         public static readonly RateLimiter RequestLimiter = new RateLimiter(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(5));
-        private static readonly int[] IgnoredCategoryIds = { 6, 22, 23, 60, 128, 129, 185, 216, 242, 255, 268, 269, 289 };
+        private static readonly int[] IgnoredTagIds = { 6, 22, 23, 60, 128, 129, 185, 216, 242, 255, 268, 269, 289 };
         private static readonly Regex AniDbUrlRegex = new Regex(@"http://anidb.net/\w+ \[(?<name>[^\]]*)\]");
         private readonly IApplicationPaths _appPaths;
         private readonly IHttpClient _httpClient;
@@ -244,14 +244,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                             case "tags":
                                 using (var subtree = reader.ReadSubtree())
                                 {
-                                }
-
-                                break;
-
-                            case "categories":
-                                using (var subtree = reader.ReadSubtree())
-                                {
-                                    ParseCategories(series, subtree);
+                                    ParseTags(series, subtree);
                                 }
 
                                 break;
@@ -277,7 +270,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "episode")
                 {
-                    if (int.TryParse(reader.GetAttribute("id"), out int id) && IgnoredCategoryIds.Contains(id))
+                    if (int.TryParse(reader.GetAttribute("id"), out int id) && IgnoredTagIds.Contains(id))
                         continue;
 
                     using (var episodeSubtree = reader.ReadSubtree())
@@ -304,30 +297,30 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             }
         }
 
-        private void ParseCategories(Series series, XmlReader reader)
+        private void ParseTags(Series series, XmlReader reader)
         {
             var genres = new List<GenreInfo>();
 
             while (reader.Read())
             {
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "category")
+                if (reader.NodeType == XmlNodeType.Element && reader.Name == "tag")
                 {
                     if (!int.TryParse(reader.GetAttribute("weight"), out int weight) || weight < 400)
                         continue;
 
-                    if (int.TryParse(reader.GetAttribute("id"), out int id) && IgnoredCategoryIds.Contains(id))
+                    if (int.TryParse(reader.GetAttribute("id"), out int id) && IgnoredTagIds.Contains(id))
                         continue;
 
-                    if (int.TryParse(reader.GetAttribute("parentid"), out int parentId) && IgnoredCategoryIds.Contains(parentId))
+                    if (int.TryParse(reader.GetAttribute("parentid"), out int parentId) && IgnoredTagIds.Contains(parentId))
                         continue;
 
-                    using (var categorySubtree = reader.ReadSubtree())
+                    using (var tagSubtree = reader.ReadSubtree())
                     {
-                        while (categorySubtree.Read())
+                        while (tagSubtree.Read())
                         {
-                            if (categorySubtree.NodeType == XmlNodeType.Element && categorySubtree.Name == "name")
+                            if (tagSubtree.NodeType == XmlNodeType.Element && tagSubtree.Name == "name")
                             {
-                                var name = categorySubtree.ReadElementContentAsString();
+                                var name = tagSubtree.ReadElementContentAsString();
                                 genres.Add(new GenreInfo { Name = name, Weight = weight });
                             }
                         }
