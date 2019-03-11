@@ -7,7 +7,7 @@ description: "Manage your Anime in Jellyfin"
 overview: >
   Manage your Anime in Jellyfin. Supports several different metadata providers and options for
   organizing your collection.
-category: "General"
+category: "Metadata"
 artifacts:
   - "Jellyfin.Plugin.Anime.dll"
 build_type: "dotnet"
