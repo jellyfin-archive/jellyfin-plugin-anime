@@ -1,6 +1,6 @@
-﻿using AnimeLists;
+﻿using System.IO;
+using AnimeLists;
 using MediaBrowser.Common.Configuration;
-using System.IO;
 
 namespace Jellyfin.Plugin.Anime.Providers.AniDB.Converter
 {

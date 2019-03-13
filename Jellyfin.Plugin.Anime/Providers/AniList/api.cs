@@ -1,15 +1,15 @@
-﻿using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Providers;
-using Jellyfin.Plugin.Anime.Configuration;
-using MediaBrowser.Model.Serialization;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.Anime.Configuration;
 using Jellyfin.Plugin.Anime.Providers.AniList;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Providers;
+using MediaBrowser.Model.Serialization;
 
 namespace Jellyfin.Plugin.Anime.Providers.AniList
 {

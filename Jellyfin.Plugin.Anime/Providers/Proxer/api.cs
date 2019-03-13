@@ -1,12 +1,12 @@
-﻿using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Providers;
-using Jellyfin.Plugin.Anime.Configuration;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Providers;
+using Jellyfin.Plugin.Anime.Configuration;
 
 namespace Jellyfin.Plugin.Anime.Providers.Proxer
 {

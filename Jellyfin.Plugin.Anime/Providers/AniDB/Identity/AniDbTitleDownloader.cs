@@ -1,12 +1,12 @@
-﻿using MediaBrowser.Common.Configuration;
-using Jellyfin.Plugin.Anime.Providers.AniDB.Metadata;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.Anime.Providers.AniDB.Metadata;
+using MediaBrowser.Common.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
 {
