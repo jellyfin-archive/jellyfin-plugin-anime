@@ -1,6 +1,4 @@
-﻿using Jellyfin.Plugin.Anime.Providers.AniDB.Identity;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,6 +6,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Jellyfin.Plugin.Anime.Providers.AniDB.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.Anime.Providers
 {

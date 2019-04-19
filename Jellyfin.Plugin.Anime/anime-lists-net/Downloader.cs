@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using Jellyfin.Plugin.Anime;
 
 namespace AnimeLists
 {

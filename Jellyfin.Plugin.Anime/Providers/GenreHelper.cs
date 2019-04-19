@@ -1,8 +1,8 @@
-﻿using MediaBrowser.Controller.Entities.TV;
-using Jellyfin.Plugin.Anime.Configuration;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Jellyfin.Plugin.Anime.Configuration;
+using MediaBrowser.Controller.Entities.TV;
 
 namespace Jellyfin.Plugin.Anime.Providers
 {

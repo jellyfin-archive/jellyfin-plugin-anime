@@ -61,7 +61,7 @@
                     loadConfiguration: function() {
                         Dashboard.showLoadingMsg();
 
-                        ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).then(function (config) {
+                        ApiClient.getPluginConfiguration(animeConfigurationPage.pluginUniqueId).then(function (config) {
                             var page = $.mobile.activePage;
 
                             $('#titleLanguage', page).val(config.TitlePreference).change();

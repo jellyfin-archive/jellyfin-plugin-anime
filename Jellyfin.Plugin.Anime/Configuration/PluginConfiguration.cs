@@ -21,8 +21,7 @@ namespace Jellyfin.Plugin.Anime.Configuration
 
     }
 
-    public class PluginConfiguration
-        : BasePluginConfiguration
+    public class PluginConfiguration : BasePluginConfiguration
     {
         public TitlePreferenceType TitlePreference { get; set; }
         public bool TidyGenreList { get; set; }
