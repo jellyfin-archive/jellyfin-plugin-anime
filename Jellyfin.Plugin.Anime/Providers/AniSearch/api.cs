@@ -11,15 +11,15 @@ using MediaBrowser.Model.Providers;
 namespace Jellyfin.Plugin.Anime.Providers.AniSearch
 {
     /// <summary>
-    /// API for http://anisearch.de a german anime database
+    /// API for http://anisearch.com
     /// 🛈 Anisearch does not have an API interface to work with
     /// </summary>
     internal class Api
     {
         public static List<string> anime_search_names = new List<string>();
         public static List<string> anime_search_ids = new List<string>();
-        public static string SearchLink = "https://www.anisearch.de/anime/index/?char=all&page=1&text={0}&smode=2&sort=title&order=asc&view=2&title=de,en,fr,it,pl,ru,es,tr&titlex=1,2&hentai=yes";
-        public static string AniSearch_anime_link = "https://www.anisearch.de/anime/";
+        public static string SearchLink = "https://www.anisearch.com/anime/index/?char=all&page=1&text={0}&smode=2&sort=title&order=asc&view=2&title=de,en,fr,it,pl,ru,es,tr&titlex=1,2&hentai=yes";
+        public static string AniSearch_anime_link = "https://www.anisearch.com/anime/";
 
         /// <summary>
         /// API call to get the anime with the id
