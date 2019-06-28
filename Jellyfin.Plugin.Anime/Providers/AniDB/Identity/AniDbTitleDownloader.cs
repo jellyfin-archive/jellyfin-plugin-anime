@@ -18,7 +18,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         /// <summary>
         /// The URL for retrieving a list of all anime titles and their AniDB IDs.
         /// </summary>
-        private const string TitlesUrl = "http://anidb.net/api/animetitles.xml";
+        private const string TitlesUrl = "http://anidb.net/api/animetitles.xml.gz";
 
         private readonly IApplicationPaths _paths;
         private readonly ILogger _logger;

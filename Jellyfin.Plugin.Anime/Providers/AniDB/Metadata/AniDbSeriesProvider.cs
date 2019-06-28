@@ -144,6 +144,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             var series = result.Item;
             var settings = new XmlReaderSettings
             {
+                Async = true,
                 CheckCharacters = false,
                 IgnoreProcessingInstructions = true,
                 IgnoreComments = true,
@@ -559,6 +560,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         {
             var settings = new XmlReaderSettings
             {
+                Async = true,
                 CheckCharacters = false,
                 IgnoreProcessingInstructions = true,
                 IgnoreComments = true,
@@ -592,6 +594,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         {
             var settings = new XmlReaderSettings
             {
+                Async = true,
                 CheckCharacters = false,
                 IgnoreProcessingInstructions = true,
                 IgnoreComments = true,
@@ -779,6 +782,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         {
             var settings = new XmlReaderSettings
             {
+                Async = true,
                 CheckCharacters = false,
                 IgnoreProcessingInstructions = true,
                 IgnoreComments = true,
