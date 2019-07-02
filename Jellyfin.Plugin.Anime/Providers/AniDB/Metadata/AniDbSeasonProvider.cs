@@ -33,7 +33,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
             var seriesId = info.ProviderIds.GetOrDefault(ProviderNames.AniDb);
             if (seriesId == null)
+            {
                 return result;
+            }
 
             var seriesInfo = new SeriesInfo();
             seriesInfo.ProviderIds.Add(ProviderNames.AniDb, seriesId);

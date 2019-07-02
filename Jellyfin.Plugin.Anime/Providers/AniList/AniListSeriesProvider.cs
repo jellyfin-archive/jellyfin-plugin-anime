@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.Anime.Providers.AniList;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
@@ -27,9 +26,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public string Name => "AniList";
         public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
 
-        public AniListSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILoggerFactory loggerFactory, IJsonSerializer jsonSerializer)
+        public AniListSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogger<AniListSeriesProvider> logger, IJsonSerializer jsonSerializer)
         {
-            _log = loggerFactory.CreateLogger("AniList");
+            _log = logger;
             _httpClient = httpClient;
             _api = new Api(jsonSerializer);
             _paths = appPaths;
@@ -66,6 +65,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
                 GenreHelper.CleanupGenres(result.Item);
                 StoreImageUrl(aid, WebContent.data.Media.coverImage.large, "image");
             }
+
             return result;
         }
 
@@ -77,15 +77,17 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             if (!string.IsNullOrEmpty(aid))
             {
                 if (!results.ContainsKey(aid))
-                    results.Add(aid, await _api.GetAnime(aid));
+                {
+                    results.Add(aid, await _api.GetAnime(aid).ConfigureAwait(false));
+                }
             }
 
             if (!string.IsNullOrEmpty(searchInfo.Name))
             {
-                List<string> ids = await _api.Search_GetSeries_list(searchInfo.Name, cancellationToken);
+                List<string> ids = await _api.Search_GetSeries_list(searchInfo.Name, cancellationToken).ConfigureAwait(false);
                 foreach (string a in ids)
                 {
-                    results.Add(a, await _api.GetAnime(a));
+                    results.Add(a, await _api.GetAnime(a).ConfigureAwait(false));
                 }
             }
 

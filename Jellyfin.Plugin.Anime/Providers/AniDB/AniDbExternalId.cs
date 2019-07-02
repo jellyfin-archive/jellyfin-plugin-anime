@@ -7,23 +7,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB
     public class AniDbExternalId : IExternalId
     {
         public bool Supports(IHasProviderIds item)
-        {
-            return item is Series;
-        }
+            => item is Series;
 
         public string Name
-        {
-            get { return "AniDB"; }
-        }
+            => "AniDB";
 
         public string Key
-        {
-            get { return ProviderNames.AniDb; }
-        }
+            => ProviderNames.AniDb;
 
         public string UrlFormatString
-        {
-            get { return "http://anidb.net/perl-bin/animedb.pl?show=anime&aid={0}"; }
-        }
+            => "http://anidb.net/perl-bin/animedb.pl?show=anime&aid={0}";
     }
 }

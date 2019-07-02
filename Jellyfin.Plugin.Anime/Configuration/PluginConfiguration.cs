@@ -17,18 +17,11 @@ namespace Jellyfin.Plugin.Anime.Configuration
         /// <summary>
         /// Use titles in Japanese romaji.
         /// </summary>
-        JapaneseRomaji,
-
+        JapaneseRomaji
     }
 
     public class PluginConfiguration : BasePluginConfiguration
     {
-        public TitlePreferenceType TitlePreference { get; set; }
-        public bool TidyGenreList { get; set; }
-        public int MaxGenres { get; set; }
-        public bool AddAnimeGenre { get; set; }
-        public bool UseAnidbOrderingWithSeasons { get; set; }
-        public int AniDB_wait_time { get; set; }
         public PluginConfiguration()
         {
             TitlePreference = TitlePreferenceType.Localized;
@@ -38,5 +31,12 @@ namespace Jellyfin.Plugin.Anime.Configuration
             UseAnidbOrderingWithSeasons = false;
             AniDB_wait_time = 2000;
         }
+
+        public TitlePreferenceType TitlePreference { get; set; }
+        public bool TidyGenreList { get; set; }
+        public int MaxGenres { get; set; }
+        public bool AddAnimeGenre { get; set; }
+        public bool UseAnidbOrderingWithSeasons { get; set; }
+        public int AniDB_wait_time { get; set; }
     }
 }

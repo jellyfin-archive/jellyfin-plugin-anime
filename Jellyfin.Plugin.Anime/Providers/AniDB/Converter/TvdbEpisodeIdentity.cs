@@ -4,11 +4,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Converter
 {
     public struct TvdbEpisodeIdentity
     {
-        public string SeriesId { get; private set; }
-        public int? SeasonIndex { get; private set; }
-        public int EpisodeNumber { get; private set; }
-        public int? EpisodeNumberEnd { get; private set; }
-
         public TvdbEpisodeIdentity(string id)
             : this()
         {
@@ -24,6 +19,11 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Converter
             EpisodeNumberEnd = episodeNumberEnd;
         }
 
+        public string SeriesId { get; private set; }
+        public int? SeasonIndex { get; private set; }
+        public int EpisodeNumber { get; private set; }
+        public int? EpisodeNumberEnd { get; private set; }
+
         public override string ToString()
         {
             return string.Format("{0}:{1}:{2}",
@@ -35,7 +35,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Converter
         public static TvdbEpisodeIdentity? Parse(string id)
         {
             if (string.IsNullOrEmpty(id))
+            {
                 return null;
+            }
 
             try
             {
@@ -46,9 +48,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Converter
                 int index;
                 int? indexEnd;
 
-                if (parts[2].Contains("-"))
+                var split = parts[2].IndexOf("-", StringComparison.OrdinalIgnoreCase);
+                if (split != -1)
                 {
-                    var split = parts[2].IndexOf("-", StringComparison.OrdinalIgnoreCase);
                     index = int.Parse(parts[2].Substring(0, split));
                     indexEnd = int.Parse(parts[2].Substring(split + 1));
                 }

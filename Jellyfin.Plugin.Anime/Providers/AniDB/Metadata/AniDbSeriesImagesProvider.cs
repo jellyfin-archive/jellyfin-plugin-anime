@@ -51,7 +51,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             if (!string.IsNullOrEmpty(aniDbId))
             {
                 var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_appPaths, _httpClient, aniDbId, cancellationToken);
-                var imageUrl = FindImageUrl(seriesDataPath);
+                var imageUrl = await FindImageUrl(seriesDataPath).ConfigureAwait(false);
 
                 if (!string.IsNullOrEmpty(imageUrl))
                 {
@@ -78,7 +78,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             return item is Series;
         }
 
-        private string FindImageUrl(string seriesDataPath)
+        private async Task<string> FindImageUrl(string seriesDataPath)
         {
             var settings = new XmlReaderSettings
             {
@@ -92,9 +92,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             {
                 using (XmlReader reader = XmlReader.Create(streamReader, settings))
                 {
-                    reader.MoveToContent();
+                    await reader.MoveToContentAsync().ConfigureAwait(false);
 
-                    while (reader.Read())
+                    while (await reader.ReadAsync().ConfigureAwait(false))
                     {
                         if (reader.NodeType == XmlNodeType.Element && reader.Name == "picture")
                         {
