@@ -21,7 +21,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         private readonly ILogger _log;
         public int Order => -3;
         public string Name => "AniSearch";
-        public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
 
         public AniSearchSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILoggerFactory loggerFactory)
         {
@@ -100,8 +99,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
             return _httpClient.GetResponse(new HttpRequestOptions
             {
                 CancellationToken = cancellationToken,
-                Url = url,
-                ResourcePool = ResourcePool
+                Url = url
             });
         }
     }
@@ -154,8 +152,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
             return _httpClient.GetResponse(new HttpRequestOptions
             {
                 CancellationToken = cancellationToken,
-                Url = url,
-                ResourcePool = AniSearchSeriesProvider.ResourcePool
+                Url = url
             });
         }
     }

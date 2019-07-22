@@ -20,7 +20,6 @@ namespace Jellyfin.Plugin.Anime.Providers.Proxer
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _paths;
         public static string provider_name = ProviderNames.Proxer;
-        public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
         public int Order => -4;
         public string Name => "Proxer";
 
@@ -101,8 +100,7 @@ namespace Jellyfin.Plugin.Anime.Providers.Proxer
             return _httpClient.GetResponse(new HttpRequestOptions
             {
                 CancellationToken = cancellationToken,
-                Url = url,
-                ResourcePool = ResourcePool
+                Url = url
             });
         }
     }
@@ -155,8 +153,7 @@ namespace Jellyfin.Plugin.Anime.Providers.Proxer
             return _httpClient.GetResponse(new HttpRequestOptions
             {
                 CancellationToken = cancellationToken,
-                Url = url,
-                ResourcePool = ProxerSeriesProvider.ResourcePool
+                Url = url
             });
         }
     }
