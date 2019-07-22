@@ -97,6 +97,7 @@ TestResults
 [Tt]est[Rr]esult*
 *.Cache
 ClientBin
+.idea
 [Ss]tyle[Cc]op.*
 ~$*
 *.dbmdl
