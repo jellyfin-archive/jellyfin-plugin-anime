@@ -1,15 +1,15 @@
 using System;
 using System.IO;
-using System.Net;
+using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using Jellyfin.Plugin.Anime;
 
 namespace AnimeLists
 {
     public class Downloader
     {
-        private readonly AsyncLock _lock = new AsyncLock();
+        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
         private readonly string _temp;
 
         public Downloader(string temp)
@@ -17,25 +17,39 @@ namespace AnimeLists
             _temp = temp;
         }
 
-        public async Task<Animelist> Download()
+        public async Task<Animelist> DownloadAsync()
         {
-            using (await _lock.LockAsync())
+            await _lock.WaitAsync().ConfigureAwait(false);
+            try
             {
                 var info = new FileInfo(_temp);
                 if (!info.Exists || info.LastWriteTimeUtc < (DateTime.UtcNow - TimeSpan.FromDays(7)))
                 {
                     if (info.Exists)
+                    {
                         info.Delete();
+                    }
 
-                    WebClient client = new WebClient();
-                    await client.DownloadFileTaskAsync("https://raw.githubusercontent.com/ScudLee/anime-lists/master/anime-list.xml", _temp);
+                    using (HttpClient client = new HttpClient())
+                    using (Stream str = await client
+                        .GetStreamAsync("https://raw.githubusercontent.com/ScudLee/anime-lists/master/anime-list.xml").ConfigureAwait(false))
+                    using (FileStream file = new FileStream(_temp, FileMode.CreateNew))
+                    {
+                        await str.CopyToAsync(file).ConfigureAwait(false);
+                    }
                 }
+            }
+            finally
+            {
+                _lock.Release();
             }
 
             XmlSerializer serializer = new XmlSerializer(typeof(Animelist));
 
             using (var stream = File.OpenRead(_temp))
+            {
                 return serializer.Deserialize(stream) as Animelist;
+            }
         }
     }
 }

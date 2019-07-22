@@ -22,14 +22,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
 
         private readonly IApplicationPaths _paths;
         private readonly ILogger _logger;
-        public static string s_paths;
 
         public AniDbTitleDownloader(ILogger logger, IApplicationPaths paths)
         {
             _logger = logger;
             _paths = paths;
-            s_paths = GetDataPath(paths);
+            Paths = GetDataPath(paths);
         }
+
+        public static string Paths { get; private set; }
 
         /// <summary>
         /// Gets the path to the anidb data folder.
@@ -81,8 +82,8 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
 
             var client = new WebClient();
 
-            await AniDbSeriesProvider.RequestLimiter.Tick();
-            await Task.Run(() => Thread.Sleep(Plugin.Instance.Configuration.AniDB_wait_time));
+            await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
+            await Task.Delay(Plugin.Instance.Configuration.AniDB_wait_time).ConfigureAwait(false);
             using (var stream = await client.OpenReadTaskAsync(TitlesUrl))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var writer = File.Open(titlesFile, FileMode.Create, FileAccess.Write))
@@ -101,8 +102,8 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         {
             var client = new WebClient();
 
-            await AniDbSeriesProvider.RequestLimiter.Tick();
-            await Task.Run(() => Thread.Sleep(Plugin.Instance.Configuration.AniDB_wait_time));
+            await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
+            await Task.Delay(Plugin.Instance.Configuration.AniDB_wait_time).ConfigureAwait(false);
             using (var stream = await client.OpenReadTaskAsync(TitlesUrl))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var writer = File.Open(titlesFile, FileMode.Create, FileAccess.Write))
@@ -115,9 +116,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         {
             get
             {
-                Directory.CreateDirectory(s_paths);
+                Directory.CreateDirectory(Paths);
 
-                return Path.Combine(s_paths, "titles.xml");
+                return Path.Combine(Paths, "titles.xml");
             }
         }
 
@@ -128,9 +129,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         {
             get
             {
-                Directory.CreateDirectory(s_paths);
+                Directory.CreateDirectory(Paths);
 
-                return Path.Combine(s_paths, "titles.xml");
+                return Path.Combine(Paths, "titles.xml");
             }
         }
     }

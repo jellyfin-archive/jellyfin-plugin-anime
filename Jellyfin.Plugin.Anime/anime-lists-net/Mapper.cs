@@ -9,7 +9,7 @@ namespace AnimeLists
         private readonly Dictionary<string, List<AnimelistAnime>> _tvdbMappings;
 
         public Mapper(string animeListFile = "anime-list.xml")
-            : this(new Downloader(animeListFile).Download().Result)
+            : this(new Downloader(animeListFile).DownloadAsync().GetAwaiter().GetResult())
         {
         }
 
@@ -18,9 +18,13 @@ namespace AnimeLists
             _anidbMappings = new Dictionary<string, AnimelistAnime>();
             _tvdbMappings = new Dictionary<string, List<AnimelistAnime>>();
 
-            int n;
-            foreach (var anime in list.Anime.Where(x => int.TryParse(x.TvdbId, out n)))
+            foreach (var anime in list.Anime)
             {
+                if (!int.TryParse(anime.TvdbId, out _))
+                {
+                    continue;
+                }
+    
                 _anidbMappings[anime.AnidbId] = anime;
 
                 List<AnimelistAnime> l;
@@ -38,7 +42,9 @@ namespace AnimeLists
         {
             List<AnimelistAnime> animeList;
             if (!_tvdbMappings.TryGetValue(tvdb.Series, out animeList))
+            {
                 return null;
+            }
 
             // look for exact mapping in mapping list
             foreach (var anime in animeList.Where(x => x.Mappinglist != null))

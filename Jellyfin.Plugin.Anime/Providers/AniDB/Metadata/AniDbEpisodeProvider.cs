@@ -1,16 +1,16 @@
-﻿using MediaBrowser.Common.Net;
-using MediaBrowser.Controller.Configuration;
-using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Controller.Providers;
-using MediaBrowser.Model.Providers;
-using Jellyfin.Plugin.Anime.Providers.AniDB.Converter;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using Jellyfin.Plugin.Anime.Providers.AniDB.Converter;
+using MediaBrowser.Common.Net;
+using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Providers;
 
 namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 {
@@ -41,19 +41,27 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
             var anidbId = info.ProviderIds.GetOrDefault(ProviderNames.AniDb);
             if (string.IsNullOrEmpty(anidbId))
+            {
                 return result;
+            }
 
             var id = AnidbEpisodeIdentity.Parse(anidbId);
             if (id == null)
+            {
                 return result;
+            }
 
             var seriesFolder = await FindSeriesFolder(id.Value.SeriesId, cancellationToken);
             if (string.IsNullOrEmpty(seriesFolder))
+            {
                 return result;
+            }
 
             var xml = GetEpisodeXmlFile(id.Value.EpisodeNumber, id.Value.EpisodeType, seriesFolder);
             if (xml == null || !xml.Exists)
+            {
                 return result;
+            }
 
             result.Item = new Episode
             {
@@ -63,7 +71,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
             result.HasMetadata = true;
 
-            ParseEpisodeXml(xml, result.Item, info.MetadataLanguage);
+            await ParseEpisodeXml(xml, result.Item, info.MetadataLanguage).ConfigureAwait(false);
 
             if (id.Value.EpisodeNumberEnd != null && id.Value.EpisodeNumberEnd > id.Value.EpisodeNumber)
             {
@@ -71,9 +79,11 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                 {
                     var additionalXml = GetEpisodeXmlFile(i, id.Value.EpisodeType, seriesFolder);
                     if (additionalXml == null || !additionalXml.Exists)
+                    {
                         continue;
+                    }
 
-                    ParseAdditionalEpisodeXml(additionalXml, result.Item, info.MetadataLanguage);
+                    await ParseAdditionalEpisodeXml(additionalXml, result.Item, info.MetadataLanguage).ConfigureAwait(false);
                 }
             }
 
@@ -99,9 +109,14 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             }
 
             if (id == null)
+            {
                 return list;
+            }
 
-            await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClient, id.Value.SeriesId,
+            await AniDbSeriesProvider.GetSeriesData(
+                _configurationManager.ApplicationPaths,
+                _httpClient,
+                id.Value.SeriesId,
                 cancellationToken).ConfigureAwait(false);
 
             try
@@ -142,7 +157,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             throw new NotImplementedException();
         }
 
-        private void ParseAdditionalEpisodeXml(FileInfo xml, Episode episode, string metadataLanguage)
+        private async Task ParseAdditionalEpisodeXml(FileInfo xml, Episode episode, string metadataLanguage)
         {
             var settings = new XmlReaderSettings
             {
@@ -155,30 +170,32 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             using (var streamReader = xml.OpenText())
             using (var reader = XmlReader.Create(streamReader, settings))
             {
-                reader.MoveToContent();
+                await reader.MoveToContentAsync().ConfigureAwait(false);
 
                 var titles = new List<Title>();
 
-                while (reader.Read())
+                while (await reader.ReadAsync().ConfigureAwait(false))
                 {
                     if (reader.NodeType == XmlNodeType.Element)
                     {
                         switch (reader.Name)
                         {
                             case "length":
-                                var length = reader.ReadElementContentAsString();
+                                var length = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
                                 if (!string.IsNullOrEmpty(length))
                                 {
                                     long duration;
                                     if (long.TryParse(length, out duration))
+                                    {
                                         episode.RunTimeTicks += TimeSpan.FromMinutes(duration).Ticks;
+                                    }
                                 }
 
                                 break;
 
                             case "title":
                                 var language = reader.GetAttribute("xml:lang");
-                                var name = reader.ReadElementContentAsString();
+                                var name = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
 
                                 titles.Add(new Title
                                 {
@@ -194,7 +211,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
                 var title = titles.Localize(Plugin.Instance.Configuration.TitlePreference, metadataLanguage).Name;
                 if (!string.IsNullOrEmpty(title))
+                {
                     episode.Name += ", " + title;
+                }
             }
         }
 
@@ -204,7 +223,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             return Path.GetDirectoryName(seriesDataPath);
         }
 
-        private void ParseEpisodeXml(FileInfo xml, Episode episode, string preferredMetadataLanguage)
+        private async Task ParseEpisodeXml(FileInfo xml, Episode episode, string preferredMetadataLanguage)
         {
             var settings = new XmlReaderSettings
             {
@@ -217,34 +236,38 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             using (var streamReader = xml.OpenText())
             using (var reader = XmlReader.Create(streamReader, settings))
             {
-                reader.MoveToContent();
+                await reader.MoveToContentAsync().ConfigureAwait(false);
 
                 var titles = new List<Title>();
 
-                while (reader.Read())
+                while (await reader.ReadAsync().ConfigureAwait(false))
                 {
                     if (reader.NodeType == XmlNodeType.Element)
                     {
                         switch (reader.Name)
                         {
                             case "length":
-                                var length = reader.ReadElementContentAsString();
+                                var length = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
                                 if (!string.IsNullOrEmpty(length))
                                 {
                                     long duration;
                                     if (long.TryParse(length, out duration))
+                                    {
                                         episode.RunTimeTicks = TimeSpan.FromMinutes(duration).Ticks;
+                                    }
                                 }
 
                                 break;
 
                             case "airdate":
-                                var airdate = reader.ReadElementContentAsString();
+                                var airdate = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
                                 if (!string.IsNullOrEmpty(airdate))
                                 {
                                     DateTime date;
                                     if (DateTime.TryParse(airdate, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out date))
+                                    {
                                         episode.PremiereDate = date;
+                                    }
                                 }
 
                                 break;
@@ -278,7 +301,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
                 var title = titles.Localize(Plugin.Instance.Configuration.TitlePreference, preferredMetadataLanguage).Name;
                 if (!string.IsNullOrEmpty(title))
+                {
                     episode.Name = title;
+                }
             }
         }
 

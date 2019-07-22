@@ -4,12 +4,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Converter
 {
     public struct AnidbEpisodeIdentity
     {
-        private static readonly Regex Regex = new Regex(@"(?<series>\d+):(?<type>[S])?(?<epno>\d+)(-(?<epnoend>\d+))?");
-
-        public string SeriesId { get; private set; }
-        public int EpisodeNumber { get; private set; }
-        public int? EpisodeNumberEnd { get; private set; }
-        public string EpisodeType { get; private set; }
+        private static readonly Regex _regex = new Regex(@"(?<series>\d+):(?<type>[S])?(?<epno>\d+)(-(?<epnoend>\d+))?");
 
         public AnidbEpisodeIdentity(string id)
         {
@@ -24,6 +19,11 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Converter
             EpisodeType = episodeType;
         }
 
+        public string SeriesId { get; private set; }
+        public int EpisodeNumber { get; private set; }
+        public int? EpisodeNumberEnd { get; private set; }
+        public string EpisodeType { get; private set; }
+
         public override string ToString()
         {
             return string.Format("{0}:{1}{2}",
@@ -34,7 +34,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Converter
 
         public static AnidbEpisodeIdentity? Parse(string id)
         {
-            var match = Regex.Match(id);
+            var match = _regex.Match(id);
             if (match.Success)
             {
                 return new AnidbEpisodeIdentity(

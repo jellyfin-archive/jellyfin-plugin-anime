@@ -7,23 +7,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
     public class AniListExternalId : IExternalId
     {
         public bool Supports(IHasProviderIds item)
-        {
-            return item is Series;
-        }
+            => item is Series;
 
         public string Name
-        {
-            get { return "AniList"; }
-        }
+            => "AniList";
 
         public string Key
-        {
-            get { return ProviderNames.AniList; }
-        }
+            => ProviderNames.AniList;
 
         public string UrlFormatString
-        {
-            get { return "http://anilist.co/anime/{0}/"; }
-        }
+            => "http://anilist.co/anime/{0}/";
     }
 }

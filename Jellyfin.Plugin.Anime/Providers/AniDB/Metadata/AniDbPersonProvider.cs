@@ -26,7 +26,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             var result = new MetadataResult<Person>();
 
             if (!string.IsNullOrEmpty(info.ProviderIds.GetOrDefault(ProviderNames.AniDb)))
+            {
                 return Task.FromResult(result);
+            }
 
             var person = AniDbSeriesProvider.GetPersonInfo(_paths.CachePath, info.Name);
             if (!string.IsNullOrEmpty(person?.Id))

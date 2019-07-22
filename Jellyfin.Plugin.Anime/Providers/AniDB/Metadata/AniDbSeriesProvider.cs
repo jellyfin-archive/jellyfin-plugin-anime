@@ -81,7 +81,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                 result.Item.ProviderIds.Add(ProviderNames.AniDb, aid);
 
                 var seriesDataPath = await GetSeriesData(_appPaths, _httpClient, aid, cancellationToken);
-                FetchSeriesInfo(result, seriesDataPath, info.MetadataLanguage ?? "en");
+                await FetchSeriesInfo(result, seriesDataPath, info.MetadataLanguage ?? "en").ConfigureAwait(false);
             }
 
             return result;
@@ -142,7 +142,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             return Path.Combine(paths.CachePath, "anidb", "series", seriesId);
         }
 
-        private void FetchSeriesInfo(MetadataResult<Series> result, string seriesDataPath, string preferredMetadataLangauge)
+        private async Task FetchSeriesInfo(MetadataResult<Series> result, string seriesDataPath, string preferredMetadataLangauge)
         {
             var series = result.Item;
             var settings = new XmlReaderSettings
@@ -156,16 +156,16 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             using (var streamReader = File.Open(seriesDataPath, FileMode.Open, FileAccess.Read))
             using (var reader = XmlReader.Create(streamReader, settings))
             {
-                reader.MoveToContent();
+                await reader.MoveToContentAsync().ConfigureAwait(false);
 
-                while (reader.Read())
+                while (await reader.ReadAsync().ConfigureAwait(false))
                 {
                     if (reader.NodeType == XmlNodeType.Element)
                     {
                         switch (reader.Name)
                         {
                             case "startdate":
-                                var val = reader.ReadElementContentAsString();
+                                var val = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
 
                                 if (!string.IsNullOrWhiteSpace(val))
                                 {
@@ -179,7 +179,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                                 break;
 
                             case "enddate":
-                                var endDate = reader.ReadElementContentAsString();
+                                var endDate = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
 
                                 if (!string.IsNullOrWhiteSpace(endDate))
                                 {
@@ -195,7 +195,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                             case "titles":
                                 using (var subtree = reader.ReadSubtree())
                                 {
-                                    var title = ParseTitle(subtree, preferredMetadataLangauge);
+                                    var title = await ParseTitle(subtree, preferredMetadataLangauge).ConfigureAwait(false);
                                     if (!string.IsNullOrEmpty(title))
                                     {
                                         series.Name = title;
@@ -207,13 +207,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                             case "creators":
                                 using (var subtree = reader.ReadSubtree())
                                 {
-                                    ParseCreators(result, subtree);
+                                    await ParseCreators(result, subtree).ConfigureAwait(false);
                                 }
 
                                 break;
 
                             case "description":
-                                series.Overview = ReplaceLineFeedWithNewLine(StripAniDbLinks(reader.ReadElementContentAsString()));
+                                series.Overview = ReplaceLineFeedWithNewLine(
+                                    StripAniDbLinks(
+                                        await reader.ReadElementContentAsStringAsync().ConfigureAwait(false)));
 
                                 break;
 
@@ -228,7 +230,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                             case "resources":
                                 using (var subtree = reader.ReadSubtree())
                                 {
-                                    ParseResources(series, subtree);
+                                    await ParseResources(series, subtree).ConfigureAwait(false);
                                 }
 
                                 break;
@@ -236,7 +238,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                             case "characters":
                                 using (var subtree = reader.ReadSubtree())
                                 {
-                                    ParseActors(result, subtree);
+                                    await ParseActors(result, subtree).ConfigureAwait(false);
                                 }
 
                                 break;
@@ -244,7 +246,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                             case "tags":
                                 using (var subtree = reader.ReadSubtree())
                                 {
-                                    ParseTags(series, subtree);
+                                    await ParseTags(series, subtree).ConfigureAwait(false);
                                 }
 
                                 break;
@@ -252,7 +254,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                             case "episodes":
                                 using (var subtree = reader.ReadSubtree())
                                 {
-                                    ParseEpisodes(series, subtree);
+                                    await ParseEpisodes(series, subtree).ConfigureAwait(false);
                                 }
 
                                 break;
@@ -264,18 +266,20 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             GenreHelper.CleanupGenres(series);
         }
 
-        private void ParseEpisodes(Series series, XmlReader reader)
+        private async Task ParseEpisodes(Series series, XmlReader reader)
         {
-            while (reader.Read())
+            while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "episode")
                 {
                     if (int.TryParse(reader.GetAttribute("id"), out int id) && IgnoredTagIds.Contains(id))
+                    {
                         continue;
+                    }
 
                     using (var episodeSubtree = reader.ReadSubtree())
                     {
-                        while (episodeSubtree.Read())
+                        while (await episodeSubtree.ReadAsync().ConfigureAwait(false))
                         {
                             if (episodeSubtree.NodeType == XmlNodeType.Element)
                             {
@@ -297,30 +301,37 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             }
         }
 
-        private void ParseTags(Series series, XmlReader reader)
+        private async Task ParseTags(Series series, XmlReader reader)
         {
             var genres = new List<GenreInfo>();
 
-            while (reader.Read())
+            while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "tag")
                 {
                     if (!int.TryParse(reader.GetAttribute("weight"), out int weight) || weight < 400)
+                    {
                         continue;
+                    }
 
                     if (int.TryParse(reader.GetAttribute("id"), out int id) && IgnoredTagIds.Contains(id))
+                    {
                         continue;
+                    }
 
-                    if (int.TryParse(reader.GetAttribute("parentid"), out int parentId) && IgnoredTagIds.Contains(parentId))
+                    if (int.TryParse(reader.GetAttribute("parentid"), out int parentId)
+                        && IgnoredTagIds.Contains(parentId))
+                    {
                         continue;
+                    }
 
                     using (var tagSubtree = reader.ReadSubtree())
                     {
-                        while (tagSubtree.Read())
+                        while (await tagSubtree.ReadAsync().ConfigureAwait(false))
                         {
                             if (tagSubtree.NodeType == XmlNodeType.Element && tagSubtree.Name == "name")
                             {
-                                var name = tagSubtree.ReadElementContentAsString();
+                                var name = await tagSubtree.ReadElementContentAsStringAsync().ConfigureAwait(false);
                                 genres.Add(new GenreInfo { Name = name, Weight = weight });
                             }
                         }
@@ -331,9 +342,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             series.Genres = genres.OrderBy(g => g.Weight).Select(g => g.Name).ToArray();
         }
 
-        private void ParseResources(Series series, XmlReader reader)
+        private async Task ParseResources(Series series, XmlReader reader)
         {
-            while (reader.Read())
+            while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "resource")
                 {
@@ -346,12 +357,14 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
                             using (var idSubtree = reader.ReadSubtree())
                             {
-                                while (idSubtree.Read())
+                                while (await idSubtree.ReadAsync().ConfigureAwait(false))
                                 {
                                     if (idSubtree.NodeType == XmlNodeType.Element && idSubtree.Name == "identifier")
                                     {
                                         if (int.TryParse(idSubtree.ReadElementContentAsString(), out int id))
+                                        {
                                             ids.Add(id);
+                                        }
                                     }
                                 }
                             }
@@ -369,7 +382,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                             {
                                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "url")
                                 {
-                                    reader.ReadElementContentAsString();
+                                    await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
                                     break;
                                 }
                             }
@@ -390,9 +403,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             return text.Replace("\n", Environment.NewLine);
         }
 
-        private void ParseActors(MetadataResult<Series> series, XmlReader reader)
+        private async Task ParseActors(MetadataResult<Series> series, XmlReader reader)
         {
-            while (reader.Read())
+            while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 if (reader.NodeType == XmlNodeType.Element)
                 {
@@ -400,30 +413,30 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                     {
                         using (var subtree = reader.ReadSubtree())
                         {
-                            ParseActor(series, subtree);
+                            await ParseActor(series, subtree).ConfigureAwait(false);
                         }
                     }
                 }
             }
         }
 
-        private void ParseActor(MetadataResult<Series> series, XmlReader reader)
+        private async Task ParseActor(MetadataResult<Series> series, XmlReader reader)
         {
             string name = null;
             string role = null;
 
-            while (reader.Read())
+            while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 if (reader.NodeType == XmlNodeType.Element)
                 {
                     switch (reader.Name)
                     {
                         case "name":
-                            role = reader.ReadElementContentAsString();
+                            role = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
                             break;
 
                         case "seiyuu":
-                            name = reader.ReadElementContentAsString();
+                            name = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
                             break;
                     }
                 }
@@ -456,17 +469,17 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             }
         }
 
-        private string ParseTitle(XmlReader reader, string preferredMetadataLangauge)
+        private async Task<string> ParseTitle(XmlReader reader, string preferredMetadataLangauge)
         {
             var titles = new List<Title>();
 
-            while (reader.Read())
+            while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "title")
                 {
                     var language = reader.GetAttribute("xml:lang");
                     var type = reader.GetAttribute("type");
-                    var name = reader.ReadElementContentAsString();
+                    var name = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
 
                     titles.Add(new Title
                     {
@@ -480,14 +493,14 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             return titles.Localize(Plugin.Instance.Configuration.TitlePreference, preferredMetadataLangauge).Name;
         }
 
-        private void ParseCreators(MetadataResult<Series> series, XmlReader reader)
+        private async Task ParseCreators(MetadataResult<Series> series, XmlReader reader)
         {
-            while (reader.Read())
+            while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "name")
                 {
                     var type = reader.GetAttribute("type");
-                    var name = reader.ReadElementContentAsString();
+                    var name = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
 
                     if (type == "Animation Work")
                     {
@@ -539,8 +552,8 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                 EnableHttpCompression = false
             };
 
-            await RequestLimiter.Tick();
-            await Task.Run(() => Thread.Sleep(Plugin.Instance.Configuration.AniDB_wait_time));
+            await RequestLimiter.Tick().ConfigureAwait(false);
+            await Task.Delay(Plugin.Instance.Configuration.AniDB_wait_time).ConfigureAwait(false);
             using (var stream = await httpClient.Get(requestOptions).ConfigureAwait(false))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var reader = new StreamReader(unzipped, Encoding.UTF8, true))
@@ -553,8 +566,8 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                 await writer.WriteAsync(text).ConfigureAwait(false);
             }
 
-            await ExtractEpisodes(directory, seriesDataPath);
-            ExtractCast(cachePath, seriesDataPath);
+            await ExtractEpisodes(directory, seriesDataPath).ConfigureAwait(false);
+            await ExtractCast(cachePath, seriesDataPath).ConfigureAwait(false);
         }
 
         private static void DeleteXmlFiles(string path)
@@ -562,8 +575,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             try
             {
                 foreach (var file in new DirectoryInfo(path)
-                    .EnumerateFiles("*.xml", SearchOption.AllDirectories)
-                    .ToList())
+                    .EnumerateFiles("*.xml", SearchOption.AllDirectories))
                 {
                     file.Delete();
                 }
@@ -589,16 +601,16 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                 // Use XmlReader for best performance
                 using (var reader = XmlReader.Create(streamReader, settings))
                 {
-                    reader.MoveToContent();
+                    await reader.MoveToContentAsync().ConfigureAwait(false);
 
                     // Loop through each element
-                    while (reader.Read())
+                    while (await reader.ReadAsync().ConfigureAwait(false))
                     {
                         if (reader.NodeType == XmlNodeType.Element)
                         {
                             if (reader.Name == "episode")
                             {
-                                var outerXml = reader.ReadOuterXml();
+                                var outerXml = await reader.ReadOuterXmlAsync().ConfigureAwait(false);
                                 await SaveEpsiodeXml(seriesDataDirectory, outerXml).ConfigureAwait(false);
                             }
                         }
@@ -607,7 +619,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             }
         }
 
-        private static void ExtractCast(string cachePath, string seriesDataPath)
+        private static async Task ExtractCast(string cachePath, string seriesDataPath)
         {
             var settings = new XmlReaderSettings
             {
@@ -624,20 +636,20 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                 // Use XmlReader for best performance
                 using (var reader = XmlReader.Create(streamReader, settings))
                 {
-                    reader.MoveToContent();
+                    await reader.MoveToContentAsync().ConfigureAwait(false);
 
                     // Loop through each element
-                    while (reader.Read())
+                    while (await reader.ReadAsync().ConfigureAwait(false))
                     {
                         if (reader.NodeType == XmlNodeType.Element && reader.Name == "characters")
                         {
-                            var outerXml = reader.ReadOuterXml();
+                            var outerXml = await reader.ReadOuterXmlAsync().ConfigureAwait(false);
                             cast.AddRange(ParseCharacterList(outerXml));
                         }
 
                         if (reader.NodeType == XmlNodeType.Element && reader.Name == "creators")
                         {
-                            var outerXml = reader.ReadOuterXml();
+                            var outerXml = await reader.ReadOuterXmlAsync().ConfigureAwait(false);
                             cast.AddRange(ParseCreatorsList(outerXml));
                         }
                     }
@@ -656,7 +668,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                     try
                     {
                         using (var stream = File.Open(path, FileMode.Create))
+                        {
                             serializer.Serialize(stream, person);
+                        }
                     }
                     catch (IOException)
                     {
@@ -676,7 +690,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                 if (File.Exists(path))
                 {
                     using (var stream = File.OpenRead(path))
+                    {
                         return serializer.Deserialize(stream) as AniDbPersonInfo;
+                    }
                 }
             }
             catch (IOException)
@@ -790,7 +806,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             }
         }
 
-        private static string ParseEpisodeNumber(string xml)
+        private static async Task<string> ParseEpisodeNumber(string xml)
         {
             var settings = new XmlReaderSettings
             {
@@ -808,13 +824,13 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                     reader.MoveToContent();
 
                     // Loop through each element
-                    while (reader.Read())
+                    while (await reader.ReadAsync().ConfigureAwait(false))
                     {
                         if (reader.NodeType == XmlNodeType.Element)
                         {
                             if (reader.Name == "epno")
                             {
-                                var val = reader.ReadElementContentAsString();
+                                var val = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
                                 if (!string.IsNullOrWhiteSpace(val))
                                 {
                                     return val;
@@ -822,7 +838,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                             }
                             else
                             {
-                                reader.Skip();
+                                await reader.SkipAsync().ConfigureAwait(false);
                             }
                         }
                     }
