@@ -21,7 +21,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _paths;
         private readonly ILogger _log;
-        private readonly Api _api;
+        private readonly AniListApi _aniListApi;
         public int Order => -2;
         public string Name => "AniList";
 
@@ -29,7 +29,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         {
             _log = logger;
             _httpClient = httpClient;
-            _api = new Api(jsonSerializer);
+            _aniListApi = new AniListApi(jsonSerializer);
             _paths = appPaths;
         }
 
@@ -41,16 +41,16 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             if (string.IsNullOrEmpty(aid))
             {
                 _log.LogInformation("Start AniList... Searching({Name})", info.Name);
-                aid = await _api.FindSeries(info.Name, cancellationToken);
+                aid = await _aniListApi.FindSeries(info.Name, cancellationToken);
             }
 
             if (!string.IsNullOrEmpty(aid))
             {
-                RootObject WebContent = await _api.WebRequestAPI(_api.AniList_anime_link.Replace("{0}", aid));
+                RootObject WebContent = await _aniListApi.WebRequestAPI(_aniListApi.AniList_anime_link.Replace("{0}", aid));
                 result.Item = new Series();
                 result.HasMetadata = true;
                
-                result.People = await _api.GetPersonInfo(WebContent.data.Media.id, cancellationToken);
+                result.People = await _aniListApi.GetPersonInfo(WebContent.data.Media.id, cancellationToken);
                 result.Item.ProviderIds.Add(ProviderNames.AniList, aid);
                 result.Item.Overview = WebContent.data.Media.description;
                 try
@@ -59,7 +59,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
                     result.Item.CommunityRating = (WebContent.data.Media.averageScore/10);
                 }
                 catch (Exception) { }
-                foreach (var genre in _api.Get_Genre(WebContent))
+                foreach (var genre in _aniListApi.Get_Genre(WebContent))
                     result.Item.AddGenre(genre);
                 GenreHelper.CleanupGenres(result.Item);
                 StoreImageUrl(aid, WebContent.data.Media.coverImage.large, "image");
@@ -77,16 +77,16 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             {
                 if (!results.ContainsKey(aid))
                 {
-                    results.Add(aid, await _api.GetAnime(aid).ConfigureAwait(false));
+                    results.Add(aid, await _aniListApi.GetAnime(aid).ConfigureAwait(false));
                 }
             }
 
             if (!string.IsNullOrEmpty(searchInfo.Name))
             {
-                List<string> ids = await _api.Search_GetSeries_list(searchInfo.Name, cancellationToken).ConfigureAwait(false);
+                List<string> ids = await _aniListApi.Search_GetSeries_list(searchInfo.Name, cancellationToken).ConfigureAwait(false);
                 foreach (string a in ids)
                 {
-                    results.Add(a, await _api.GetAnime(a).ConfigureAwait(false));
+                    results.Add(a, await _aniListApi.GetAnime(a).ConfigureAwait(false));
                 }
             }
 
@@ -116,12 +116,12 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
     {
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _appPaths;
-        private readonly Api _api;
+        private readonly AniListApi _aniListApi;
         public AniListSeriesImageProvider(IHttpClient httpClient, IApplicationPaths appPaths, IJsonSerializer jsonSerializer)
         {
             _httpClient = httpClient;
             _appPaths = appPaths;
-            _api = new Api(jsonSerializer);
+            _aniListApi = new AniListApi(jsonSerializer);
         }
 
         public string Name => "AniList";
@@ -145,7 +145,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
 
             if (!string.IsNullOrEmpty(aid))
             {
-                var primary =  _api.Get_ImageUrl(await _api.WebRequestAPI(_api.AniList_anime_link.Replace("{0}", aid)));
+                var primary =  _aniListApi.Get_ImageUrl(await _aniListApi.WebRequestAPI(_aniListApi.AniList_anime_link.Replace("{0}", aid)));
                 list.Add(new RemoteImageInfo
                 {
                     ProviderName = Name,

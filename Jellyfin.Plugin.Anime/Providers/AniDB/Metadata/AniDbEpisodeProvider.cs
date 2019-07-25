@@ -45,7 +45,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                 return result;
             }
 
-            var id = AnidbEpisodeIdentity.Parse(anidbId);
+            var id = AniDbEpisodeIdentity.Parse(anidbId);
             if (id == null)
             {
                 return result;
@@ -96,7 +96,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         {
             var list = new List<RemoteSearchResult>();
 
-            var id = AnidbEpisodeIdentity.Parse(searchInfo.ProviderIds.GetOrDefault(ProviderNames.AniDb));
+            var id = AniDbEpisodeIdentity.Parse(searchInfo.ProviderIds.GetOrDefault(ProviderNames.AniDb));
             if (id == null)
             {
                 //var episodeIdentifier = new AnidbEpisodeIdentityProvider();

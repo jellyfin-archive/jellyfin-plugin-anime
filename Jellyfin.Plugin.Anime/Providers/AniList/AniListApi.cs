@@ -19,7 +19,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
     /// 🛈 https://anilist.gitbooks.io/anilist-apiv2-docs
     /// 🛈 THIS IS AN UNOFFICAL API INTERFACE FOR EMBY
     /// </summary>
-    public class Api
+    public class AniListApi
     {
         private static IJsonSerializer _jsonSerializer;
         private const string SearchLink = @"https://graphql.anilist.co/api/v2?query=
@@ -142,7 +142,7 @@ query ($query: String, $type: MediaType) {
     }
   }
 }&variables={ ""id"":""{0}"",""type"":""ANIME""}";
-        public Api(IJsonSerializer jsonSerializer)
+        public AniListApi(IJsonSerializer jsonSerializer)
         {
             _jsonSerializer = jsonSerializer;
         }

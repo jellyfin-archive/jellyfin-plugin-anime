@@ -346,34 +346,8 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "resource")
                 {
                     var type = reader.GetAttribute("type");
-
                     switch (type)
                     {
-                        case "2":
-                            var ids = new List<int>();
-
-                            using (var idSubtree = reader.ReadSubtree())
-                            {
-                                while (await idSubtree.ReadAsync().ConfigureAwait(false))
-                                {
-                                    if (idSubtree.NodeType == XmlNodeType.Element && idSubtree.Name == "identifier")
-                                    {
-                                        if (int.TryParse(idSubtree.ReadElementContentAsString(), out int id))
-                                        {
-                                            ids.Add(id);
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (ids.Count > 0)
-                            {
-                                var firstId = ids.OrderBy(i => i).First().ToString(CultureInfo.InvariantCulture);
-                                series.ProviderIds.Add(ProviderNames.MyAnimeList, firstId);
-                            }
-
-                            break;
-
                         case "4":
                             while (reader.Read())
                             {
@@ -383,7 +357,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                                     break;
                                 }
                             }
-
                             break;
                     }
                 }
