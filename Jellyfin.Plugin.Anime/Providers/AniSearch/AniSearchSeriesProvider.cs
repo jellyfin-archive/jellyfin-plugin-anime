@@ -21,7 +21,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         private readonly ILogger _log;
         public int Order => -3;
         public string Name => "AniSearch";
-        public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
 
         public AniSearchSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILoggerFactory loggerFactory)
         {
@@ -38,27 +37,27 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
             if (string.IsNullOrEmpty(aid))
             {
                 _log.LogInformation("Start AniSearch... Searching({Name})", info.Name);
-                aid = await Api.FindSeries(info.Name, cancellationToken);
+                aid = await AniSearchApi.FindSeries(info.Name, cancellationToken);
             }
 
             if (!string.IsNullOrEmpty(aid))
             {
-                string WebContent = await Api.WebRequestAPI(Api.AniSearch_anime_link + aid);
+                string WebContent = await AniSearchApi.WebRequestAPI(AniSearchApi.AniSearch_anime_link + aid);
                 result.Item = new Series();
                 result.HasMetadata = true;
 
                 result.Item.ProviderIds.Add(ProviderNames.AniSearch, aid);
-                result.Item.Overview = await Api.Get_Overview(WebContent);
+                result.Item.Overview = await AniSearchApi.Get_Overview(WebContent);
                 try
                 {
                     //AniSearch has a max rating of 5
-                    result.Item.CommunityRating = (float.Parse(await Api.Get_Rating(WebContent), System.Globalization.CultureInfo.InvariantCulture) * 2);
+                    result.Item.CommunityRating = (float.Parse(await AniSearchApi.Get_Rating(WebContent), System.Globalization.CultureInfo.InvariantCulture) * 2);
                 }
                 catch (Exception) { }
-                foreach (var genre in await Api.Get_Genre(WebContent))
+                foreach (var genre in await AniSearchApi.Get_Genre(WebContent))
                     result.Item.AddGenre(genre);
                 GenreHelper.CleanupGenres(result.Item);
-                StoreImageUrl(aid, await Api.Get_ImageUrl(WebContent), "image");
+                StoreImageUrl(aid, await AniSearchApi.Get_ImageUrl(WebContent), "image");
             }
             return result;
         }
@@ -71,15 +70,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
             if (!string.IsNullOrEmpty(aid))
             {
                 if (!results.ContainsKey(aid))
-                    results.Add(aid, await Api.GetAnime(aid));
+                    results.Add(aid, await AniSearchApi.GetAnime(aid));
             }
 
             if (!string.IsNullOrEmpty(searchInfo.Name))
             {
-                List<string> ids = await Api.Search_GetSeries_list(searchInfo.Name, cancellationToken);
+                List<string> ids = await AniSearchApi.Search_GetSeries_list(searchInfo.Name, cancellationToken);
                 foreach (string a in ids)
                 {
-                    results.Add(a, await Api.GetAnime(a));
+                    results.Add(a, await AniSearchApi.GetAnime(a));
                 }
             }
 
@@ -100,8 +99,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
             return _httpClient.GetResponse(new HttpRequestOptions
             {
                 CancellationToken = cancellationToken,
-                Url = url,
-                ResourcePool = ResourcePool
+                Url = url
             });
         }
     }
@@ -138,7 +136,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
 
             if (!string.IsNullOrEmpty(aid))
             {
-                var primary = await Api.Get_ImageUrl(await Api.WebRequestAPI(Api.AniSearch_anime_link + aid));
+                var primary = await AniSearchApi.Get_ImageUrl(await AniSearchApi.WebRequestAPI(AniSearchApi.AniSearch_anime_link + aid));
                 list.Add(new RemoteImageInfo
                 {
                     ProviderName = Name,
@@ -154,8 +152,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
             return _httpClient.GetResponse(new HttpRequestOptions
             {
                 CancellationToken = cancellationToken,
-                Url = url,
-                ResourcePool = AniSearchSeriesProvider.ResourcePool
+                Url = url
             });
         }
     }

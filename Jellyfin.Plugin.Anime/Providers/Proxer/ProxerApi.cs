@@ -14,7 +14,7 @@ namespace Jellyfin.Plugin.Anime.Providers.Proxer
     /// API for http://proxer.me/ german anime database.
     /// 🛈 Proxer does not have an API interface to work with
     /// </summary>
-    internal class Api
+    internal class ProxerApi
     {
         public static List<string> anime_search_names = new List<string>();
         public static List<string> anime_search_ids = new List<string>();

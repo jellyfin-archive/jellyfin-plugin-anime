@@ -5,7 +5,6 @@
         public const string AniDb = "AniDB";
         public const string AniList = "AniList";
         public const string AniSearch = "AniSearch";
-        public const string MyAnimeList = "MyAnimeList";
         public const string Proxer = "Proxer";
     }
 }

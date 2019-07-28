@@ -14,7 +14,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
     /// API for http://anisearch.de a german anime database
     /// 🛈 Anisearch does not have an API interface to work with
     /// </summary>
-    internal class Api
+    internal class AniSearchApi
     {
         public static List<string> anime_search_names = new List<string>();
         public static List<string> anime_search_ids = new List<string>();

@@ -32,8 +32,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             return await _httpClient.GetResponse(new HttpRequestOptions
             {
                 CancellationToken = cancellationToken,
-                Url = url,
-                ResourcePool = AniDbSeriesProvider.ResourcePool
+                Url = url
             }).ConfigureAwait(false);
         }
 

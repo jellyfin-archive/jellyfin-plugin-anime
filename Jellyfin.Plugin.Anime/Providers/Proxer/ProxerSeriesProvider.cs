@@ -20,7 +20,6 @@ namespace Jellyfin.Plugin.Anime.Providers.Proxer
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _paths;
         public static string provider_name = ProviderNames.Proxer;
-        public static readonly SemaphoreSlim ResourcePool = new SemaphoreSlim(1, 1);
         public int Order => -4;
         public string Name => "Proxer";
 
@@ -39,27 +38,27 @@ namespace Jellyfin.Plugin.Anime.Providers.Proxer
             if (string.IsNullOrEmpty(aid))
             {
                 _log.LogInformation("Start Proxer... Searching({Name})", info.Name);
-                aid = await Api.FindSeries(info.Name, cancellationToken);
+                aid = await ProxerApi.FindSeries(info.Name, cancellationToken);
             }
 
             if (!string.IsNullOrEmpty(aid))
             {
-                string WebContent = await Api.WebRequestAPI(Api.Proxer_anime_link + aid);
+                string WebContent = await ProxerApi.WebRequestAPI(ProxerApi.Proxer_anime_link + aid);
                 result.Item = new Series();
                 result.HasMetadata = true;
 
                 result.Item.ProviderIds.Add(provider_name, aid);
-                result.Item.Overview = await Api.Get_Overview(WebContent);
+                result.Item.Overview = await ProxerApi.Get_Overview(WebContent);
                 result.ResultLanguage = "ger";
                 try
                 {
-                    result.Item.CommunityRating = float.Parse(await Api.Get_Rating(WebContent), System.Globalization.CultureInfo.InvariantCulture);
+                    result.Item.CommunityRating = float.Parse(await ProxerApi.Get_Rating(WebContent), System.Globalization.CultureInfo.InvariantCulture);
                 }
                 catch (Exception) { }
-                foreach (var genre in await Api.Get_Genre(WebContent))
+                foreach (var genre in await ProxerApi.Get_Genre(WebContent))
                     result.Item.AddGenre(genre);
                 GenreHelper.CleanupGenres(result.Item);
-                StoreImageUrl(aid, await Api.Get_ImageUrl(WebContent), "image");
+                StoreImageUrl(aid, await ProxerApi.Get_ImageUrl(WebContent), "image");
             }
             return result;
         }
@@ -72,15 +71,15 @@ namespace Jellyfin.Plugin.Anime.Providers.Proxer
             if (!string.IsNullOrEmpty(aid))
             {
                 if (!results.ContainsKey(aid))
-                    results.Add(aid, await Api.GetAnime(aid));
+                    results.Add(aid, await ProxerApi.GetAnime(aid));
             }
 
             if (!string.IsNullOrEmpty(searchInfo.Name))
             {
-                List<string> ids = await Api.Search_GetSeries_list(searchInfo.Name, cancellationToken);
+                List<string> ids = await ProxerApi.Search_GetSeries_list(searchInfo.Name, cancellationToken);
                 foreach (string a in ids)
                 {
-                    results.Add(a, await Api.GetAnime(a));
+                    results.Add(a, await ProxerApi.GetAnime(a));
                 }
             }
 
@@ -101,8 +100,7 @@ namespace Jellyfin.Plugin.Anime.Providers.Proxer
             return _httpClient.GetResponse(new HttpRequestOptions
             {
                 CancellationToken = cancellationToken,
-                Url = url,
-                ResourcePool = ResourcePool
+                Url = url
             });
         }
     }
@@ -139,7 +137,7 @@ namespace Jellyfin.Plugin.Anime.Providers.Proxer
 
             if (!string.IsNullOrEmpty(aid))
             {
-                var primary = Api.Get_ImageUrl(await Api.WebRequestAPI(Api.Proxer_anime_link + aid));
+                var primary = ProxerApi.Get_ImageUrl(await ProxerApi.WebRequestAPI(ProxerApi.Proxer_anime_link + aid));
                 list.Add(new RemoteImageInfo
                 {
                     ProviderName = Name,
@@ -155,8 +153,7 @@ namespace Jellyfin.Plugin.Anime.Providers.Proxer
             return _httpClient.GetResponse(new HttpRequestOptions
             {
                 CancellationToken = cancellationToken,
-                Url = url,
-                ResourcePool = ProxerSeriesProvider.ResourcePool
+                Url = url
             });
         }
     }
