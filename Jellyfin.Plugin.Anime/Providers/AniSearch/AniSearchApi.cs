@@ -43,7 +43,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         }
 
         /// <summary>
-        /// API call to select the lang
+        /// API call to select the language
         /// </summary>
         /// <param name="WebContent"></param>
         /// <param name="preference"></param>
@@ -64,7 +64,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         }
 
         /// <summary>
-        /// API call to get the title with the right lang
+        /// API call to get the title with the right language
         /// </summary>
         /// <param name="lang"></param>
         /// <param name="WebContent"></param>
@@ -113,7 +113,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         }
 
         /// <summary>
-        /// API call to get the img url
+        /// API call to get the image url
         /// </summary>
         /// <param name="WebContent"></param>
         /// <returns></returns>
@@ -123,7 +123,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         }
 
         /// <summary>
-        /// API call too get the rating
+        /// API call to get the rating
         /// </summary>
         /// <param name="WebContent"></param>
         /// <returns></returns>
@@ -257,14 +257,17 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
                     {
                         return anime_search_ids[x];
                     }
+
                     x++;
                 }
             }
+
             aid = await Search_GetSeries(await Equals_check.Clear_name(title, cancellationToken), cancellationToken);
             if (!string.IsNullOrEmpty(aid))
             {
                 return aid;
             }
+
             return null;
         }
 
@@ -273,14 +276,13 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         /// </summary>
         public static async Task<string> One_line_regex(Regex regex, string match, int group = 1, int match_int = 0)
         {
-            Regex _regex = regex;
             int x = 0;
             MatchCollection matches = await Task.Run(() => regex.Matches(match));
             foreach (Match _match in matches)
             {
                 if (x == match_int)
                 {
-                    return await Task.Run(() => _match.Groups[group].Value.ToString());
+                    return await Task.Run(() => _match.Groups[group].Value);
                 }
                 x++;
             }
@@ -298,6 +300,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
                     Task<string> async_content = client.DownloadStringTaskAsync(link);
                     _strContent = await async_content;
                 }
+
                 return _strContent;
         }
     }

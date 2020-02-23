@@ -7,23 +7,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
     public class AniSearchExternalId : IExternalId
     {
         public bool Supports(IHasProviderIds item)
-        {
-            return item is Series;
-        }
+            => item is Series;
 
         public string Name
-        {
-            get { return "AniSearch"; }
-        }
+            => "AniSearch";
 
         public string Key
-        {
-            get { return ProviderNames.AniSearch; }
-        }
+            => ProviderNames.AniSearch;
 
         public string UrlFormatString
-        {
-            get { return "http://www.anisearch.de/anime/{0}"; }
-        }
+            => "http://www.anisearch.de/anime/{0}";
     }
 }

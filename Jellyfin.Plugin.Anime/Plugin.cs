@@ -13,7 +13,9 @@ namespace Jellyfin.Plugin.Anime
     public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         public override string Name => "Anime";
+
         public override Guid Id => Guid.Parse("a4df60c5-6ab4-412a-8f79-2cab93fb2bc5");
+
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger logger) : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
@@ -29,7 +31,7 @@ namespace Jellyfin.Plugin.Anime
             {
                 new PluginPageInfo
                 {
-                    Name = this.Name,
+                    Name = Name,
                     EmbeddedResourcePath = string.Format("{0}.Configuration.configPage.html", GetType().Namespace)
                 }
             };
