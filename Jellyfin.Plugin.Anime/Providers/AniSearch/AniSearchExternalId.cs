@@ -16,6 +16,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
             => ProviderNames.AniSearch;
 
         public string UrlFormatString
-            => "http://www.anisearch.de/anime/{0}";
+            => "http://www.anisearch.com/anime/{0}";
     }
 }
