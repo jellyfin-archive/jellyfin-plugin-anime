@@ -53,8 +53,8 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             Current = this;
         }
 
-        internal static AniDbSeriesProvider Current { get; private set; }
-        public IAniDbTitleMatcher TitleMatcher { get; set; }
+        private static AniDbSeriesProvider Current { get; set; }
+        private IAniDbTitleMatcher TitleMatcher { get; set; }
         public int Order => -1;
 
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)

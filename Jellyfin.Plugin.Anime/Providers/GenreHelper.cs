@@ -50,21 +50,6 @@ namespace Jellyfin.Plugin.Anime.Providers
             {"Yaoi", "Adult"},
             {"Yuri", "Adult"},
             {"Zombie", "Supernatural"},
-            //AniSearch Genre
-            {"Geister­geschichten", "Geister­geschichten"},
-            {"Romanze", "Romance"},
-            {"Alltagsdrama", "Slice of Life"},
-            {"Alltagsleben", "Slice of Life"},
-            {"Psychodrama", "Psycho"},
-            {"Actiondrama", "Action"},
-            {"Nonsense-Komödie", "Comedy"},
-            {"Magie", "Fantasy"},
-            {"Abenteuer", "Adventure"},
-            {"Komödie", "Comedy"},
-            {"Erotik", "Adult"},
-            {"Historisch", "Period & Historical"},
-            //Proxer
-            {"Slice_of_Life", "Slice of Life"},
         };
 
         private static readonly string[] GenresAsTags =
@@ -196,12 +181,6 @@ namespace Jellyfin.Plugin.Anime.Providers
             "Vampire",
             "Youkai",
             "Zombie",
-            //Proxer
-            "Virtual Reality",
-            "Game",
-            "Survival",
-            "Fanservice",
-            "Schlauer Protagonist",
         };
 
         private static readonly Dictionary<string, string> IgnoreIfPresent = new Dictionary<string, string>
@@ -216,8 +195,8 @@ namespace Jellyfin.Plugin.Anime.Providers
             if (config.TidyGenreList)
             {
                 series.Genres = RemoveRedundantGenres(series.Genres)
-                                           .Distinct()
-                                           .ToArray();
+                    .Distinct()
+                    .ToArray();
 
                 TidyGenres(series);
             }
@@ -256,7 +235,9 @@ namespace Jellyfin.Plugin.Anime.Providers
             {
                 string mapped;
                 if (GenreMappings.TryGetValue(genre, out mapped))
+                {
                     genres.Add(mapped);
+                }
                 else
                 {
                     genres.Add(genre);

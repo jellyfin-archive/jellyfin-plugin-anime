@@ -13,7 +13,7 @@ using MediaBrowser.Model.Providers;
 namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 {
     /// <summary>
-    ///     Copies the series image into a season, if the season does not otherwise have any primary image.
+    /// Copies the series image into a season, if the season does not otherwise have any primary image.
     /// </summary>
     public class AniDbSeasonImageProvider : IRemoteImageProvider
     {

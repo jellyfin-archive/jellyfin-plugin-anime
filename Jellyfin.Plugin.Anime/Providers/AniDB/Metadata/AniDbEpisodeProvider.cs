@@ -15,7 +15,7 @@ using MediaBrowser.Model.Providers;
 namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 {
     /// <summary>
-    ///     The <see cref="AniDbEpisodeProvider" /> class provides episode metadata from AniDB.
+    /// The <see cref="AniDbEpisodeProvider" /> class provides episode metadata from AniDB.
     /// </summary>
     public class AniDbEpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
     {
@@ -23,7 +23,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         private readonly IHttpClient _httpClient;
 
         /// <summary>
-        ///     Creates a new instance of the <see cref="AniDbEpisodeProvider" /> class.
+        /// Creates a new instance of the <see cref="AniDbEpisodeProvider" /> class.
         /// </summary>
         /// <param name="configurationManager">The configuration manager.</param>
         /// <param name="httpClient">The HTTP client.</param>

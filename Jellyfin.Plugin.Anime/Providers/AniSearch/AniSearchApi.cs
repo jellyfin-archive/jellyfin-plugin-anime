@@ -11,15 +11,15 @@ using MediaBrowser.Model.Providers;
 namespace Jellyfin.Plugin.Anime.Providers.AniSearch
 {
     /// <summary>
-    /// API for http://anisearch.de a german anime database
-    /// 🛈 Anisearch does not have an API interface to work with
+    /// API for http://anisearch.com
+    /// Anisearch does not have an API interface to work with
     /// </summary>
     internal class AniSearchApi
     {
         public static List<string> anime_search_names = new List<string>();
         public static List<string> anime_search_ids = new List<string>();
-        public static string SearchLink = "https://www.anisearch.de/anime/index/?char=all&page=1&text={0}&smode=2&sort=title&order=asc&view=2&title=de,en,fr,it,pl,ru,es,tr&titlex=1,2&hentai=yes";
-        public static string AniSearch_anime_link = "https://www.anisearch.de/anime/";
+        public static string SearchLink = "https://www.anisearch.com/anime/index/?char=all&page=1&text={0}&smode=2&sort=title&order=asc&view=2&title=de,en,fr,it,pl,ru,es,tr&titlex=1,2&hentai=yes";
+        public static string AniSearch_anime_link = "https://www.anisearch.com/anime/";
 
         /// <summary>
         /// API call to get the anime with the id
@@ -43,7 +43,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         }
 
         /// <summary>
-        /// API call to select the lang
+        /// API call to select the language
         /// </summary>
         /// <param name="WebContent"></param>
         /// <param name="preference"></param>
@@ -64,7 +64,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         }
 
         /// <summary>
-        /// API call to get the title with the right lang
+        /// API call to get the title with the right language
         /// </summary>
         /// <param name="lang"></param>
         /// <param name="WebContent"></param>
@@ -113,7 +113,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         }
 
         /// <summary>
-        /// API call to get the img url
+        /// API call to get the image url
         /// </summary>
         /// <param name="WebContent"></param>
         /// <returns></returns>
@@ -123,7 +123,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         }
 
         /// <summary>
-        /// API call too get the rating
+        /// API call to get the rating
         /// </summary>
         /// <param name="WebContent"></param>
         /// <returns></returns>
@@ -257,14 +257,17 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
                     {
                         return anime_search_ids[x];
                     }
+
                     x++;
                 }
             }
+
             aid = await Search_GetSeries(await Equals_check.Clear_name(title, cancellationToken), cancellationToken);
             if (!string.IsNullOrEmpty(aid))
             {
                 return aid;
             }
+
             return null;
         }
 
@@ -273,14 +276,13 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         /// </summary>
         public static async Task<string> One_line_regex(Regex regex, string match, int group = 1, int match_int = 0)
         {
-            Regex _regex = regex;
             int x = 0;
             MatchCollection matches = await Task.Run(() => regex.Matches(match));
             foreach (Match _match in matches)
             {
                 if (x == match_int)
                 {
-                    return await Task.Run(() => _match.Groups[group].Value.ToString());
+                    return await Task.Run(() => _match.Groups[group].Value);
                 }
                 x++;
             }
@@ -298,6 +300,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
                     Task<string> async_content = client.DownloadStringTaskAsync(link);
                     _strContent = await async_content;
                 }
+
                 return _strContent;
         }
     }
