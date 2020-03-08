@@ -72,25 +72,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MovieInfo searchInfo, CancellationToken cancellationToken)
         {
-            var metadata = await GetMetadata(searchInfo, cancellationToken).ConfigureAwait(false);
-
-            var list = new List<RemoteSearchResult>();
-
-            if (metadata.HasMetadata)
+            var seriesInfo = new SeriesInfo();
+            var seriesId = searchInfo.ProviderIds.GetOrDefault(ProviderNames.AniDb);
+            if (seriesId != null)
             {
-                var res = new RemoteSearchResult
-                {
-                    Name = metadata.Item.Name,
-                    PremiereDate = metadata.Item.PremiereDate,
-                    ProductionYear = metadata.Item.ProductionYear,
-                    ProviderIds = metadata.Item.ProviderIds,
-                    SearchProviderName = Name
-                };
-
-                list.Add(res);
+                seriesInfo.ProviderIds.Add(ProviderNames.AniDb, seriesId);
             }
+            seriesInfo.Name = searchInfo.Name;
 
-            return list;
+            return await _seriesProvider.GetSearchResults(seriesInfo, cancellationToken);
         }
 
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
