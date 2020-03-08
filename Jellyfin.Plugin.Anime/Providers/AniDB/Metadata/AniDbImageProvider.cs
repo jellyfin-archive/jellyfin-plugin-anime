@@ -8,18 +8,20 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 
 namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 {
-    public class AniDbSeriesImagesProvider : IRemoteImageProvider
+    public class AniDbImageProvider : IRemoteImageProvider
     {
+        public string Name => "AniDB";
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _appPaths;
 
-        public AniDbSeriesImagesProvider(IHttpClient httpClient, IApplicationPaths appPaths)
+        public AniDbImageProvider(IHttpClient httpClient, IApplicationPaths appPaths)
         {
             _httpClient = httpClient;
             _appPaths = appPaths;
@@ -38,8 +40,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
         public Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
         {
-            var series = (Series)item;
-            var seriesId = series.GetProviderId(ProviderNames.AniDb);
+            var seriesId = item.GetProviderId(ProviderNames.AniDb);
             return GetImages(seriesId, cancellationToken);
         }
 
@@ -70,11 +71,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             return new[] { ImageType.Primary };
         }
 
-        public string Name => "AniDB";
-
         public bool Supports(BaseItem item)
         {
-            return item is Series;
+            return item is Series || item is Season || item is Movie;
         }
 
         private async Task<string> FindImageUrl(string seriesDataPath)
