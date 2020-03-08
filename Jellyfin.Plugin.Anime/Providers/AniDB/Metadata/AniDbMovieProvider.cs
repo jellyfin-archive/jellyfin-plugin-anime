@@ -13,7 +13,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
     public class AniDbMovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>
     {
         private readonly AniDbSeriesProvider _seriesProvider;
-        // private readonly AniDbEpisodeProvider _episodeProvider;
         private readonly ILogger _log;
 
         public string Name => "AniDB";
@@ -21,7 +20,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         public AniDbMovieProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILoggerFactory loggerFactory)
         {
             _seriesProvider = new AniDbSeriesProvider(appPaths, httpClient);
-            // _episodeProvider = new AniDbEpisodeProvider(config, httpClient);
             _log = loggerFactory.CreateLogger("AniDB");
         }
 
@@ -49,14 +47,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             var seriesResult = await _seriesProvider.GetMetadata(seriesInfo, cancellationToken);
             if (seriesResult.HasMetadata)
             {
-                // Leaving this commented out in case there's information
-                // that's only contained on the 'Complete Movie' episode information
-                // var episodeInfo = new EpisodeInfo();
-                // episodeInfo.ProviderIds.Add(ProviderNames.AniDb, seriesId + ":1");
-
-                // var episodeResult = await _episodeProvider.GetMetadata(episodeInfo, cancellationToken);
-                // if (episodeResult.HasMetadata)
-                // {
                 result = new MetadataResult<Movie>
                 {
                     HasMetadata = true,
@@ -75,7 +65,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                     People = seriesResult.People,
                     Images = seriesResult.Images
                 };
-                // }
             }
 
             return result;

@@ -13,22 +13,22 @@ using MediaBrowser.Model.Providers;
 namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 {
     /// <summary>
-    /// Copies the series image into a Movie, if the Movie does not otherwise have any primary image.
+    /// Provides movie images fetched from AniDB. Interally, this class uses AniDbSeriesImagesProvider
+    /// as AniDB does not differentiate between shows and movies.
     /// </summary>
     public class AniDbMovieImageProvider : IRemoteImageProvider
     {
-        private readonly IApplicationPaths _appPaths;
-        private readonly IHttpClient _httpClient;
+        public string Name => "AniDB";
+        private readonly AniDbSeriesImagesProvider _seriesImagesProvider;
 
         public AniDbMovieImageProvider(IApplicationPaths appPaths, IHttpClient httpClient)
         {
-            _appPaths = appPaths;
-            _httpClient = httpClient;
+            _seriesImagesProvider = new AniDbSeriesImagesProvider(httpClient, appPaths);
         }
 
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            return new AniDbSeriesImagesProvider(_httpClient, _appPaths).GetImageResponse(url, cancellationToken);
+            return _seriesImagesProvider.GetImageResponse(url, cancellationToken);
         }
 
         public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
@@ -36,17 +36,17 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             var movie = (Movie)item;
             var seriesId = movie.ProviderIds.GetOrDefault(ProviderNames.AniDb);
             if (string.IsNullOrEmpty(seriesId))
+            {
                 return Enumerable.Empty<RemoteImageInfo>();
+            }
 
-            return await new AniDbSeriesImagesProvider(_httpClient, _appPaths).GetImages(seriesId, cancellationToken);
+            return await _seriesImagesProvider.GetImages(seriesId, cancellationToken);
         }
 
         public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
         {
-            return new[] { ImageType.Primary };
+            return _seriesImagesProvider.GetSupportedImages(item);
         }
-
-        public string Name => "AniDB";
 
         public bool Supports(BaseItem item)
         {
