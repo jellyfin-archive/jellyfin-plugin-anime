@@ -95,11 +95,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
             if (metadata.HasMetadata)
             {
+                var seriesId = metadata.Item.ProviderIds.GetOrDefault(ProviderNames.AniDb);
+                var imageProvider = new AniDbImageProvider(_httpClient, _appPaths);
+                var images = await imageProvider.GetImages(seriesId, cancellationToken);
                 var res = new RemoteSearchResult
                 {
                     Name = metadata.Item.Name,
                     PremiereDate = metadata.Item.PremiereDate,
                     ProductionYear = metadata.Item.ProductionYear,
+                    ImageUrl = images.Any() ? images.First().Url : null,
                     ProviderIds = metadata.Item.ProviderIds,
                     SearchProviderName = Name
                 };
