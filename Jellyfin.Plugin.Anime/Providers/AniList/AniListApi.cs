@@ -371,6 +371,7 @@ query ($query: String, $type: MediaType) {
                 string _strContent = "";
                 using (WebClient client = new WebClient())
                 {
+                    client.Headers.Add("User-Agent", Constants.UserAgent);
                     var values = new System.Collections.Specialized.NameValueCollection();
 
                     var response = await Task.Run(() => client.UploadValues(new Uri(link),values));

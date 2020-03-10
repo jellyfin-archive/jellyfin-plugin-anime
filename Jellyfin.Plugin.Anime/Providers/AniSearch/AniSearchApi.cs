@@ -297,6 +297,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
                 string _strContent = "";
                 using (WebClient client = new WebClient())
                 {
+                    client.Headers.Add("User-Agent", Constants.UserAgent);
                     Task<string> async_content = client.DownloadStringTaskAsync(link);
                     _strContent = await async_content;
                 }

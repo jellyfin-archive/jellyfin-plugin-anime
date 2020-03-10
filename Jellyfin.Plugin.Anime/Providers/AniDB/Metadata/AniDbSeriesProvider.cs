@@ -118,6 +118,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         {
             return _httpClient.GetResponse(new HttpRequestOptions
             {
+                UserAgent = Constants.UserAgent,
                 CancellationToken = cancellationToken,
                 Url = url
             });
@@ -522,6 +523,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
             var requestOptions = new HttpRequestOptions
             {
+                UserAgent = Constants.UserAgent,
                 Url = string.Format(SeriesQueryUrl, ClientName, aid),
                 CancellationToken = cancellationToken
             };

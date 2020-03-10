@@ -106,6 +106,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         {
             return _httpClient.GetResponse(new HttpRequestOptions
             {
+                UserAgent = Constants.UserAgent,
                 CancellationToken = cancellationToken,
                 Url = url
             });
@@ -160,6 +161,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         {
             return _httpClient.GetResponse(new HttpRequestOptions
             {
+                UserAgent = Constants.UserAgent,
                 CancellationToken = cancellationToken,
                 Url = url
             });

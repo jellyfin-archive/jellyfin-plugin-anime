@@ -19,7 +19,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         /// The URL for retrieving a list of all anime titles and their AniDB IDs.
         /// </summary>
         private const string TitlesUrl = "http://anidb.net/api/anime-titles.xml.gz";
-        private const string UserAgent = "jellyfin-plugin-anime";
 
         private readonly IApplicationPaths _paths;
         private readonly ILogger _logger;
@@ -92,7 +91,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         private static async Task DownloadTitles_static(string titlesFile)
         {
             var client = new WebClient();
-            client.Headers.Add("User-Agent", UserAgent);
+            client.Headers.Add("User-Agent", Constants.UserAgent);
 
             await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
             await Task.Delay(Plugin.Instance.Configuration.AniDB_wait_time).ConfigureAwait(false);
