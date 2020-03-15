@@ -18,7 +18,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         /// <summary>
         /// The URL for retrieving a list of all anime titles and their AniDB IDs.
         /// </summary>
-        private const string TitlesUrl = "http://anidb.net/api/animetitles.xml.gz";
+        private const string TitlesUrl = "http://anidb.net/api/anime-titles.xml.gz";
 
         private readonly IApplicationPaths _paths;
         private readonly ILogger _logger;
@@ -79,17 +79,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         private async Task DownloadTitles(string titlesFile)
         {
             _logger.LogDebug("Downloading new AniDB titles file.");
-
-            var client = new WebClient();
-
-            await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
-            await Task.Delay(Plugin.Instance.Configuration.AniDB_wait_time).ConfigureAwait(false);
-            using (var stream = await client.OpenReadTaskAsync(TitlesUrl))
-            using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
-            using (var writer = File.Open(titlesFile, FileMode.Create, FileAccess.Write))
-            {
-                await unzipped.CopyToAsync(writer).ConfigureAwait(false);
-            }
+            await DownloadTitles_static(titlesFile);
         }
 
         /// <summary>
@@ -101,6 +91,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         private static async Task DownloadTitles_static(string titlesFile)
         {
             var client = new WebClient();
+            client.Headers.Add("User-Agent", Constants.UserAgent);
 
             await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
             await Task.Delay(Plugin.Instance.Configuration.AniDB_wait_time).ConfigureAwait(false);

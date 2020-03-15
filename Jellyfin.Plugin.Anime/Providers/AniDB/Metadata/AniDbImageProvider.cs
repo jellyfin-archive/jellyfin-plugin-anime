@@ -33,6 +33,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
             return await _httpClient.GetResponse(new HttpRequestOptions
             {
+                UserAgent = Constants.UserAgent,
                 CancellationToken = cancellationToken,
                 Url = url
             }).ConfigureAwait(false);

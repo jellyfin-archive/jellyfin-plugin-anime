@@ -95,11 +95,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
             if (metadata.HasMetadata)
             {
+                var seriesId = metadata.Item.ProviderIds.GetOrDefault(ProviderNames.AniDb);
+                var imageProvider = new AniDbImageProvider(_httpClient, _appPaths);
+                var images = await imageProvider.GetImages(seriesId, cancellationToken);
                 var res = new RemoteSearchResult
                 {
                     Name = metadata.Item.Name,
                     PremiereDate = metadata.Item.PremiereDate,
                     ProductionYear = metadata.Item.ProductionYear,
+                    ImageUrl = images.Any() ? images.First().Url : null,
                     ProviderIds = metadata.Item.ProviderIds,
                     SearchProviderName = Name
                 };
@@ -114,6 +118,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         {
             return _httpClient.GetResponse(new HttpRequestOptions
             {
+                UserAgent = Constants.UserAgent,
                 CancellationToken = cancellationToken,
                 Url = url
             });
@@ -518,6 +523,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
             var requestOptions = new HttpRequestOptions
             {
+                UserAgent = Constants.UserAgent,
                 Url = string.Format(SeriesQueryUrl, ClientName, aid),
                 CancellationToken = cancellationToken
             };

@@ -154,7 +154,8 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
         public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var imageProvider = new AniDbImageProvider(_httpClient, _configurationManager.ApplicationPaths);
+            return imageProvider.GetImageResponse(url, cancellationToken);
         }
 
         private async Task ParseAdditionalEpisodeXml(FileInfo xml, Episode episode, string metadataLanguage)
