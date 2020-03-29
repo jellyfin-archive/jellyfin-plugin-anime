@@ -36,7 +36,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         private readonly IApplicationPaths _appPaths;
         private readonly IHttpClient _httpClient;
 
-        private readonly Dictionary<string, string> _typeMappings = new Dictionary<string, string>()
+        private readonly Dictionary<string, string> _typeMappings = new Dictionary<string, string>
         {
             {"Direction", PersonType.Director},
             {"Music", PersonType.Composer},
@@ -130,7 +130,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             var seriesDataPath = Path.Combine(dataPath, SeriesDataFile);
             var fileInfo = new FileInfo(seriesDataPath);
 
-            // download series data if not present, or out of date
+            // download series data if not present or out of date
             if (!fileInfo.Exists || DateTime.UtcNow - fileInfo.LastWriteTimeUtc > TimeSpan.FromDays(7))
             {
                 await DownloadSeriesData(seriesId, seriesDataPath, appPaths.CachePath, httpClient, cancellationToken).ConfigureAwait(false);
@@ -201,7 +201,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                                     var title = await ParseTitle(subtree, preferredMetadataLangauge).ConfigureAwait(false);
                                     if (!string.IsNullOrEmpty(title))
                                     {
-                                        series.Name = title;
+                                        series.Name = Plugin.Instance.Configuration.AniDbReplaceGraves
+                                            ? title.Replace('`', '\'')
+                                            : title;
                                     }
                                 }
 
@@ -529,7 +531,8 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             };
 
             await RequestLimiter.Tick().ConfigureAwait(false);
-            await Task.Delay(Plugin.Instance.Configuration.AniDB_wait_time).ConfigureAwait(false);
+            await Task.Delay(Plugin.Instance.Configuration.AniDbRateLimit).ConfigureAwait(false);
+
             using (var stream = await httpClient.Get(requestOptions).ConfigureAwait(false))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var reader = new StreamReader(unzipped, Encoding.UTF8, true))
@@ -828,7 +831,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         }
 
         /// <summary>
-        ///     Gets the series data path.
+        /// Gets the series data path.
         /// </summary>
         /// <param name="appPaths">The app paths.</param>
         /// <param name="seriesId">The series id.</param>
@@ -841,7 +844,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         }
 
         /// <summary>
-        ///     Gets the series data path.
+        /// Gets the series data path.
         /// </summary>
         /// <param name="appPaths">The app paths.</param>
         /// <returns>System.String.</returns>
@@ -905,7 +908,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         }
 
         /// <summary>
-        ///     Gets the series data path.
+        /// Gets the series data path.
         /// </summary>
         /// <param name="appPaths">The app paths.</param>
         /// <param name="seriesId">The series id.</param>
@@ -918,7 +921,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         }
 
         /// <summary>
-        ///     Gets the series data path.
+        /// Gets the series data path.
         /// </summary>
         /// <param name="appPaths">The app paths.</param>
         /// <returns>System.String.</returns>

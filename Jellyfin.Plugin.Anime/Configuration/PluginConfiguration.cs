@@ -25,18 +25,26 @@ namespace Jellyfin.Plugin.Anime.Configuration
         public PluginConfiguration()
         {
             TitlePreference = TitlePreferenceType.Localized;
-            TidyGenreList = true;
             MaxGenres = 5;
+            TidyGenreList = true;
             AddAnimeGenre = true;
-            UseAnidbOrderingWithSeasons = false;
-            AniDB_wait_time = 2000;
+            AniDbRateLimit = 2000;
+            AniDbOrderWithSeasons = false;
+            AniDbReplaceGraves = true;
         }
 
         public TitlePreferenceType TitlePreference { get; set; }
-        public bool TidyGenreList { get; set; }
+
         public int MaxGenres { get; set; }
+
+        public bool TidyGenreList { get; set; }
+
         public bool AddAnimeGenre { get; set; }
-        public bool UseAnidbOrderingWithSeasons { get; set; }
-        public int AniDB_wait_time { get; set; }
+
+        public int AniDbRateLimit { get; set; }
+
+        public bool AniDbOrderWithSeasons { get; set; }
+
+        public bool AniDbReplaceGraves { get; set; }
     }
 }

@@ -35,17 +35,16 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
         public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var result = new MetadataResult<Episode>();
 
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var anidbId = info.ProviderIds.GetOrDefault(ProviderNames.AniDb);
-            if (string.IsNullOrEmpty(anidbId))
+            var aniDbId = info.ProviderIds.GetOrDefault(ProviderNames.AniDb);
+            if (string.IsNullOrEmpty(aniDbId))
             {
                 return result;
             }
 
-            var id = AniDbEpisodeIdentity.Parse(anidbId);
+            var id = AniDbEpisodeIdentity.Parse(aniDbId);
             if (id == null)
             {
                 return result;
@@ -97,17 +96,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             var list = new List<RemoteSearchResult>();
 
             var id = AniDbEpisodeIdentity.Parse(searchInfo.ProviderIds.GetOrDefault(ProviderNames.AniDb));
-            if (id == null)
-            {
-                //var episodeIdentifier = new AnidbEpisodeIdentityProvider();
-                //await episodeIdentifier.Identify(searchInfo);
-
-                //var converter = new AnidbTvdbEpisodeConverter();
-                //await converter.Convert(searchInfo);
-
-                //id = AnidbEpisodeIdentity.Parse(searchInfo.ProviderIds.GetOrDefault(ProviderNames.AniDb));
-            }
-
             if (id == null)
             {
                 return list;
@@ -213,7 +201,10 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                 var title = titles.Localize(Plugin.Instance.Configuration.TitlePreference, metadataLanguage).Name;
                 if (!string.IsNullOrEmpty(title))
                 {
-                    episode.Name += ", " + title;
+                    title = ", " + title;
+                    episode.Name += Plugin.Instance.Configuration.AniDbReplaceGraves
+                        ? title.Replace('`', '\'')
+                        : title;
                 }
             }
         }
@@ -303,7 +294,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                 var title = titles.Localize(Plugin.Instance.Configuration.TitlePreference, preferredMetadataLanguage).Name;
                 if (!string.IsNullOrEmpty(title))
                 {
-                    episode.Name = title;
+                    episode.Name = Plugin.Instance.Configuration.AniDbReplaceGraves
+                        ? title.Replace('`', '\'')
+                        : title;
                 }
             }
         }
