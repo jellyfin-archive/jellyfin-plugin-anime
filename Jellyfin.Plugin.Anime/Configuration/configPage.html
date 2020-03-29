@@ -3,42 +3,53 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
-    <title>Anime Configuration</title>
+    <title>Anime</title>
 </head>
 <body>
         <div id="animeConfigurationPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
             <div data-role="content">
                 <div class="content-primary">
-
                     <form id="animeConfigurationForm">
                         <div class="selectContainer">
-                            <label class="selectLabel" for="titleLanguage">Title Language:</label>
+                            <label class="selectLabel" for="titleLanguage">Title Language</label>
                             <select is="emby-select" id="titleLanguage" name="titleLanguage" class="emby-select-withcolor emby-select">
                                 <option id="optLanguageLocalized" value="Localized">Localized</option>
-                                <option id="optLanguageRomaji" value="JapaneseRomaji">Romaji</option>
                                 <option id="optLanguageJapanese" value="Japanese">Japanese</option>
+                                <option id="optLanguageJapaneseRomaji" value="JapaneseRomaji">Romaji</option>
                             </select>
                         </div>
                         <div class="inputContainer">
-                            <label class="inputeLabel inputLabelUnfocused" for="chkMaxGenres">Max Genres:</label>
+                            <label class="inputeLabel inputLabelUnfocused" for="chkMaxGenres">Max Genres</label>
                             <input id="chkMaxGenres" name="chkMaxGenres" type="number" is="emby-input" min="0"/>
-                            <div class="fieldDescription">[0: unlimited]</div>
-                        </div>
-                        <div class="inputContainer">
-                            <label class="inputeLabel inputLabelUnfocused" for="chkAniDB_wait_time">AniDB wait time:</label>
-                            <input id="chkAniDB_wait_time" name="chkAniDB_wait_time" type="number" is="emby-input"/>
-                            <div class="fieldDescription">AniDB sleep time to prevent IP ban (ms)</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescripton">
-                            <label class="emby-checkbox-label">
-                                <input id="chkAnidbSeasonOne" name="chkAnidbSeasonOne" type="checkbox" is="emby-checkbox"/>
-                                <span>Use AniDB Ordering with Seasons</span>
-                            </label>
+                            <div class="fieldDescription">Set this to zero to remove any limit.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescripton">
                             <label class="emby-checkbox-label">
                                 <input id="chkTidyGenres" name="chkTidyGenres" type="checkbox" is="emby-checkbox"/>
                                 <span>Tidy Genre List</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescripton">
+                            <label class="emby-checkbox-label">
+                                <input id="chkAddAnimeGenre" name="chkAddAnimeGenre" type="checkbox" is="emby-checkbox"/>
+                                <span>Add Anime Genre</span>
+                            </label>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputeLabel inputLabelUnfocused" for="chkAniDbWaitTime">AniDB Rate Limit</label>
+                            <input id="chkAniDbWaitTime" name="chkAniDbWaitTime" type="number" is="emby-input"/>
+                            <div class="fieldDescription">This will prevent IP bans for requesting data too quickly.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescripton">
+                            <label class="emby-checkbox-label">
+                                <input id="chkAniDbOrderWithSeasons" name="chkAniDbOrderWithSeasons" type="checkbox" is="emby-checkbox"/>
+                                <span>AniDB Order with Seasons</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescripton">
+                            <label class="emby-checkbox-label">
+                                <input id="chkAniDbReplaceGraves" name="chkAniDbReplaceGraves" type="checkbox" is="emby-checkbox"/>
+                                <span>AniDB Replace Grave Characters</span>
                             </label>
                         </div>
                         <div>
@@ -51,12 +62,8 @@
             </div>
 
             <script type="text/javascript">
-                var AnimeConfigurationPage =
-                {
+                var AnimeConfigurationPage = {
                     pluginUniqueId: "a4df60c5-6ab4-412a-8f79-2cab93fb2bc5",
-
-                    virtualFolders: [],
-                    physicalFolders: [],
 
                     loadConfiguration: function() {
                         Dashboard.showLoadingMsg();
@@ -65,10 +72,12 @@
                             var page = $.mobile.activePage;
 
                             $('#titleLanguage', page).val(config.TitlePreference).change();
-                            $('#chkTidyGenres', page).checked(config.TidyGenreList).checkboxradio("refresh");
                             $('#chkMaxGenres', page).val(config.MaxGenres).change();
-                            $('#chkAnidbSeasonOne', page).checked(config.UseAnidbOrderingWithSeasons).checkboxradio("refresh");
-                            $('#chkAniDB_wait_time', page).val(config.AniDB_wait_time).change();
+                            $('#chkTidyGenres', page).checked(config.TidyGenreList).checkboxradio("refresh");
+                            $('#chkAddAnimeGenre', page).checked(config.AddAnimeGenre).checkboxradio("refresh");
+                            $('#chkAniDbWaitTime', page).val(config.AniDbWaitTime).change();
+                            $('#chkAniDbOrderWithSeasons', page).checked(config.AniDbOrderWithSeasons).checkboxradio("refresh");
+                            $('#chkAniDbReplaceGraves', page).checked(config.AniDbReplaceGraves).checkboxradio("refresh");
 
                             Dashboard.hideLoadingMsg();
                         });
@@ -77,15 +86,17 @@
                     saveConfiguration: function() {
                         Dashboard.showLoadingMsg();
 
-                        var page = $.mobile.activePage;
-
                         ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).then(function(config) {
+                            var page = $.mobile.activePage;
 
                             config.TitlePreference = $('#titleLanguage', page).val();
-                            config.TidyGenreList = $('#chkTidyGenres').prop('checked');
                             config.MaxGenres = $('#chkMaxGenres').val();
-                            config.UseAnidbOrderingWithSeasons = $('#chkAnidbSeasonOne').prop('checked');
-                            config.AniDB_wait_time = $('#chkAniDB_wait_time').val();
+                            config.TidyGenreList = $('#chkTidyGenres').prop('checked');
+                            config.AddAnimeGenre = $('#chkAddAnimeGenre').prop('checked');
+                            config.AniDbWaitTime = $('#chkAniDbWaitTime').val();
+                            config.AniDbOrderWithSeasons = $('#chkAniDbOrderWithSeasons').prop('checked');
+                            config.AniDbReplaceGraves = $('#chkAniDbReplaceGraves').prop('checked');
+
                             ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).then(function (result) {
                                 Dashboard.processPluginConfigurationUpdateResult(result);
                             });

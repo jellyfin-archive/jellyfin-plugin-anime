@@ -74,10 +74,12 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         {
             var seriesInfo = new SeriesInfo();
             var seriesId = searchInfo.ProviderIds.GetOrDefault(ProviderNames.AniDb);
+
             if (seriesId != null)
             {
                 seriesInfo.ProviderIds.Add(ProviderNames.AniDb, seriesId);
             }
+
             seriesInfo.Name = searchInfo.Name;
 
             return await _seriesProvider.GetSearchResults(seriesInfo, cancellationToken);

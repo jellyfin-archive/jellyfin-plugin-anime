@@ -94,7 +94,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
             client.Headers.Add("User-Agent", Constants.UserAgent);
 
             await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
-            await Task.Delay(Plugin.Instance.Configuration.AniDB_wait_time).ConfigureAwait(false);
+            await Task.Delay(Plugin.Instance.Configuration.AniDbRateLimit).ConfigureAwait(false);
             using (var stream = await client.OpenReadTaskAsync(TitlesUrl))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var writer = File.Open(titlesFile, FileMode.Create, FileAccess.Write))
