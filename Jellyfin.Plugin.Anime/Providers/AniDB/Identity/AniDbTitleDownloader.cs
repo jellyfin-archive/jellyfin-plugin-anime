@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.Anime.Providers.AniDB.Metadata;
@@ -20,14 +20,19 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         /// </summary>
         private const string TitlesUrl = "http://anidb.net/api/anime-titles.xml.gz";
 
-        private readonly IApplicationPaths _paths;
+        private static readonly HttpClient _httpClient;
         private readonly ILogger _logger;
 
-        public AniDbTitleDownloader(ILogger logger, IApplicationPaths paths)
+        public AniDbTitleDownloader(ILogger logger, IApplicationPaths applicationPaths)
         {
             _logger = logger;
-            _paths = paths;
-            Paths = GetDataPath(paths);
+            Paths = GetDataPath(applicationPaths);
+        }
+
+        static AniDbTitleDownloader()
+        {
+            _httpClient = new HttpClient();
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", Constants.UserAgent);
         }
 
         public static string Paths { get; private set; }
@@ -76,10 +81,10 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         /// and saves it to disk.
         /// </summary>
         /// <param name="titlesFile">The destination file name.</param>
-        private async Task DownloadTitles(string titlesFile)
+        private Task DownloadTitles(string titlesFile)
         {
             _logger.LogDebug("Downloading new AniDB titles file.");
-            await DownloadTitles_static(titlesFile);
+            return DownloadTitles_static(titlesFile);
         }
 
         /// <summary>
@@ -90,12 +95,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         /// <returns></returns>
         private static async Task DownloadTitles_static(string titlesFile)
         {
-            var client = new WebClient();
-            client.Headers.Add("User-Agent", Constants.UserAgent);
-
             await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
             await Task.Delay(Plugin.Instance.Configuration.AniDbRateLimit).ConfigureAwait(false);
-            using (var stream = await client.OpenReadTaskAsync(TitlesUrl))
+            using (var stream = await _httpClient.GetStreamAsync(TitlesUrl).ConfigureAwait(false))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var writer = File.Open(titlesFile, FileMode.Create, FileAccess.Write))
             {

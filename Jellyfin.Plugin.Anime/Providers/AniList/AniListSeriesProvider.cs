@@ -25,11 +25,11 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public int Order => -2;
         public string Name => "AniList";
 
-        public AniListSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogger<AniListSeriesProvider> logger, IJsonSerializer jsonSerializer)
+        public AniListSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogger<AniListSeriesProvider> logger)
         {
             _log = logger;
             _httpClient = httpClient;
-            _aniListApi = new AniListApi(jsonSerializer);
+            _aniListApi = new AniListApi();
             _paths = appPaths;
         }
 
@@ -49,14 +49,14 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
                 RootObject WebContent = await _aniListApi.WebRequestAPI(_aniListApi.AniList_anime_link.Replace("{0}", aid));
                 result.Item = new Series();
                 result.HasMetadata = true;
-               
+
                 result.People = await _aniListApi.GetPersonInfo(WebContent.data.Media.id, cancellationToken);
                 result.Item.ProviderIds.Add(ProviderNames.AniList, aid);
                 result.Item.Overview = WebContent.data.Media.description;
                 try
                 {
                     //AniList has a max rating of 5
-                    result.Item.CommunityRating = (WebContent.data.Media.averageScore/10);
+                    result.Item.CommunityRating = WebContent.data.Media.averageScore / 10;
                 }
                 catch (Exception) { }
                 foreach (var genre in _aniListApi.Get_Genre(WebContent))
@@ -116,13 +116,11 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
     public class AniListSeriesImageProvider : IRemoteImageProvider
     {
         private readonly IHttpClient _httpClient;
-        private readonly IApplicationPaths _appPaths;
         private readonly AniListApi _aniListApi;
-        public AniListSeriesImageProvider(IHttpClient httpClient, IApplicationPaths appPaths, IJsonSerializer jsonSerializer)
+        public AniListSeriesImageProvider(IHttpClient httpClient)
         {
             _httpClient = httpClient;
-            _appPaths = appPaths;
-            _aniListApi = new AniListApi(jsonSerializer);
+            _aniListApi = new AniListApi();
         }
 
         public string Name => "AniList";

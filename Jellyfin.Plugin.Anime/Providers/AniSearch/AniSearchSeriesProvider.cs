@@ -108,12 +108,10 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
     public class AniSearchSeriesImageProvider : IRemoteImageProvider
     {
         private readonly IHttpClient _httpClient;
-        private readonly IApplicationPaths _appPaths;
 
-        public AniSearchSeriesImageProvider(IHttpClient httpClient, IApplicationPaths appPaths)
+        public AniSearchSeriesImageProvider(IHttpClient httpClient)
         {
             _httpClient = httpClient;
-            _appPaths = appPaths;
         }
 
         public string Name => "AniSearch";
