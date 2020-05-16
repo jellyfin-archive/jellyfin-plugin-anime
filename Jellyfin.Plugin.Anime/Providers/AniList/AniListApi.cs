@@ -159,13 +159,12 @@ query ($query: String, $type: MediaType) {
 
             var result = new RemoteSearchResult
             {
-                Name = ""
+                Name = WebContent.data.Media.title.romaji,
+                Overview = WebContent.data.Media.description,
+                ImageUrl = WebContent.data.Media.coverImage.large,
+                SearchProviderName = ProviderNames.AniList,
             };
-
-            result.SearchProviderName = WebContent.data.Media.title.romaji;
-            result.ImageUrl = WebContent.data.Media.coverImage.large;
             result.SetProviderId(ProviderNames.AniList, id);
-            result.Overview = WebContent.data.Media.description;
 
             return result;
         }
@@ -281,33 +280,12 @@ query ($query: String, $type: MediaType) {
         /// <returns></returns>
         public async Task<string> Search_GetSeries(string title, CancellationToken cancellationToken)
         {
-            string result = null;
             RootObject WebContent = await WebRequestAPI(SearchLink.Replace("{0}", title));
             foreach (Medium media in WebContent.data.Page.media) {
-                //get id
-
-                try
-                {
-
-                    if (await Equals_check.Compare_strings(media.title.romaji, title, cancellationToken))
-                    {
-                        return media.id.ToString();
-                    }
-                    if (await Equals_check.Compare_strings(media.title.english, title, cancellationToken))
-                    {
-                        return media.id.ToString();
-                    }
-                    //Disabled due to false result.
-                    /*if (await Task.Run(() => Equals_check.Compare_strings(media.title.native, title)))
-                    {
-                        return media.id.ToString();
-                    }*/
-                }
-
-                catch (Exception) { }
+                return media.id.ToString();
             }
 
-            return result;
+            return null;
         }
 
         /// <summary>
@@ -322,27 +300,7 @@ query ($query: String, $type: MediaType) {
             RootObject WebContent = await WebRequestAPI(SearchLink.Replace("{0}", title));
             foreach (Medium media in WebContent.data.Page.media)
             {
-                //get id
-
-                try
-                {
-
-                    if (await Equals_check.Compare_strings(media.title.romaji, title, cancellationToken))
-                    {
-                        result.Add(media.id.ToString());
-                    }
-                    if (await Equals_check.Compare_strings(media.title.english, title, cancellationToken))
-                    {
-                        result.Add(media.id.ToString());
-                    }
-                    //Disabled due to false result.
-                    /*if (await Task.Run(() => Equals_check.Compare_strings(media.title.native, title)))
-                    {
-                        result.Add(media.id.ToString());
-                    }*/
-                }
-
-                catch (Exception) { }
+                result.Add(media.id.ToString());
             }
             return result;
         }

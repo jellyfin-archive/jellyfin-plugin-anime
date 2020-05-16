@@ -75,10 +75,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             var aid = searchInfo.ProviderIds.GetOrDefault(ProviderNames.AniList);
             if (!string.IsNullOrEmpty(aid))
             {
-                if (!results.ContainsKey(aid))
-                {
-                    results.Add(aid, await _aniListApi.GetAnime(aid).ConfigureAwait(false));
-                }
+                results.Add(aid, await _aniListApi.GetAnime(aid).ConfigureAwait(false));
             }
 
             if (!string.IsNullOrEmpty(searchInfo.Name))
