@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Text.RegularExpressions;
+using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.Anime.Configuration;
-using Jellyfin.Plugin.Anime.Providers.AniList;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
-using MediaBrowser.Model.Serialization;
 
 namespace Jellyfin.Plugin.Anime.Providers.AniList
 {
@@ -21,7 +20,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
     /// </summary>
     public class AniListApi
     {
-        private static IJsonSerializer _jsonSerializer;
+        private static readonly HttpClient _httpClient;
         private const string SearchLink = @"https://graphql.anilist.co/api/v2?query=
 query ($query: String, $type: MediaType) {
   Page {
@@ -142,10 +141,13 @@ query ($query: String, $type: MediaType) {
     }
   }
 }&variables={ ""id"":""{0}"",""type"":""ANIME""}";
-        public AniListApi(IJsonSerializer jsonSerializer)
+
+        static AniListApi()
         {
-            _jsonSerializer = jsonSerializer;
+            _httpClient = new HttpClient();
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", Constants.UserAgent);
         }
+
         /// <summary>
         /// API call to get the anime with the id
         /// </summary>
@@ -154,7 +156,7 @@ query ($query: String, $type: MediaType) {
         public async Task<RemoteSearchResult> GetAnime(string id)
         {
             RootObject WebContent = await WebRequestAPI(AniList_anime_link.Replace("{0}",id));
-            
+
             var result = new RemoteSearchResult
             {
                 Name = ""
@@ -304,7 +306,7 @@ query ($query: String, $type: MediaType) {
 
                 catch (Exception) { }
             }
-            
+
             return result;
         }
 
@@ -368,19 +370,12 @@ query ($query: String, $type: MediaType) {
         /// </summary>
         public async Task<RootObject> WebRequestAPI(string link)
         {
-                string _strContent = "";
-                using (WebClient client = new WebClient())
-                {
-                    client.Headers.Add("User-Agent", Constants.UserAgent);
-                    var values = new System.Collections.Specialized.NameValueCollection();
-
-                    var response = await Task.Run(() => client.UploadValues(new Uri(link),values));
-                    _strContent = System.Text.Encoding.Default.GetString(response);
-                }
-
-                RootObject data = _jsonSerializer.DeserializeFromString<RootObject>(_strContent);
-            
-                return data;
+          using (HttpContent content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>()))
+          using (var response = await _httpClient.PostAsync(link, content).ConfigureAwait(false))
+          using (var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+          {
+            return await JsonSerializer.DeserializeAsync<RootObject>(responseStream).ConfigureAwait(false);
+          }
         }
     }
 }
