@@ -44,8 +44,10 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public Media Media { get; set; }
     }
 
-    // This class is a slimmed down version of Media to avoid
-    // confusion and reduce the size of responses when searching
+    /// <summary>
+    /// A slimmed down version of Media to avoid confusion and reduce
+    /// the size of responses when searching.
+    /// </summary>
     public class MediaSearchResult
     {
         public int id { get; set; }
@@ -54,7 +56,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public CoverImage coverImage { get; set; }
 
         /// <summary>
-        /// API call to get the title in configured language
+        /// Get the title in configured language
         /// </summary>
         /// <param name="language"></param>
         /// <returns></returns>
@@ -75,7 +77,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         }
 
         /// <summary>
-        /// API call to get the img url
+        /// Get the highest quality image url
         /// </summary>
         /// <returns></returns>
         public string GetImageUrl()
@@ -95,14 +97,14 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         }
 
         /// <summary>
-        /// Convert a Media object to a RemoteSearchResult
+        /// Convert a Media/MediaSearchResult object to a RemoteSearchResult
         /// </summary>
         /// <returns></returns>
         public RemoteSearchResult ToSearchResult()
         {
             return new RemoteSearchResult
             {
-                Name = this.title.romaji,  // TODO: Call GetPreferredTitle() here
+                Name = this.GetPreferredTitle("en"),
                 ProductionYear = this.startDate.year,
                 PremiereDate = this.GetStartDate(),
                 ImageUrl = this.GetImageUrl(),
@@ -139,7 +141,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public object volumes { get; set; }
 
         /// <summary>
-        /// API call too get the rating, normalized to 1-10
+        /// Get the rating, normalized to 1-10
         /// </summary>
         /// <returns></returns>
         public float GetRating()
@@ -170,6 +172,10 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             return results;
         }
 
+        /// <summary>
+        /// Returns a list of PersonInfo for voice actors
+        /// </summary>
+        /// <returns></returns>
         public List<PersonInfo> GetPeopleInfo()
         {
             List<PersonInfo> lpi = new List<PersonInfo>();

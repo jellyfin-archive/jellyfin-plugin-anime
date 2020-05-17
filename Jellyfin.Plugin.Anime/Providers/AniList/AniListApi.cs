@@ -16,7 +16,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
     /// Based on the new API from AniList
     /// 🛈 This code works with the API Interface (v2) from AniList
     /// 🛈 https://anilist.gitbooks.io/anilist-apiv2-docs
-    /// 🛈 THIS IS AN UNOFFICAL API INTERFACE FOR EMBY
+    /// 🛈 THIS IS AN UNOFFICAL API INTERFACE FOR JELLYFIN
     /// </summary>
     public class AniListApi
     {
@@ -143,7 +143,7 @@ query($id: Int!, $type: MediaType) {
         }
 
         /// <summary>
-        /// API call to get the anime with the id
+        /// API call to get the anime with the given id
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -168,7 +168,7 @@ query($id: Int!, $type: MediaType) {
         }
 
         /// <summary>
-        /// API call to search a title and return a list back
+        /// API call to search a title and return a list of results
         /// </summary>
         /// <param name="title"></param>
         /// <param name="cancellationToken"></param>
@@ -179,8 +179,10 @@ query($id: Int!, $type: MediaType) {
         }
 
         /// <summary>
-        /// SEARCH Title
+        /// Search for anime with the given title. Attempts to fuzzy search by removing special characters
         /// </summary>
+        /// <param name="title"></param>
+        /// <returns></returns>
         public async Task<string> FindSeries(string title, CancellationToken cancellationToken)
         {
             MediaSearchResult result = await Search_GetSeries(title, cancellationToken);
@@ -195,8 +197,10 @@ query($id: Int!, $type: MediaType) {
         }
 
         /// <summary>
-        /// GET website content from the link
+        /// GET and parse JSON content from link, deserialize into a RootObject
         /// </summary>
+        /// <param name="link"></param>
+        /// <returns></returns>
         public async Task<RootObject> WebRequestAPI(string link)
         {
             using (HttpContent content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>()))
