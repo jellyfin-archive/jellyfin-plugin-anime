@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using MediaBrowser.Model.Providers;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using Jellyfin.Plugin.Anime.Configuration;
@@ -21,6 +22,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
     {
         public string medium { get; set; }
         public string large { get; set; }
+        public string extraLarge { get; set; }
     }
 
     public class ApiDate
@@ -32,7 +34,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
 
     public class Page
     {
-        public List<Media> media { get; set; }
+        public List<MediaSearchResult> media { get; set; }
     }
 
     public class Data
@@ -41,35 +43,14 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public Media Media { get; set; }
     }
 
-    public class Media
+    // This class is a slimmed down version of Media to avoid
+    // confusion and reduce the size of responses when searching
+    public class MediaSearchResult
     {
-        public int? averageScore { get; set; }
-        public object bannerImage { get; set; }
-        public object chapters { get; set; }
-        public Characters characters { get; set; }
-        public CoverImage coverImage { get; set; }
-        public string description { get; set; }
-        public int? duration { get; set; }
-        public ApiDate endDate { get; set; }
-        public int? episodes { get; set; }
-        public string format { get; set; }
-        public List<string> genres { get; set; }
-        public object hashtag { get; set; }
         public int id { get; set; }
-        public bool isAdult { get; set; }
-        public int? meanScore { get; set; }
-        public object nextAiringEpisode { get; set; }
-        public int? popularity { get; set; }
-        public string season { get; set; }
-        public int? seasonYear { get; set; }
-        public ApiDate startDate { get; set; }
-        public string status { get; set; }
-        public StudioConnection studios { get; set; }
-        public List<object> synonyms { get; set; }
-        public List<Tag> tags { get; set; }
         public Title title { get; set; }
-        public string type { get; set; }
-        public object volumes { get; set; }
+        public ApiDate startDate { get; set; }
+        public CoverImage coverImage { get; set; }
 
         /// <summary>
         /// API call to get the title in configured language
@@ -98,16 +79,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         /// <returns></returns>
         public string GetImageUrl()
         {
-            return this.coverImage.large ?? this.coverImage.medium;
-        }
-
-        /// <summary>
-        /// API call too get the rating, normalized to 1-10
-        /// </summary>
-        /// <returns></returns>
-        public float GetRating()
-        {
-            return (this.averageScore ?? 0) / 10f;
+            return this.coverImage.extraLarge ?? this.coverImage.large ?? this.coverImage.medium;
         }
 
         /// <summary>
@@ -119,6 +91,59 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             if (this.startDate.year == null || this.startDate.month == null || this.startDate.day == null)
                 return null;
             return new DateTime(this.startDate.year.Value, this.startDate.month.Value, this.startDate.day.Value);
+        }
+
+        /// <summary>
+        /// Convert a Media object to a RemoteSearchResult
+        /// </summary>
+        /// <returns></returns>
+        public RemoteSearchResult ToSearchResult()
+        {
+            return new RemoteSearchResult
+            {
+                Name = this.title.romaji,  // TODO: Call GetPreferredTitle() here
+                ProductionYear = this.startDate.year,
+                PremiereDate = this.GetStartDate(),
+                ImageUrl = this.GetImageUrl(),
+                SearchProviderName = ProviderNames.AniList,
+                ProviderIds = new Dictionary<string, string>() {{ProviderNames.AniList, this.id.ToString()}}
+            };
+        }
+    }
+
+    public class Media: MediaSearchResult
+    {
+        public int? averageScore { get; set; }
+        public string bannerImage { get; set; }
+        public object chapters { get; set; }
+        public Characters characters { get; set; }
+        public string description { get; set; }
+        public int? duration { get; set; }
+        public ApiDate endDate { get; set; }
+        public int? episodes { get; set; }
+        public string format { get; set; }
+        public List<string> genres { get; set; }
+        public object hashtag { get; set; }
+        public bool isAdult { get; set; }
+        public int? meanScore { get; set; }
+        public object nextAiringEpisode { get; set; }
+        public int? popularity { get; set; }
+        public string season { get; set; }
+        public int? seasonYear { get; set; }
+        public string status { get; set; }
+        public StudioConnection studios { get; set; }
+        public List<object> synonyms { get; set; }
+        public List<Tag> tags { get; set; }
+        public string type { get; set; }
+        public object volumes { get; set; }
+
+        /// <summary>
+        /// API call too get the rating, normalized to 1-10
+        /// </summary>
+        /// <returns></returns>
+        public float GetRating()
+        {
+            return (this.averageScore ?? 0) / 10f;
         }
 
         /// <summary>
@@ -148,18 +173,14 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         {
             List<PersonInfo> lpi = new List<PersonInfo>();
             foreach (CharacterEdge edge in this.characters.edges)
-            {
                 foreach (VoiceActor va in edge.voiceActors)
-                {
-                    lpi.Add(new PersonInfo {
+                    PeopleHelper.AddPerson(lpi, new PersonInfo {
                         Name = va.name.full,
                         ImageUrl = va.image.large ?? va.image.medium,
                         Role = edge.node.name.full,
-                        Type = "Voice Actor",
+                        Type = PersonType.Actor,
                         ProviderIds = new Dictionary<string, string>() {{ProviderNames.AniList, this.id.ToString()}}
                     });
-                }
-            }
             return lpi;
         }
 
@@ -173,25 +194,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             foreach (Tag tag in this.tags)
                 results.Add(tag.name);
             return results;
-        }
-
-        /// <summary>
-        /// Convert a Media object to a RemoteSearchResult
-        /// </summary>
-        /// <returns></returns>
-        public RemoteSearchResult ToSearchResult()
-        {
-            var result = new RemoteSearchResult
-            {
-                Name = this.title.romaji,  // TODO: Call GetPreferredTitle() here
-                Overview = this.description,
-                ProductionYear = this.startDate.year,
-                PremiereDate = this.GetStartDate(),
-                ImageUrl = this.GetImageUrl(),
-                SearchProviderName = ProviderNames.AniList,
-                ProviderIds = new Dictionary<string, string>() {{ProviderNames.AniList, this.id.ToString()}}
-            };
-            return result;
         }
 
         /// <summary>
@@ -211,6 +213,11 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
                 Studios = this.GetStudioNames().ToArray(),
                 ProviderIds = new Dictionary<string, string>() {{ProviderNames.AniList, this.id.ToString()}}
             };
+
+            if (this.status == "FINISHED" || this.status == "CANCELLED")
+                result.Status = SeriesStatus.Ended;
+            else if (this.status == "RELEASING")
+                result.Status = SeriesStatus.Continuing;
 
             foreach (var genre in this.genres)
                 result.AddGenre(genre);

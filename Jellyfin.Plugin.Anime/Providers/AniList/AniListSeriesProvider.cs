@@ -46,7 +46,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             else
             {
                 _log.LogInformation("Start AniList... Searching({Name})", info.Name);
-                media = await _aniListApi.Search_GetSeries(info.Name, cancellationToken);
+                MediaSearchResult msr = await _aniListApi.Search_GetSeries(info.Name, cancellationToken);
+                if (msr != null)
+                    media = await _aniListApi.GetAnime(msr.id.ToString());
             }
 
             if (media != null)
@@ -69,18 +71,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             if (!string.IsNullOrEmpty(aid))
             {
                 Media aid_result = await _aniListApi.GetAnime(aid).ConfigureAwait(false);
-                if (aid_result != null) {
+                if (aid_result != null)
                     results.Add(aid_result.ToSearchResult());
-                }
             }
 
             if (!string.IsNullOrEmpty(searchInfo.Name))
             {
-                List<Media> name_results = await _aniListApi.Search_GetSeries_list(searchInfo.Name, cancellationToken).ConfigureAwait(false);
+                List<MediaSearchResult> name_results = await _aniListApi.Search_GetSeries_list(searchInfo.Name, cancellationToken).ConfigureAwait(false);
                 foreach (var media in name_results)
-                {
                     results.Add(media.ToSearchResult());
-                }
             }
 
             return results;
@@ -138,13 +137,23 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             if (!string.IsNullOrEmpty(aid))
             {
                 Media media = await _aniListApi.GetAnime(aid);
-                if (media != null) {
-                    list.Add(new RemoteImageInfo
-                    {
-                        ProviderName = Name,
-                        Type = ImageType.Primary,
-                        Url = media.GetImageUrl()
-                    });
+                if (media != null)
+                {
+                    if (media.GetImageUrl() != null)
+                        list.Add(new RemoteImageInfo
+                        {
+                            ProviderName = Name,
+                            Type = ImageType.Primary,
+                            Url = media.GetImageUrl()
+                        });
+
+                    if (media.bannerImage != null)
+                        list.Add(new RemoteImageInfo
+                        {
+                            ProviderName = Name,
+                            Type = ImageType.Banner,
+                            Url = media.bannerImage
+                        });
                 }
             }
             return list;

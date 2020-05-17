@@ -34,21 +34,9 @@ query ($query: String, $type: MediaType) {
       coverImage {
         medium
         large
+        extraLarge
       }
-      format
-      type
-      averageScore
-      popularity
-      episodes
-      season
-      hashtag
-      isAdult
       startDate {
-        year
-        month
-        day
-      }
-      endDate {
         year
         month
         day
@@ -56,93 +44,96 @@ query ($query: String, $type: MediaType) {
     }
   }
 }&variables={ ""query"":""{0}"",""type"":""ANIME""}";
-        public string AniList_anime_link = @"https://graphql.anilist.co/api/v2?query=query($id: Int!, $type: MediaType) {
-  Media(id: $id, type: $type)
-    {
+        public string AnimeLink = @"https://graphql.anilist.co/api/v2?query=
+query($id: Int!, $type: MediaType) {
+  Media(id: $id, type: $type) {
+    id
+    title {
+      romaji
+      english
+      native
+      userPreferred
+    }
+    startDate {
+      year
+      month
+      day
+    }
+    endDate {
+      year
+      month
+      day
+    }
+    coverImage {
+      medium
+      large
+      extraLarge
+    }
+    bannerImage
+    format
+    type
+    status
+    episodes
+    chapters
+    volumes
+    season
+    seasonYear
+    description
+    averageScore
+    meanScore
+    genres
+    synonyms
+    duration
+    tags {
       id
-      title {
-        romaji
-        english
-        native
-        userPreferred
-      }
-      startDate {
-        year
-        month
-        day
-      }
-      endDate {
-        year
-        month
-        day
-      }
-      coverImage {
-        large
-        medium
-      }
-      bannerImage
-      format
-      type
-      status
-      episodes
-      chapters
-      volumes
-      season
-      seasonYear
-      description
-      averageScore
-      meanScore
-      genres
-      synonyms
-      duration
-      tags {
+      name
+      category
+    }
+    nextAiringEpisode {
+      airingAt
+      timeUntilAiring
+      episode
+    }
+
+    studios {
+      nodes {
         id
         name
-        category
+        isAnimationStudio
       }
-      nextAiringEpisode {
-        airingAt
-        timeUntilAiring
-        episode
-      }
-
-      studios {
-        nodes {
+    }
+    characters(sort: [ROLE]) {
+      edges {
+        node {
           id
-          name
-          isAnimationStudio
-        }
-      }
-      characters(sort: [ROLE]) {
-        edges {
-          node {
-            id
-            name {
-              first
-              last
-            }
-            image {
-              medium
-              large
-            }
+          name {
+            first
+            last
+            full
           }
-          role
-          voiceActors {
-            id
-            name {
-              first
-              last
-              full
-              native
-            }
-            image {
-              medium
-              large
-            }
-            language
+          image {
+            medium
+            large
           }
         }
+        role
+        voiceActors {
+          id
+          name {
+            first
+            last
+            full
+            native
+          }
+          image {
+            medium
+            large
+          }
+          language
+        }
       }
+    }
+  }
 }&variables={ ""id"":""{0}"",""type"":""ANIME""}";
 
         static AniListApi()
@@ -158,8 +149,7 @@ query ($query: String, $type: MediaType) {
         /// <returns></returns>
         public async Task<Media> GetAnime(string id)
         {
-            RootObject WebContent = await WebRequestAPI(AniList_anime_link.Replace("{0}",id));
-            return WebContent.data.Media;
+            return (await WebRequestAPI(AnimeLink.Replace("{0}",id))).data?.Media;
         }
 
         /// <summary>
@@ -168,13 +158,12 @@ query ($query: String, $type: MediaType) {
         /// <param name="title"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<Media> Search_GetSeries(string title, CancellationToken cancellationToken)
+        public async Task<MediaSearchResult> Search_GetSeries(string title, CancellationToken cancellationToken)
         {
             // Reimplemented instead of calling Search_GetSeries_list() for efficiency
             RootObject WebContent = await WebRequestAPI(SearchLink.Replace("{0}", title));
-            foreach (Media media in WebContent.data.Page.media) {
+            foreach (Media media in WebContent.data.Page.media)
                 return media;
-            }
             return null;
         }
 
@@ -184,10 +173,9 @@ query ($query: String, $type: MediaType) {
         /// <param name="title"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<List<Media>> Search_GetSeries_list(string title, CancellationToken cancellationToken)
+        public async Task<List<MediaSearchResult>> Search_GetSeries_list(string title, CancellationToken cancellationToken)
         {
-            RootObject WebContent = await WebRequestAPI(SearchLink.Replace("{0}", title));
-            return WebContent.data.Page.media;
+            return (await WebRequestAPI(SearchLink.Replace("{0}", title))).data.Page.media;
         }
 
         /// <summary>
@@ -195,16 +183,14 @@ query ($query: String, $type: MediaType) {
         /// </summary>
         public async Task<string> FindSeries(string title, CancellationToken cancellationToken)
         {
-            Media result = await Search_GetSeries(title, cancellationToken);
+            MediaSearchResult result = await Search_GetSeries(title, cancellationToken);
             if (result != null)
-            {
                 return result.id.ToString();
-            }
+
             result = await Search_GetSeries(await Equals_check.Clear_name(title, cancellationToken), cancellationToken);
             if (result != null)
-            {
                 return result.id.ToString();
-            }
+
             return null;
         }
 
