@@ -5,6 +5,7 @@ using MediaBrowser.Model.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Entities.Movies;
 using Jellyfin.Plugin.Anime.Configuration;
 
 namespace Jellyfin.Plugin.Anime.Providers.AniList
@@ -55,19 +56,19 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         /// <summary>
         /// API call to get the title in configured language
         /// </summary>
-        /// <param name="preference"></param>
         /// <param name="language"></param>
         /// <returns></returns>
-        public string GetPreferredTitle(TitlePreferenceType preference, string language)
+        public string GetPreferredTitle(string language)
         {
-            if (preference == TitlePreferenceType.Localized)
+            PluginConfiguration config = Plugin.Instance.Configuration;
+            if (config.TitlePreference == TitlePreferenceType.Localized)
             {
                 if (language == "en")
                     return this.title.english;
                 if (language == "jap")
                     return this.title.native;
             }
-            if (preference == TitlePreferenceType.Japanese)
+            if (config.TitlePreference == TitlePreferenceType.Japanese)
                 return this.title.native;
 
             return this.title.romaji;
@@ -203,12 +204,13 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public Series ToSeries()
         {
             var result = new Series {
-                Name = this.title.romaji,
+                Name = this.GetPreferredTitle("en"),
                 Overview = this.description,
                 ProductionYear = this.startDate.year,
                 PremiereDate = this.GetStartDate(),
                 EndDate = this.GetStartDate(),
                 CommunityRating = this.GetRating(),
+                Genres = this.genres.ToArray(),
                 Tags = this.GetTagNames().ToArray(),
                 Studios = this.GetStudioNames().ToArray(),
                 ProviderIds = new Dictionary<string, string>() {{ProviderNames.AniList, this.id.ToString()}}
@@ -219,11 +221,27 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             else if (this.status == "RELEASING")
                 result.Status = SeriesStatus.Continuing;
 
-            foreach (var genre in this.genres)
-                result.AddGenre(genre);
-            GenreHelper.CleanupGenres(result);
-
             return result;
+        }
+
+        /// <summary>
+        /// Convert a Media object to a Movie
+        /// </summary>
+        /// <returns></returns>
+        public Movie ToMovie()
+        {
+            return new Movie {
+                Name = this.GetPreferredTitle("en"),
+                Overview = this.description,
+                ProductionYear = this.startDate.year,
+                PremiereDate = this.GetStartDate(),
+                EndDate = this.GetStartDate(),
+                CommunityRating = this.GetRating(),
+                Genres = this.genres.ToArray(),
+                Tags = this.GetTagNames().ToArray(),
+                Studios = this.GetStudioNames().ToArray(),
+                ProviderIds = new Dictionary<string, string>() {{ProviderNames.AniList, this.id.ToString()}}
+            };
         }
     }
     public class PageInfo

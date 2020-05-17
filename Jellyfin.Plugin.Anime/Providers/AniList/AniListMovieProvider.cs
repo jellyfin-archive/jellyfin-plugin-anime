@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 //API v2
 namespace Jellyfin.Plugin.Anime.Providers.AniList
 {
-    public class AniListSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder
+    public class AniListMovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrder
     {
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _paths;
@@ -25,7 +25,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public int Order => -2;
         public string Name => "AniList";
 
-        public AniListSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogger<AniListSeriesProvider> logger)
+        public AniListMovieProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogger<AniListMovieProvider> logger)
         {
             _log = logger;
             _httpClient = httpClient;
@@ -33,9 +33,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             _paths = appPaths;
         }
 
-        public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
+        public async Task<MetadataResult<Movie>> GetMetadata(MovieInfo info, CancellationToken cancellationToken)
         {
-            var result = new MetadataResult<Series>();
+            var result = new MetadataResult<Movie>();
             Media media = null;
 
             var aid = info.ProviderIds.GetOrDefault(ProviderNames.AniList);
@@ -54,7 +54,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             if (media != null)
             {
                 result.HasMetadata = true;
-                result.Item = media.ToSeries();
+                result.Item = media.ToMovie();
                 result.People = media.GetPeopleInfo();
                 result.Provider = ProviderNames.AniList;
                 StoreImageUrl(media.id.ToString(), media.GetImageUrl(), "image");
@@ -63,7 +63,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             return result;
         }
 
-        public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
+        public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MovieInfo searchInfo, CancellationToken cancellationToken)
         {
             var results = new List<RemoteSearchResult>();
 
