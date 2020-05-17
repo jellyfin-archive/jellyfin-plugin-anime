@@ -216,6 +216,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
                 PremiereDate = this.GetStartDate(),
                 EndDate = this.GetStartDate(),
                 CommunityRating = this.GetRating(),
+                RunTimeTicks = this.duration.HasValue ? TimeSpan.FromMinutes(this.duration.Value).Ticks : (long?)null,
                 Genres = this.genres.ToArray(),
                 Tags = this.GetTagNames().ToArray(),
                 Studios = this.GetStudioNames().ToArray(),
