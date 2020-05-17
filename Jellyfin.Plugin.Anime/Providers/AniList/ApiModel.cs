@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using MediaBrowser.Model.Providers;
+using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.TV;
 using Jellyfin.Plugin.Anime.Configuration;
 
 namespace Jellyfin.Plugin.Anime.Providers.AniList
@@ -62,6 +64,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public int? seasonYear { get; set; }
         public ApiDate startDate { get; set; }
         public string status { get; set; }
+        public StudioConnection studios { get; set; }
         public List<object> synonyms { get; set; }
         public List<Tag> tags { get; set; }
         public Title title { get; set; }
@@ -130,6 +133,49 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         }
 
         /// <summary>
+        /// Returns a list of studio names
+        /// </summary>
+        /// <returns></returns>
+        public List<string> GetStudioNames()
+        {
+            List<string> results = new List<string>();
+            foreach (Studio node in this.studios.nodes)
+                results.Add(node.name);
+            return results;
+        }
+
+        public List<PersonInfo> GetPeopleInfo()
+        {
+            List<PersonInfo> lpi = new List<PersonInfo>();
+            foreach (CharacterEdge edge in this.characters.edges)
+            {
+                foreach (VoiceActor va in edge.voiceActors)
+                {
+                    lpi.Add(new PersonInfo {
+                        Name = va.name.full,
+                        ImageUrl = va.image.large ?? va.image.medium,
+                        Role = edge.node.name.full,
+                        Type = "Voice Actor",
+                        ProviderIds = new Dictionary<string, string>() {{ProviderNames.AniList, this.id.ToString()}}
+                    });
+                }
+            }
+            return lpi;
+        }
+
+        /// <summary>
+        /// Returns a list of tag names
+        /// </summary>
+        /// <returns></returns>
+        public List<string> GetTagNames()
+        {
+            List<string> results = new List<string>();
+            foreach (Tag tag in this.tags)
+                results.Add(tag.name);
+            return results;
+        }
+
+        /// <summary>
         /// Convert a Media object to a RemoteSearchResult
         /// </summary>
         /// <returns></returns>
@@ -145,6 +191,31 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
                 SearchProviderName = ProviderNames.AniList,
                 ProviderIds = new Dictionary<string, string>() {{ProviderNames.AniList, this.id.ToString()}}
             };
+            return result;
+        }
+
+        /// <summary>
+        /// Convert a Media object to a Series
+        /// </summary>
+        /// <returns></returns>
+        public Series ToSeries()
+        {
+            var result = new Series {
+                Name = this.title.romaji,
+                Overview = this.description,
+                ProductionYear = this.startDate.year,
+                PremiereDate = this.GetStartDate(),
+                EndDate = this.GetStartDate(),
+                CommunityRating = this.GetRating(),
+                Tags = this.GetTagNames().ToArray(),
+                Studios = this.GetStudioNames().ToArray(),
+                ProviderIds = new Dictionary<string, string>() {{ProviderNames.AniList, this.id.ToString()}}
+            };
+
+            foreach (var genre in this.genres)
+                result.AddGenre(genre);
+            GenreHelper.CleanupGenres(result);
+
             return result;
         }
     }
@@ -169,10 +240,10 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public string large { get; set; }
     }
 
-    public class Node
+    public class Character
     {
         public int id { get; set; }
-        public Name name { get; set; }
+        public Name2 name { get; set; }
         public Image image { get; set; }
     }
 
@@ -180,34 +251,28 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
     {
         public string first { get; set; }
         public string last { get; set; }
+        public string full { get; set; }
         public string native { get; set; }
-    }
-
-    public class Image2
-    {
-        public string medium { get; set; }
-        public string large { get; set; }
     }
 
     public class VoiceActor
     {
         public int id { get; set; }
         public Name2 name { get; set; }
-        public Image2 image { get; set; }
+        public Image image { get; set; }
         public string language { get; set; }
     }
 
-    public class Edge
+    public class CharacterEdge
     {
-        public Node node { get; set; }
+        public Character node { get; set; }
         public string role { get; set; }
         public List<VoiceActor> voiceActors { get; set; }
     }
 
     public class Characters
     {
-        public PageInfo pageInfo { get; set; }
-        public List<Edge> edges { get; set; }
+        public List<CharacterEdge> edges { get; set; }
     }
 
     public class Tag
@@ -216,6 +281,18 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public string name { get; set; }
         public string description { get; set; }
         public string category { get; set; }
+    }
+
+    public class Studio
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public bool isAnimationStudio { get; set; }
+    }
+
+    public class StudioConnection
+    {
+        public List<Studio> nodes { get; set; }
     }
 
     public class RootObject

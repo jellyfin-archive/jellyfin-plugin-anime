@@ -51,21 +51,10 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
 
             if (media != null)
             {
-                result.Item = new Series();
                 result.HasMetadata = true;
-
-                result.People = await _aniListApi.GetPersonInfo(media.id, cancellationToken);
-                result.Item.ProviderIds.Add(ProviderNames.AniList, media.id.ToString());
-                result.Item.Overview = media.description;
-                try
-                {
-                    //AniList has a max rating of 5
-                    result.Item.CommunityRating = media.GetRating();
-                }
-                catch (Exception) { }
-                foreach (var genre in media.genres)
-                    result.Item.AddGenre(genre);
-                GenreHelper.CleanupGenres(result.Item);
+                result.Item = media.ToSeries();
+                result.People = media.GetPeopleInfo();
+                result.Provider = ProviderNames.AniList;
                 StoreImageUrl(media.id.ToString(), media.GetImageUrl(), "image");
             }
 

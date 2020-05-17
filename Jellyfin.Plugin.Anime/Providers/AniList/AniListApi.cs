@@ -105,48 +105,44 @@ query ($query: String, $type: MediaType) {
         timeUntilAiring
         episode
       }
-    }
-}&variables={ ""id"":""{0}"",""type"":""ANIME""}";
-        private const string AniList_anime_char_link = @"https://graphql.anilist.co/api/v2?query=query($id: Int!, $type: MediaType, $page: Int = 1) {
-  Media(id: $id, type: $type) {
-    id
-    characters(page: $page, sort: [ROLE]) {
-      pageInfo {
-        total
-        perPage
-        hasNextPage
-        currentPage
-        lastPage
-      }
-      edges {
-        node {
+
+      studios {
+        nodes {
           id
-          name {
-            first
-            last
-          }
-          image {
-            medium
-            large
-          }
-        }
-        role
-        voiceActors {
-          id
-          name {
-            first
-            last
-            native
-          }
-          image {
-            medium
-            large
-          }
-          language
+          name
+          isAnimationStudio
         }
       }
-    }
-  }
+      characters(sort: [ROLE]) {
+        edges {
+          node {
+            id
+            name {
+              first
+              last
+            }
+            image {
+              medium
+              large
+            }
+          }
+          role
+          voiceActors {
+            id
+            name {
+              first
+              last
+              full
+              native
+            }
+            image {
+              medium
+              large
+            }
+            language
+          }
+        }
+      }
 }&variables={ ""id"":""{0}"",""type"":""ANIME""}";
 
         static AniListApi()
@@ -164,20 +160,6 @@ query ($query: String, $type: MediaType) {
         {
             RootObject WebContent = await WebRequestAPI(AniList_anime_link.Replace("{0}",id));
             return WebContent.data.Media;
-        }
-
-        public async Task<List<PersonInfo>> GetPersonInfo(int id, CancellationToken cancellationToken)
-        {
-            List<PersonInfo> lpi = new List<PersonInfo>();
-            RootObject WebContent = await WebRequestAPI(AniList_anime_char_link.Replace("{0}", id.ToString()));
-            foreach (Edge edge in WebContent.data.Media.characters.edges)
-            {
-                PersonInfo pi = new PersonInfo();
-                pi.Name = edge.node.name.first+" "+ edge.node.name.last;
-                pi.ImageUrl = edge.node.image.large;
-                pi.Role = edge.role;
-            }
-            return lpi;
         }
 
         /// <summary>
