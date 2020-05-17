@@ -58,48 +58,55 @@ query ($query: String, $type: MediaType) {
 }&variables={ ""query"":""{0}"",""type"":""ANIME""}";
         public string AniList_anime_link = @"https://graphql.anilist.co/api/v2?query=query($id: Int!, $type: MediaType) {
   Media(id: $id, type: $type)
-        {
-            id
-            title {
-                romaji
-                english
-              native
-      userPreferred
-            }
-            startDate {
-                year
-                month
-              day
-            }
-            endDate {
-                year
-                month
-              day
-            }
-            coverImage {
-                large
-                medium
-            }
-            bannerImage
-            format
-    type
-    status
-    episodes
-    chapters
-    volumes
-    season
-    description
-    averageScore
-    meanScore
-    genres
-    synonyms
-    nextAiringEpisode {
-                airingAt
-                timeUntilAiring
-      episode
+    {
+      id
+      title {
+        romaji
+        english
+        native
+        userPreferred
+      }
+      startDate {
+        year
+        month
+        day
+      }
+      endDate {
+        year
+        month
+        day
+      }
+      coverImage {
+        large
+        medium
+      }
+      bannerImage
+      format
+      type
+      status
+      episodes
+      chapters
+      volumes
+      season
+      seasonYear
+      description
+      averageScore
+      meanScore
+      genres
+      synonyms
+      duration
+      tags {
+        id
+        name
+        category
+      }
+      nextAiringEpisode {
+        airingAt
+        timeUntilAiring
+        episode
+      }
     }
-        }
-    }&variables={ ""id"":""{0}"",""type"":""ANIME""}";
+}&variables={ ""id"":""{0}"",""type"":""ANIME""}";
         private const string AniList_anime_char_link = @"https://graphql.anilist.co/api/v2?query=query($id: Int!, $type: MediaType, $page: Int = 1) {
   Media(id: $id, type: $type) {
     id
@@ -153,60 +160,12 @@ query ($query: String, $type: MediaType) {
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<RemoteSearchResult> GetAnime(string id)
+        public async Task<Media> GetAnime(string id)
         {
             RootObject WebContent = await WebRequestAPI(AniList_anime_link.Replace("{0}",id));
-
-            var result = new RemoteSearchResult
-            {
-                Name = WebContent.data.Media.title.romaji,
-                Overview = WebContent.data.Media.description,
-                ImageUrl = WebContent.data.Media.coverImage.large,
-                SearchProviderName = ProviderNames.AniList,
-            };
-            result.SetProviderId(ProviderNames.AniList, id);
-
-            return result;
+            return WebContent.data.Media;
         }
 
-        /// <summary>
-        /// API call to select the lang
-        /// </summary>
-        /// <param name="WebContent"></param>
-        /// <param name="preference"></param>
-        /// <param name="language"></param>
-        /// <returns></returns>
-        private string SelectName(RootObject WebContent, TitlePreferenceType preference, string language)
-        {
-            if (preference == TitlePreferenceType.Localized && language == "en")
-                return WebContent.data.Media.title.english;
-            if (preference == TitlePreferenceType.Japanese)
-                return WebContent.data.Media.title.native;
-
-            return  WebContent.data.Media.title.romaji;
-        }
-
-        /// <summary>
-        /// API call to get the title with the right lang
-        /// </summary>
-        /// <param name="lang"></param>
-        /// <param name="WebContent"></param>
-        /// <returns></returns>
-        public string Get_title(string lang, RootObject WebContent)
-        {
-            switch (lang)
-            {
-                case "en":
-                    return WebContent.data.Media.title.english;
-
-                case "jap":
-                    return WebContent.data.Media.title.native;
-
-                //Default is jap_r
-                default:
-                   return WebContent.data.Media.title.romaji;
-            }
-        }
         public async Task<List<PersonInfo>> GetPersonInfo(int id, CancellationToken cancellationToken)
         {
             List<PersonInfo> lpi = new List<PersonInfo>();
@@ -220,71 +179,20 @@ query ($query: String, $type: MediaType) {
             }
             return lpi;
         }
-        /// <summary>
-        /// Convert int to Guid
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public async static Task<Guid> ToGuid(int value, CancellationToken cancellationToken)
-        {
-            byte[] bytes = new byte[16];
-            await Task.Run(() => BitConverter.GetBytes(value).CopyTo(bytes, 0), cancellationToken);
-            return new Guid(bytes);
-        }
-        /// <summary>
-        /// API call to get the genre of the anime
-        /// </summary>
-        /// <param name="WebContent"></param>
-        /// <returns></returns>
-        public List<string> Get_Genre(RootObject WebContent)
-        {
-
-            return WebContent.data.Media.genres;
-        }
 
         /// <summary>
-        /// API call to get the img url
-        /// </summary>
-        /// <param name="WebContent"></param>
-        /// <returns></returns>
-        public string Get_ImageUrl(RootObject WebContent)
-        {
-            return WebContent.data.Media.coverImage.large;
-        }
-
-        /// <summary>
-        /// API call too get the rating
-        /// </summary>
-        /// <param name="WebContent"></param>
-        /// <returns></returns>
-        public string Get_Rating(RootObject WebContent)
-        {
-            return (WebContent.data.Media.averageScore / 10).ToString();
-        }
-
-        /// <summary>
-        /// API call to get the description
-        /// </summary>
-        /// <param name="WebContent"></param>
-        /// <returns></returns>
-        public string Get_Overview(RootObject WebContent)
-        {
-            return WebContent.data.Media.description;
-        }
-
-        /// <summary>
-        /// API call to search a title and return the right one back
+        /// API call to search a title and return the first result
         /// </summary>
         /// <param name="title"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<string> Search_GetSeries(string title, CancellationToken cancellationToken)
+        public async Task<Media> Search_GetSeries(string title, CancellationToken cancellationToken)
         {
+            // Reimplemented instead of calling Search_GetSeries_list() for efficiency
             RootObject WebContent = await WebRequestAPI(SearchLink.Replace("{0}", title));
-            foreach (Medium media in WebContent.data.Page.media) {
-                return media.id.ToString();
+            foreach (Media media in WebContent.data.Page.media) {
+                return media;
             }
-
             return null;
         }
 
@@ -294,15 +202,10 @@ query ($query: String, $type: MediaType) {
         /// <param name="title"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<List<string>> Search_GetSeries_list(string title, CancellationToken cancellationToken)
+        public async Task<List<Media>> Search_GetSeries_list(string title, CancellationToken cancellationToken)
         {
-            List<string> result = new List<string>();
             RootObject WebContent = await WebRequestAPI(SearchLink.Replace("{0}", title));
-            foreach (Medium media in WebContent.data.Page.media)
-            {
-                result.Add(media.id.ToString());
-            }
-            return result;
+            return WebContent.data.Page.media;
         }
 
         /// <summary>
@@ -310,15 +213,15 @@ query ($query: String, $type: MediaType) {
         /// </summary>
         public async Task<string> FindSeries(string title, CancellationToken cancellationToken)
         {
-            string aid = await Search_GetSeries(title, cancellationToken);
-            if (!string.IsNullOrEmpty(aid))
+            Media result = await Search_GetSeries(title, cancellationToken);
+            if (result != null)
             {
-                return aid;
+                return result.id.ToString();
             }
-            aid = await Search_GetSeries(await Equals_check.Clear_name(title, cancellationToken), cancellationToken);
-            if (!string.IsNullOrEmpty(aid))
+            result = await Search_GetSeries(await Equals_check.Clear_name(title, cancellationToken), cancellationToken);
+            if (result != null)
             {
-                return aid;
+                return result.id.ToString();
             }
             return null;
         }
@@ -328,12 +231,12 @@ query ($query: String, $type: MediaType) {
         /// </summary>
         public async Task<RootObject> WebRequestAPI(string link)
         {
-          using (HttpContent content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>()))
-          using (var response = await _httpClient.PostAsync(link, content).ConfigureAwait(false))
-          using (var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
-          {
-            return await JsonSerializer.DeserializeAsync<RootObject>(responseStream).ConfigureAwait(false);
-          }
+            using (HttpContent content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>()))
+            using (var response = await _httpClient.PostAsync(link, content).ConfigureAwait(false))
+            using (var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+            {
+                return await JsonSerializer.DeserializeAsync<RootObject>(responseStream).ConfigureAwait(false);
+            }
         }
     }
 }

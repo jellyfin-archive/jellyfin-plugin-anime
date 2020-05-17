@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using MediaBrowser.Model.Providers;
+using Jellyfin.Plugin.Anime.Configuration;
 
 namespace Jellyfin.Plugin.Anime.Providers.AniList
 {
@@ -19,49 +21,16 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public string large { get; set; }
     }
 
-    public class StartDate
+    public class ApiDate
     {
-        public int year { get; set; }
-        public int month { get; set; }
-        public int day { get; set; }
-    }
-
-    public class EndDate
-    {
-        public int year { get; set; }
-        public int month { get; set; }
-        public int day { get; set; }
-    }
-
-    public class Medium
-    {
-        public int id { get; set; }
-        public Title title { get; set; }
-        public CoverImage coverImage { get; set; }
-        public string format { get; set; }
-        public string type { get; set; }
-        public int averageScore { get; set; }
-        public int popularity { get; set; }
-        public int episodes { get; set; }
-        public string season { get; set; }
-        public string hashtag { get; set; }
-        public bool isAdult { get; set; }
-        public StartDate startDate { get; set; }
-        public EndDate endDate { get; set; }
-        public object bannerImage { get; set; }
-        public string status { get; set; }
-        public object chapters { get; set; }
-        public object volumes { get; set; }
-        public string description { get; set; }
-        public int meanScore { get; set; }
-        public List<string> genres { get; set; }
-        public List<object> synonyms { get; set; }
-        public object nextAiringEpisode { get; set; }
+        public int? year { get; set; }
+        public int? month { get; set; }
+        public int? day { get; set; }
     }
 
     public class Page
     {
-        public List<Medium> media { get; set; }
+        public List<Media> media { get; set; }
     }
 
     public class Data
@@ -72,29 +41,112 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
 
     public class Media
     {
-        public Characters characters { get; set; }
-        public int popularity { get; set; }
-        public object hashtag { get; set; }
-        public bool isAdult { get; set; }
-        public int id { get; set; }
-        public Title title { get; set; }
-        public StartDate startDate { get; set; }
-        public EndDate endDate { get; set; }
-        public CoverImage coverImage { get; set; }
+        public int? averageScore { get; set; }
         public object bannerImage { get; set; }
-        public string format { get; set; }
-        public string type { get; set; }
-        public string status { get; set; }
-        public int episodes { get; set; }
         public object chapters { get; set; }
-        public object volumes { get; set; }
-        public string season { get; set; }
+        public Characters characters { get; set; }
+        public CoverImage coverImage { get; set; }
         public string description { get; set; }
-        public int averageScore { get; set; }
-        public int meanScore { get; set; }
+        public int? duration { get; set; }
+        public ApiDate endDate { get; set; }
+        public int? episodes { get; set; }
+        public string format { get; set; }
         public List<string> genres { get; set; }
-        public List<object> synonyms { get; set; }
+        public object hashtag { get; set; }
+        public int id { get; set; }
+        public bool isAdult { get; set; }
+        public int? meanScore { get; set; }
         public object nextAiringEpisode { get; set; }
+        public int? popularity { get; set; }
+        public string season { get; set; }
+        public int? seasonYear { get; set; }
+        public ApiDate startDate { get; set; }
+        public string status { get; set; }
+        public List<object> synonyms { get; set; }
+        public List<Tag> tags { get; set; }
+        public Title title { get; set; }
+        public string type { get; set; }
+        public object volumes { get; set; }
+
+        /// <summary>
+        /// API call to get the title in configured language
+        /// </summary>
+        /// <param name="preference"></param>
+        /// <param name="language"></param>
+        /// <returns></returns>
+        public string GetPreferredTitle(TitlePreferenceType preference, string language)
+        {
+            if (preference == TitlePreferenceType.Localized)
+            {
+                if (language == "en")
+                    return this.title.english;
+                if (language == "jap")
+                    return this.title.native;
+            }
+            if (preference == TitlePreferenceType.Japanese)
+                return this.title.native;
+
+            return this.title.romaji;
+        }
+
+        /// <summary>
+        /// API call to get the img url
+        /// </summary>
+        /// <returns></returns>
+        public string GetImageUrl()
+        {
+            return this.coverImage.large ?? this.coverImage.medium;
+        }
+
+        /// <summary>
+        /// API call too get the rating, normalized to 1-10
+        /// </summary>
+        /// <returns></returns>
+        public float GetRating()
+        {
+            return (this.averageScore ?? 0) / 10f;
+        }
+
+        /// <summary>
+        /// Returns the start date as a DateTime object or null if not available
+        /// </summary>
+        /// <returns></returns>
+        public DateTime? GetStartDate()
+        {
+            if (this.startDate.year == null || this.startDate.month == null || this.startDate.day == null)
+                return null;
+            return new DateTime(this.startDate.year.Value, this.startDate.month.Value, this.startDate.day.Value);
+        }
+
+        /// <summary>
+        /// Returns the end date as a DateTime object or null if not available
+        /// </summary>
+        /// <returns></returns>
+        public DateTime? GetEndDate()
+        {
+            if (this.endDate.year == null || this.endDate.month == null || this.endDate.day == null)
+                return null;
+            return new DateTime(this.endDate.year.Value, this.endDate.month.Value, this.endDate.day.Value);
+        }
+
+        /// <summary>
+        /// Convert a Media object to a RemoteSearchResult
+        /// </summary>
+        /// <returns></returns>
+        public RemoteSearchResult ToSearchResult()
+        {
+            var result = new RemoteSearchResult
+            {
+                Name = this.title.romaji,  // TODO: Call GetPreferredTitle() here
+                Overview = this.description,
+                ProductionYear = this.startDate.year,
+                PremiereDate = this.GetStartDate(),
+                ImageUrl = this.GetImageUrl(),
+                SearchProviderName = ProviderNames.AniList,
+                ProviderIds = new Dictionary<string, string>() {{ProviderNames.AniList, this.id.ToString()}}
+            };
+            return result;
+        }
     }
     public class PageInfo
     {
@@ -156,6 +208,14 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
     {
         public PageInfo pageInfo { get; set; }
         public List<Edge> edges { get; set; }
+    }
+
+    public class Tag
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public string description { get; set; }
+        public string category { get; set; }
     }
 
     public class RootObject

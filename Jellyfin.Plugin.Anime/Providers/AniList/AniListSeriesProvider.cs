@@ -36,33 +36,37 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
+            Media media = null;
 
             var aid = info.ProviderIds.GetOrDefault(ProviderNames.AniList);
-            if (string.IsNullOrEmpty(aid))
-            {
-                _log.LogInformation("Start AniList... Searching({Name})", info.Name);
-                aid = await _aniListApi.FindSeries(info.Name, cancellationToken);
-            }
-
             if (!string.IsNullOrEmpty(aid))
             {
-                RootObject WebContent = await _aniListApi.WebRequestAPI(_aniListApi.AniList_anime_link.Replace("{0}", aid));
+                media = await _aniListApi.GetAnime(aid);
+            }
+            else
+            {
+                _log.LogInformation("Start AniList... Searching({Name})", info.Name);
+                media = await _aniListApi.Search_GetSeries(info.Name, cancellationToken);
+            }
+
+            if (media != null)
+            {
                 result.Item = new Series();
                 result.HasMetadata = true;
 
-                result.People = await _aniListApi.GetPersonInfo(WebContent.data.Media.id, cancellationToken);
-                result.Item.ProviderIds.Add(ProviderNames.AniList, aid);
-                result.Item.Overview = WebContent.data.Media.description;
+                result.People = await _aniListApi.GetPersonInfo(media.id, cancellationToken);
+                result.Item.ProviderIds.Add(ProviderNames.AniList, media.id.ToString());
+                result.Item.Overview = media.description;
                 try
                 {
                     //AniList has a max rating of 5
-                    result.Item.CommunityRating = WebContent.data.Media.averageScore / 10;
+                    result.Item.CommunityRating = media.GetRating();
                 }
                 catch (Exception) { }
-                foreach (var genre in _aniListApi.Get_Genre(WebContent))
+                foreach (var genre in media.genres)
                     result.Item.AddGenre(genre);
                 GenreHelper.CleanupGenres(result.Item);
-                StoreImageUrl(aid, WebContent.data.Media.coverImage.large, "image");
+                StoreImageUrl(media.id.ToString(), media.GetImageUrl(), "image");
             }
 
             return result;
@@ -70,24 +74,27 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
 
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
         {
-            var results = new Dictionary<string, RemoteSearchResult>();
+            var results = new List<RemoteSearchResult>();
 
             var aid = searchInfo.ProviderIds.GetOrDefault(ProviderNames.AniList);
             if (!string.IsNullOrEmpty(aid))
             {
-                results.Add(aid, await _aniListApi.GetAnime(aid).ConfigureAwait(false));
+                Media aid_result = await _aniListApi.GetAnime(aid).ConfigureAwait(false);
+                if (aid_result != null) {
+                    results.Add(aid_result.ToSearchResult());
+                }
             }
 
             if (!string.IsNullOrEmpty(searchInfo.Name))
             {
-                List<string> ids = await _aniListApi.Search_GetSeries_list(searchInfo.Name, cancellationToken).ConfigureAwait(false);
-                foreach (string a in ids)
+                List<Media> name_results = await _aniListApi.Search_GetSeries_list(searchInfo.Name, cancellationToken).ConfigureAwait(false);
+                foreach (var media in name_results)
                 {
-                    results.Add(a, await _aniListApi.GetAnime(a).ConfigureAwait(false));
+                    results.Add(media.ToSearchResult());
                 }
             }
 
-            return results.Values;
+            return results;
         }
 
         private void StoreImageUrl(string series, string url, string type)
@@ -141,13 +148,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
 
             if (!string.IsNullOrEmpty(aid))
             {
-                var primary =  _aniListApi.Get_ImageUrl(await _aniListApi.WebRequestAPI(_aniListApi.AniList_anime_link.Replace("{0}", aid)));
-                list.Add(new RemoteImageInfo
-                {
-                    ProviderName = Name,
-                    Type = ImageType.Primary,
-                    Url = primary
-                });
+                Media media = await _aniListApi.GetAnime(aid);
+                if (media != null) {
+                    list.Add(new RemoteImageInfo
+                    {
+                        ProviderName = Name,
+                        Type = ImageType.Primary,
+                        Url = media.GetImageUrl()
+                    });
+                }
             }
             return list;
         }
