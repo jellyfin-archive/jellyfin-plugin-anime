@@ -162,7 +162,7 @@ query($id: Int!, $type: MediaType) {
         {
             // Reimplemented instead of calling Search_GetSeries_list() for efficiency
             RootObject WebContent = await WebRequestAPI(SearchLink.Replace("{0}", title));
-            foreach (Media media in WebContent.data.Page.media)
+            foreach (MediaSearchResult media in WebContent.data.Page.media)
                 return media;
             return null;
         }
