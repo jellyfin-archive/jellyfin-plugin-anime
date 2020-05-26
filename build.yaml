@@ -1,17 +1,15 @@
 ---
-name: "jellyfin-plugin-anime"
+name: "Anime"
 guid: "a4df60c5-6ab4-412a-8f79-2cab93fb2bc5"
-version: "8"
-jellyfin_version: "10.5.0"
+version: "8.0.0.0"
+targetAbi: "10.5.0.0"
 owner: "jellyfin"
-nicename: "Anime"
-description: "Manage your Anime in Jellyfin"
-overview: >
+overview: "Manage your anime from Jellyfin"
+description: >
   Manage your anime in Jellyfin. This plugin supports several different metadata providers
   and options for organizing your collection.
 category: "Metadata"
 artifacts:
-  - "Jellyfin.Plugin.Anime.dll"
-build_type: "dotnet"
-dotnet_configuration: "Release"
-dotnet_framework: "netstandard2.1"
+- "Jellyfin.Plugin.Anime.dll"
+changelog: >
+  changelog
