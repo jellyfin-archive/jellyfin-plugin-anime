@@ -1,5 +1,5 @@
 ---
-name: "jellyfin-plugin-anime"
+name: "Anime"
 guid: "a4df60c5-6ab4-412a-8f79-2cab93fb2bc5"
 version: "8.0.0.0"
 targetAbi: "10.5.0.0"
@@ -11,3 +11,5 @@ description: >
 category: "Metadata"
 artifacts:
 - "Jellyfin.Plugin.Anime.dll"
+changelog: >
+  changelog
