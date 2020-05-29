@@ -98,7 +98,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
                     {
                         if (reader.NodeType == XmlNodeType.Element && reader.Name == "picture")
                         {
-                            return "http://img7.anidb.net/pics/anime/" + reader.ReadElementContentAsString();
+                            return "https://cdn.anidb.net/images/main/" + reader.ReadElementContentAsString();
                         }
                     }
                 }
