@@ -11,7 +11,7 @@ using MediaBrowser.Model.Providers;
 namespace Jellyfin.Plugin.Anime.Providers.AniSearch
 {
     /// <summary>
-    /// API for http://anisearch.com
+    /// API for https://anisearch.com
     /// Anisearch does not have an API interface to work with
     /// </summary>
     internal class AniSearchApi

@@ -17,6 +17,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB
             => ProviderNames.AniDb;
 
         public string UrlFormatString
-            => "http://anidb.net/perl-bin/animedb.pl?show=anime&aid={0}";
+            => "https://anidb.net/perl-bin/animedb.pl?show=anime&aid={0}";
     }
 }
