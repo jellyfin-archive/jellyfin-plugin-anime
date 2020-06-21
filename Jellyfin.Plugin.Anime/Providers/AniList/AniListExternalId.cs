@@ -17,6 +17,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             => ProviderNames.AniList;
 
         public string UrlFormatString
-            => "http://anilist.co/anime/{0}/";
+            => "https://anilist.co/anime/{0}/";
     }
 }
