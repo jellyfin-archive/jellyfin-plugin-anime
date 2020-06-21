@@ -81,7 +81,7 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
                     Genres = seriesInfo.Included.Select(x => x.Attributes.Name).ToArray(),
                 };
                 GenreHelper.CleanupGenres(result.Item);
-                StoreImageUrl(kitsuId, seriesInfo.Data.Attributes.CoverImage.Original.ToString(), "image");
+                StoreImageUrl(kitsuId, seriesInfo.Data.Attributes.PosterImage.Original.ToString(), "image");
             }
 
             return result;
