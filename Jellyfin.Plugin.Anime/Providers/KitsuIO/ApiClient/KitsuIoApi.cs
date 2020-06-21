@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Jellyfin.Plugin.Anime.Providers.KitsuIO
+namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.ApiClient
 {
     internal class KitsuIoApi
     {
@@ -41,6 +41,33 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO
         public static async Task<ApiGetResponse> Get_Series(string seriesId)
         {
             var responseString = await _httpClient.GetStringAsync($"{_apiBaseUrl}/anime/{seriesId}?include=genres");
+            var response = JsonSerializer.Deserialize<ApiGetResponse>(responseString, _serializerOptions);
+            return response;
+        }
+        
+        public static async Task<ApiSearchResponse> Get_Episodes(string seriesId)
+        {
+            var result = new ApiSearchResponse();
+            long episodeCount = 10;
+            var step = 10;
+            
+            for (long offset = 0; offset < episodeCount; offset += step)
+            {
+                var queryString = $"?filter[mediaId]={seriesId}&page[limit]={step}&page[offset]={offset}";
+                var responseString = await _httpClient.GetStringAsync($"{_apiBaseUrl}/episodes{queryString}");
+                var response = JsonSerializer.Deserialize<ApiSearchResponse>(responseString, _serializerOptions);
+
+                episodeCount = response.Meta.Count.Value;
+                result.Data.AddRange(response.Data);
+            }
+
+            return result;
+        }
+        
+        public static async Task<ApiGetResponse> Get_Episode(string episodeId)
+        {
+            var filterString = $"/{episodeId}";
+            var responseString = await _httpClient.GetStringAsync($"{_apiBaseUrl}/episodes{filterString}");
             var response = JsonSerializer.Deserialize<ApiGetResponse>(responseString, _serializerOptions);
             return response;
         }

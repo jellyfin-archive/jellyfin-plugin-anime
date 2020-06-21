@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Jellyfin.Plugin.Anime.Providers.KitsuIO
+namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.ApiClient
 {
     public partial class ApiSearchResponse
     {
         public List<Series> Data { get; set; }
-        public TemperaturesMeta Meta { get; set; }
-        public TemperaturesLinks Links { get; set; }
+        public ResponseMeta Meta { get; set; }
+        public ResponseLinks Links { get; set; }
     }
 
     public partial class ApiGetResponse
@@ -56,6 +56,12 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO
         public string YoutubeVideoId { get; set; }
         public ShowTypeEnum ShowType { get; set; }
         public bool Nsfw { get; set; }
+        
+        // Episode specific
+        public int? Number { get; set; }
+        public int? SeasonNumber { get; set; }
+        public DateTime? AirDate { get; set; }
+        public int? Length { get; set; }
     }
 
     public partial class CoverImage
@@ -151,14 +157,14 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO
         public Uri Related { get; set; }
     }
 
-    public partial class TemperaturesLinks
+    public partial class ResponseLinks
     {
         public Uri First { get; set; }
         public Uri Next { get; set; }
         public Uri Last { get; set; }
     }
 
-    public partial class TemperaturesMeta
+    public partial class ResponseMeta
     {
         public long? Count { get; set; }
     }
