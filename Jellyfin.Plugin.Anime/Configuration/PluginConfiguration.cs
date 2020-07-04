@@ -29,7 +29,6 @@ namespace Jellyfin.Plugin.Anime.Configuration
             TidyGenreList = true;
             AddAnimeGenre = true;
             AniDbRateLimit = 2000;
-            AniDbOrderWithSeasons = false;
             AniDbReplaceGraves = true;
         }
 
@@ -42,8 +41,6 @@ namespace Jellyfin.Plugin.Anime.Configuration
         public bool AddAnimeGenre { get; set; }
 
         public int AniDbRateLimit { get; set; }
-
-        public bool AniDbOrderWithSeasons { get; set; }
 
         public bool AniDbReplaceGraves { get; set; }
     }

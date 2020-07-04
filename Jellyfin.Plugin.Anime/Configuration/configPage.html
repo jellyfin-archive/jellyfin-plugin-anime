@@ -42,12 +42,6 @@
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescripton">
                             <label class="emby-checkbox-label">
-                                <input id="chkAniDbOrderWithSeasons" name="chkAniDbOrderWithSeasons" type="checkbox" is="emby-checkbox"/>
-                                <span>AniDB Order with Seasons</span>
-                            </label>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescripton">
-                            <label class="emby-checkbox-label">
                                 <input id="chkAniDbReplaceGraves" name="chkAniDbReplaceGraves" type="checkbox" is="emby-checkbox"/>
                                 <span>AniDB Replace Grave Characters</span>
                             </label>
@@ -76,7 +70,6 @@
                             document.getElementById('chkTidyGenres').checked = config.TidyGenreList;
                             document.getElementById('chkAddAnimeGenre').checked = config.AddAnimeGenre;
                             $('#chkAniDbWaitTime', page).val(config.AniDbWaitTime).change();
-                            document.getElementById('chkAniDbOrderWithSeasons').checked = config.AniDbOrderWithSeasons;
                             document.getElementById('chkAniDbReplaceGraves').checked = config.AniDbReplaceGraves;
 
                             Dashboard.hideLoadingMsg();
@@ -94,7 +87,6 @@
                             config.TidyGenreList = document.getElementById('chkTidyGenres').checked;
                             config.AddAnimeGenre = document.getElementById('chkAddAnimeGenre').checked;
                             config.AniDbWaitTime = $('#chkAniDbWaitTime').val();
-                            config.AniDbOrderWithSeasons = document.getElementById('chkAniDbOrderWithSeasons').checked;
                             config.AniDbReplaceGraves = document.getElementById('chkAniDbReplaceGraves').checked;
 
                             ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).then(function (result) {
