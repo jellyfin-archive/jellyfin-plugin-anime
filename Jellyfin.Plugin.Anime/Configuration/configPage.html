@@ -20,29 +20,37 @@
                         </div>
                         <div class="inputContainer">
                             <label class="inputeLabel inputLabelUnfocused" for="chkMaxGenres">Max Genres</label>
-                            <input id="chkMaxGenres" name="chkMaxGenres" type="number" is="emby-input" min="0"/>
+                            <input id="chkMaxGenres" name="chkMaxGenres" type="number" is="emby-input" min="0" />
                             <div class="fieldDescription">Set this to zero to remove any limit.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescripton">
+                        <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
-                                <input id="chkTidyGenres" name="chkTidyGenres" type="checkbox" is="emby-checkbox"/>
+                                <input id="chkTitleCaseGenres" name="chkTitleCaseGenres" type="checkbox" is="emby-checkbox" />
+                                <span>Title Case Genres</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="chkTidyGenres" name="chkTidyGenres" type="checkbox" is="emby-checkbox" />
                                 <span>Tidy Genre List</span>
                             </label>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescripton">
-                            <label class="emby-checkbox-label">
-                                <input id="chkAddAnimeGenre" name="chkAddAnimeGenre" type="checkbox" is="emby-checkbox"/>
-                                <span>Add Anime Genre</span>
-                            </label>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="animeDefaultGenre">Anime Default Genre Name</label>
+                            <select is="emby-select" id="animeDefaultGenre" name="animeDefaultGenre" class="emby-select-withcolor emby-select">
+                                <option id="optDefaultGenreNone" value="None">None</option>
+                                <option id="optDefaultGenreAnime" value="Anime">Anime</option>
+                                <option id="optDefaultGenreAnimation" value="Animation">Animation</option>
+                            </select>
                         </div>
                         <div class="inputContainer">
-                            <label class="inputeLabel inputLabelUnfocused" for="chkAniDbWaitTime">AniDB Rate Limit</label>
-                            <input id="chkAniDbWaitTime" name="chkAniDbWaitTime" type="number" is="emby-input"/>
+                            <label class="inputeLabel inputLabelUnfocused" for="chkAniDbRateLimit">AniDB Rate Limit</label>
+                            <input id="chkAniDbRateLimit" name="chkAniDbRateLimit" type="number" is="emby-input" min="0" />
                             <div class="fieldDescription">This will prevent IP bans for requesting data too quickly.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescripton">
+                        <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
-                                <input id="chkAniDbReplaceGraves" name="chkAniDbReplaceGraves" type="checkbox" is="emby-checkbox"/>
+                                <input id="chkAniDbReplaceGraves" name="chkAniDbReplaceGraves" type="checkbox" is="emby-checkbox" />
                                 <span>AniDB Replace Grave Characters</span>
                             </label>
                         </div>
@@ -59,34 +67,32 @@
                 var AnimeConfigurationPage = {
                     pluginUniqueId: "a4df60c5-6ab4-412a-8f79-2cab93fb2bc5",
 
-                    loadConfiguration: function() {
+                    loadConfiguration: function () {
                         Dashboard.showLoadingMsg();
 
                         ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).then(function (config) {
-                            var page = $.mobile.activePage;
-
-                            $('#titleLanguage', page).val(config.TitlePreference).change();
-                            $('#chkMaxGenres', page).val(config.MaxGenres).change();
+                            document.getElementById('titleLanguage').value = config.TitlePreference;
+                            document.getElementById('chkMaxGenres').value = config.MaxGenres;
+                            document.getElementById('chkTitleCaseGenres').checked = config.TitleCaseGenres;
                             document.getElementById('chkTidyGenres').checked = config.TidyGenreList;
-                            document.getElementById('chkAddAnimeGenre').checked = config.AddAnimeGenre;
-                            $('#chkAniDbWaitTime', page).val(config.AniDbWaitTime).change();
+                            document.getElementById('animeDefaultGenre').value = config.AnimeDefaultGenre;
+                            document.getElementById('chkAniDbRateLimit').value = config.AniDbRateLimit;
                             document.getElementById('chkAniDbReplaceGraves').checked = config.AniDbReplaceGraves;
 
                             Dashboard.hideLoadingMsg();
                         });
                     },
 
-                    saveConfiguration: function() {
+                    saveConfiguration: function () {
                         Dashboard.showLoadingMsg();
 
-                        ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).then(function(config) {
-                            var page = $.mobile.activePage;
-
-                            config.TitlePreference = $('#titleLanguage', page).val();
-                            config.MaxGenres = $('#chkMaxGenres').val();
+                        ApiClient.getPluginConfiguration(AnimeConfigurationPage.pluginUniqueId).then(function (config) {
+                            config.TitlePreference = document.getElementById('titleLanguage').value;
+                            config.MaxGenres = document.getElementById('chkMaxGenres').value;
+                            config.TitleCaseGenres = document.getElementById('chkTitleCaseGenres').checked;
                             config.TidyGenreList = document.getElementById('chkTidyGenres').checked;
-                            config.AddAnimeGenre = document.getElementById('chkAddAnimeGenre').checked;
-                            config.AniDbWaitTime = $('#chkAniDbWaitTime').val();
+                            config.AnimeDefaultGenre = document.getElementById('animeDefaultGenre').value;
+                            config.AniDbRateLimit = document.getElementById('chkAniDbRateLimit').value;
                             config.AniDbReplaceGraves = document.getElementById('chkAniDbReplaceGraves').checked;
 
                             ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).then(function (result) {
@@ -96,13 +102,13 @@
                     },
                 };
 
-                $('#animeConfigurationPage').on('pageshow', function () {
+                document.getElementById('animeConfigurationPage').addEventListener('pageshow', function () {
                     AnimeConfigurationPage.loadConfiguration();
                 });
 
-                $('#animeConfigurationForm').on('submit', function () {
+                document.getElementById('animeConfigurationForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
                     AnimeConfigurationPage.saveConfiguration();
-                    return false;
                 });
             </script>
         </div>

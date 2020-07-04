@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Jellyfin.Plugin.Anime.Configuration;
 using MediaBrowser.Controller.Entities.TV;
@@ -192,6 +193,11 @@ namespace Jellyfin.Plugin.Anime.Providers
         {
             PluginConfiguration config = Plugin.Instance.Configuration;
 
+            if (config.TitleCaseGenres)
+            {
+                series.Genres = series.Genres.Select(g => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(g)).ToArray();
+            }
+
             if (config.TidyGenreList)
             {
                 series.Genres = RemoveRedundantGenres(series.Genres)
@@ -201,24 +207,17 @@ namespace Jellyfin.Plugin.Anime.Providers
                 TidyGenres(series);
             }
 
-            var max = config.MaxGenres;
-            if (config.AddAnimeGenre)
+            if (config.AnimeDefaultGenre != AnimeDefaultGenreType.None)
             {
-                series.Genres = series.Genres.Except(new[] { "Animation", "Anime" }).ToArray();
-
-                max = Math.Max(max - 1, 0);
+                series.Genres = series.Genres
+                    .Except(new[] { "Animation", "Anime" })
+                    .Prepend(config.AnimeDefaultGenre.ToString())
+                    .ToArray();
             }
 
             if (config.MaxGenres > 0)
             {
-                series.Genres = series.Genres.Take(max).ToArray();
-            }
-
-            if (!series.Genres.Contains("Anime") && config.AddAnimeGenre)
-            {
-                series.Genres = series.Genres.Except(new[] { "Animation" }).ToArray();
-
-                series.AddGenre("Anime");
+                series.Genres = series.Genres.Take(config.MaxGenres).ToArray();
             }
 
             series.Genres = series.Genres.OrderBy(i => i).ToArray();
@@ -226,8 +225,6 @@ namespace Jellyfin.Plugin.Anime.Providers
 
         public static void TidyGenres(Series series)
         {
-            var config = Plugin.Instance.Configuration;
-
             var genres = new HashSet<string>();
             var tags = new HashSet<string>(series.Tags);
 
