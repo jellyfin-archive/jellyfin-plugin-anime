@@ -73,11 +73,11 @@
 
                             $('#titleLanguage', page).val(config.TitlePreference).change();
                             $('#chkMaxGenres', page).val(config.MaxGenres).change();
-                            $('#chkTidyGenres', page).checked = config.TidyGenreList;
-                            $('#chkAddAnimeGenre', page).checked = config.AddAnimeGenre;
+                            document.getElementById('chkTidyGenres').checked = config.TidyGenreList;
+                            document.getElementById('chkAddAnimeGenre').checked = config.AddAnimeGenre;
                             $('#chkAniDbWaitTime', page).val(config.AniDbWaitTime).change();
-                            $('#chkAniDbOrderWithSeasons', page).checked = config.AniDbOrderWithSeasons;
-                            $('#chkAniDbReplaceGraves', page).checked = config.AniDbReplaceGraves;
+                            document.getElementById('chkAniDbOrderWithSeasons').checked = config.AniDbOrderWithSeasons;
+                            document.getElementById('chkAniDbReplaceGraves').checked = config.AniDbReplaceGraves;
 
                             Dashboard.hideLoadingMsg();
                         });
@@ -91,11 +91,11 @@
 
                             config.TitlePreference = $('#titleLanguage', page).val();
                             config.MaxGenres = $('#chkMaxGenres').val();
-                            config.TidyGenreList = $('#chkTidyGenres').checked;
-                            config.AddAnimeGenre = $('#chkAddAnimeGenre').checked;
+                            config.TidyGenreList = document.getElementById('chkTidyGenres').checked;
+                            config.AddAnimeGenre = document.getElementById('chkAddAnimeGenre').checked;
                             config.AniDbWaitTime = $('#chkAniDbWaitTime').val();
-                            config.AniDbOrderWithSeasons = $('#chkAniDbOrderWithSeasons').checked;
-                            config.AniDbReplaceGraves = $('#chkAniDbReplaceGraves').checked;
+                            config.AniDbOrderWithSeasons = document.getElementById('chkAniDbOrderWithSeasons').checked;
+                            config.AniDbReplaceGraves = document.getElementById('chkAniDbReplaceGraves').checked;
 
                             ApiClient.updatePluginConfiguration(AnimeConfigurationPage.pluginUniqueId, config).then(function (result) {
                                 Dashboard.processPluginConfigurationUpdateResult(result);
