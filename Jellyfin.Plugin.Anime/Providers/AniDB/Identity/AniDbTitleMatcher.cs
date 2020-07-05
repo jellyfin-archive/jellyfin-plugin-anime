@@ -37,8 +37,8 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         /// </summary>
         public static IAniDbTitleMatcher DefaultInstance { get; set; }
 
-        private readonly ILogger _logger;
         public readonly IAniDbTitleDownloader _downloader;
+        private readonly ILogger<AniDbTitleMatcher> _logger;
         private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
 
         public static Dictionary<string, TitleInfo> _titles;
@@ -48,7 +48,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         /// </summary>
         /// <param name="logger">The logger.</param>
         /// <param name="downloader">The AniDB title downloader.</param>
-        public AniDbTitleMatcher(ILogger logger, IAniDbTitleDownloader downloader)
+        public AniDbTitleMatcher(ILogger<AniDbTitleMatcher> logger, IAniDbTitleDownloader downloader)
         {
             _logger = logger;
             _downloader = downloader;
