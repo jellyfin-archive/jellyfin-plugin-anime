@@ -106,7 +106,7 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
         
         private void StoreImageUrl(string series, string url, string type)
         {
-            var path = Path.Combine(_paths.CachePath, "kitsuio", type, series + ".txt");
+            var path = Path.Combine(_paths.CachePath, "kitsu", type, series + ".txt");
             var directory = Path.GetDirectoryName(path);
             Directory.CreateDirectory(directory);
 
