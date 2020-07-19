@@ -48,20 +48,24 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
                 if (media != null)
                 {
                     if (media.GetImageUrl() != null)
+                    {
                         list.Add(new RemoteImageInfo
                         {
                             ProviderName = Name,
                             Type = ImageType.Primary,
                             Url = media.GetImageUrl()
                         });
+                    }
 
                     if (media.bannerImage != null)
+                    {
                         list.Add(new RemoteImageInfo
                         {
                             ProviderName = Name,
                             Type = ImageType.Banner,
                             Url = media.bannerImage
                         });
+                    }
                 }
             }
             return list;

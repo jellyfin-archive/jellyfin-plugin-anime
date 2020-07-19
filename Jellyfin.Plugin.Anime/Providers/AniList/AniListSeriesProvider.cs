@@ -48,7 +48,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
                 _log.LogInformation("Start AniList... Searching({Name})", info.Name);
                 MediaSearchResult msr = await _aniListApi.Search_GetSeries(info.Name, cancellationToken);
                 if (msr != null)
+                {
                     media = await _aniListApi.GetAnime(msr.id.ToString());
+                }
             }
 
             if (media != null)
@@ -72,14 +74,18 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             {
                 Media aid_result = await _aniListApi.GetAnime(aid).ConfigureAwait(false);
                 if (aid_result != null)
+                {
                     results.Add(aid_result.ToSearchResult());
+                }
             }
 
             if (!string.IsNullOrEmpty(searchInfo.Name))
             {
                 List<MediaSearchResult> name_results = await _aniListApi.Search_GetSeries_list(searchInfo.Name, cancellationToken).ConfigureAwait(false);
                 foreach (var media in name_results)
+                {
                     results.Add(media.ToSearchResult());
+                }
             }
 
             return results;

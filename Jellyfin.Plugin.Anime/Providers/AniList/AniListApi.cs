@@ -163,7 +163,9 @@ query($id: Int!, $type: MediaType) {
             // Reimplemented instead of calling Search_GetSeries_list() for efficiency
             RootObject WebContent = await WebRequestAPI(SearchLink.Replace("{0}", title));
             foreach (MediaSearchResult media in WebContent.data.Page.media)
+            {
                 return media;
+            }
             return null;
         }
 
@@ -187,11 +189,15 @@ query($id: Int!, $type: MediaType) {
         {
             MediaSearchResult result = await Search_GetSeries(title, cancellationToken);
             if (result != null)
+            {
                 return result.id.ToString();
+            }
 
             result = await Search_GetSeries(await Equals_check.Clear_name(title, cancellationToken), cancellationToken);
             if (result != null)
+            {
                 return result.id.ToString();
+            }
 
             return null;
         }

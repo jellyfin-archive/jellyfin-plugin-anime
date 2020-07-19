@@ -66,12 +66,18 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             if (config.TitlePreference == TitlePreferenceType.Localized)
             {
                 if (language == "en")
+                {
                     return this.title.english;
+                }
                 if (language == "jap")
+                {
                     return this.title.native;
+                }
             }
             if (config.TitlePreference == TitlePreferenceType.Japanese)
+            {
                 return this.title.native;
+            }
 
             return this.title.romaji;
         }
@@ -92,7 +98,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public DateTime? GetStartDate()
         {
             if (this.startDate.year == null || this.startDate.month == null || this.startDate.day == null)
+            {
                 return null;
+            }
             return new DateTime(this.startDate.year.Value, this.startDate.month.Value, this.startDate.day.Value);
         }
 
@@ -156,7 +164,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         public DateTime? GetEndDate()
         {
             if (this.endDate.year == null || this.endDate.month == null || this.endDate.day == null)
+            {
                 return null;
+            }
             return new DateTime(this.endDate.year.Value, this.endDate.month.Value, this.endDate.day.Value);
         }
 
@@ -168,7 +178,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         {
             List<string> results = new List<string>();
             foreach (Studio node in this.studios.nodes)
+            {
                 results.Add(node.name);
+            }
             return results;
         }
 
@@ -180,7 +192,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         {
             List<PersonInfo> lpi = new List<PersonInfo>();
             foreach (CharacterEdge edge in this.characters.edges)
+            {
                 foreach (VoiceActor va in edge.voiceActors)
+                {
                     PeopleHelper.AddPerson(lpi, new PersonInfo {
                         Name = va.name.full,
                         ImageUrl = va.image.large ?? va.image.medium,
@@ -188,6 +202,8 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
                         Type = PersonType.Actor,
                         ProviderIds = new Dictionary<string, string>() {{ProviderNames.AniList, this.id.ToString()}}
                     });
+                }
+            }
             return lpi;
         }
 
@@ -199,7 +215,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
         {
             List<string> results = new List<string>();
             foreach (Tag tag in this.tags)
+            {
                 results.Add(tag.name);
+            }
             return results;
         }
 
@@ -224,9 +242,13 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             };
 
             if (this.status == "FINISHED" || this.status == "CANCELLED")
+            {
                 result.Status = SeriesStatus.Ended;
+            }
             else if (this.status == "RELEASING")
+            {
                 result.Status = SeriesStatus.Continuing;
+            }
 
             return result;
         }
