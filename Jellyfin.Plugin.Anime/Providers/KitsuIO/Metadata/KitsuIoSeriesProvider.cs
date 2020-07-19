@@ -16,15 +16,15 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
 {
     public class KitsuIoSeriesProvider : IRemoteMetadataProvider<MediaBrowser.Controller.Entities.TV.Series, SeriesInfo>, IHasOrder
     {
-        private readonly ILogger _log;
+        private readonly ILogger<KitsuIoSeriesProvider> _log;
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _paths;
         public int Order => -4;
         public string Name => ProviderNames.KitsuIo;
 
-        public KitsuIoSeriesProvider(ILoggerFactory loggerFactory, IApplicationPaths paths, IHttpClient httpClient)
+        public KitsuIoSeriesProvider(ILogger<KitsuIoSeriesProvider> logger, IApplicationPaths paths, IHttpClient httpClient)
         {
-            _log = loggerFactory.CreateLogger(Name);
+            _log = logger;
             _paths = paths;
             _httpClient = httpClient;
         }
