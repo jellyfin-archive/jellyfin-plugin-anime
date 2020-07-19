@@ -13,14 +13,14 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
     public class AniDbMovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>
     {
         private readonly AniDbSeriesProvider _seriesProvider;
-        private readonly ILogger _log;
+        private readonly ILogger<AniDbMovieProvider> _logger;
 
         public string Name => "AniDB";
 
-        public AniDbMovieProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILoggerFactory loggerFactory)
+        public AniDbMovieProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogger<AniDbMovieProvider> logger)
         {
             _seriesProvider = new AniDbSeriesProvider(appPaths, httpClient);
-            _log = loggerFactory.CreateLogger("AniDB");
+            _logger = logger;
         }
 
         public async Task<MetadataResult<Movie>> GetMetadata(MovieInfo info, CancellationToken cancellationToken)

@@ -2,7 +2,7 @@
 name: "Anime"
 guid: "a4df60c5-6ab4-412a-8f79-2cab93fb2bc5"
 version: "9.0.0.0"
-jellyfin_version: "10.5.0.0"
+targetAbi: "10.6.0.0"
 owner: "jellyfin"
 overview: "Manage your anime from Jellyfin"
 description: >
