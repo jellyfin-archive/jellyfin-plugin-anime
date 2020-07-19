@@ -21,9 +21,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         private const string TitlesUrl = "https://anidb.net/api/anime-titles.xml.gz";
 
         private static readonly HttpClient _httpClient;
-        private readonly ILogger _logger;
+        private readonly ILogger<AniDbTitleDownloader> _logger;
 
-        public AniDbTitleDownloader(ILogger logger, IApplicationPaths applicationPaths)
+        public AniDbTitleDownloader(ILogger<AniDbTitleDownloader> logger, IApplicationPaths applicationPaths)
         {
             _logger = logger;
             Paths = GetDataPath(applicationPaths);
