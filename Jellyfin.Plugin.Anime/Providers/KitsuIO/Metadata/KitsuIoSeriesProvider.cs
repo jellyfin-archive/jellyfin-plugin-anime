@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -78,7 +79,8 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
                         ? null
                         : (float?) float.Parse(seriesInfo.Data.Attributes.AverageRating, System.Globalization.CultureInfo.InvariantCulture) / 10,
                     ProviderIds = new Dictionary<string, string>() {{ProviderNames.KitsuIo, kitsuId}},
-                    Genres = seriesInfo.Included.Select(x => x.Attributes.Name).ToArray(),
+                    Genres = seriesInfo.Included?.Select(x => x.Attributes.Name).ToArray()
+                             ?? Array.Empty<string>()
                 };
                 GenreHelper.CleanupGenres(result.Item);
                 StoreImageUrl(kitsuId, seriesInfo.Data.Attributes.PosterImage.Original.ToString(), "image");
