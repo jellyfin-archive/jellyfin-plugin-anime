@@ -2,19 +2,23 @@ using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Providers;
 
 namespace Jellyfin.Plugin.Anime.Providers.KitsuIO
 {
     public class KitsuIoExternalId : IExternalId
     {
         public bool Supports(IHasProviderIds item)
-            => item is MediaBrowser.Controller.Entities.TV.Series || item is Movie;
+            => item is Series || item is Movie;
         
-        public string Name
+        public string ProviderName
             => "KitsuIO";
         
         public string Key
             => ProviderNames.KitsuIo;
+
+        public ExternalIdMediaType? Type 
+            => ExternalIdMediaType.Series;
 
         public string UrlFormatString
             => "https://kitsu.io/anime/{0}";
