@@ -149,7 +149,7 @@ query($id: Int!, $type: MediaType) {
         /// <returns></returns>
         public async Task<Media> GetAnime(string id)
         {
-            return (await WebRequestAPI(AnimeLink.Replace("{0}",id))).data?.Media;
+            return (await WebRequestAPI(AnimeLink.Replace("{0}", id))).data?.Media;
         }
 
         /// <summary>
