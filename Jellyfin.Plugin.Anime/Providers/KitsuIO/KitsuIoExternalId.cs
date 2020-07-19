@@ -12,7 +12,7 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO
             => item is Series || item is Movie;
         
         public string ProviderName
-            => "KitsuIO";
+            => "Kitsu";
         
         public string Key
             => ProviderNames.KitsuIo;
