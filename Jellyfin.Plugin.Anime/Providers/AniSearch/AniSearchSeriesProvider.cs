@@ -18,13 +18,13 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
     {
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _paths;
-        private readonly ILogger _log;
+        private readonly ILogger<AniSearchSeriesProvider> _log;
         public int Order => -3;
         public string Name => "AniSearch";
 
-        public AniSearchSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILoggerFactory loggerFactory)
+        public AniSearchSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogger<AniSearchSeriesProvider> logger)
         {
-            _log = loggerFactory.CreateLogger("AniSearch");
+            _log = logger;
             _httpClient = httpClient;
             _paths = appPaths;
         }

@@ -20,7 +20,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
     {
         private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _paths;
-        private readonly ILogger _log;
+        private readonly ILogger<AniListSeriesProvider> _log;
         private readonly AniListApi _aniListApi;
         public int Order => -2;
         public string Name => "AniList";

@@ -13,9 +13,9 @@ namespace Jellyfin.Plugin.Anime.Providers
 {
     internal class Equals_check
     {
-        public readonly ILogger _logger;
+        public readonly ILogger<Equals_check> _logger;
 
-        public Equals_check(ILogger logger)
+        public Equals_check(ILogger<Equals_check> logger)
         {
             _logger = logger;
         }
