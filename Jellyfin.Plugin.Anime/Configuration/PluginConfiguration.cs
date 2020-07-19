@@ -20,6 +20,11 @@ namespace Jellyfin.Plugin.Anime.Configuration
         JapaneseRomaji
     }
 
+    public enum AnimeDefaultGenreType
+    {
+        None, Anime, Animation
+    }
+
     public class PluginConfiguration : BasePluginConfiguration
     {
         public PluginConfiguration()
@@ -27,9 +32,9 @@ namespace Jellyfin.Plugin.Anime.Configuration
             TitlePreference = TitlePreferenceType.Localized;
             MaxGenres = 5;
             TidyGenreList = true;
-            AddAnimeGenre = true;
+            TitleCaseGenres = false;
+            AnimeDefaultGenre = AnimeDefaultGenreType.Anime;
             AniDbRateLimit = 2000;
-            AniDbOrderWithSeasons = false;
             AniDbReplaceGraves = true;
         }
 
@@ -39,11 +44,11 @@ namespace Jellyfin.Plugin.Anime.Configuration
 
         public bool TidyGenreList { get; set; }
 
-        public bool AddAnimeGenre { get; set; }
+        public bool TitleCaseGenres { get; set; }
+
+        public AnimeDefaultGenreType AnimeDefaultGenre { get; set; }
 
         public int AniDbRateLimit { get; set; }
-
-        public bool AniDbOrderWithSeasons { get; set; }
 
         public bool AniDbReplaceGraves { get; set; }
     }
