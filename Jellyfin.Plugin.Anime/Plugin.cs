@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Jellyfin.Plugin.Anime.Configuration;
 using Jellyfin.Plugin.Anime.Providers.AniDB.Identity;
 using MediaBrowser.Common.Configuration;
-using MediaBrowser.Common.Net;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
@@ -16,14 +15,15 @@ namespace Jellyfin.Plugin.Anime
         public Plugin(
             IApplicationPaths applicationPaths,
             IXmlSerializer xmlSerializer,
-            ILogger logger)
+            ILogger<AniDbTitleMatcher> matcherLogger,
+            ILogger<AniDbTitleDownloader> downloaderLogger)
             : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
 
             AniDbTitleMatcher.DefaultInstance = new AniDbTitleMatcher(
-                logger,
-                new AniDbTitleDownloader(logger, applicationPaths));
+                matcherLogger,
+                new AniDbTitleDownloader(downloaderLogger, applicationPaths));
         }
 
         /// <inheritdoc />
