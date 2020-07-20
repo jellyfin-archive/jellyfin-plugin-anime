@@ -32,17 +32,15 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.ApiClient
         {
             var filterString = string.Join("&",filters.Select(x => $"filter[{x.Key}]={x.Value}"));
             var pageString = "page[limit]=10";
-            
-            var responseString = await _httpClient.GetStringAsync($"{_apiBaseUrl}/anime?{filterString}&{pageString}");
-            var response = JsonSerializer.Deserialize<ApiListResponse>(responseString, _serializerOptions);
-            return response;
+
+            var responseStream = await _httpClient.GetStreamAsync($"{_apiBaseUrl}/anime?{filterString}&{pageString}");
+            return await JsonSerializer.DeserializeAsync<ApiListResponse>(responseStream, _serializerOptions);
         }
         
         public static async Task<ApiResponse> Get_Series(string seriesId)
         {
-            var responseString = await _httpClient.GetStringAsync($"{_apiBaseUrl}/anime/{seriesId}?include=genres");
-            var response = JsonSerializer.Deserialize<ApiResponse>(responseString, _serializerOptions);
-            return response;
+            var responseStream = await _httpClient.GetStreamAsync($"{_apiBaseUrl}/anime/{seriesId}?include=genres");
+            return await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream, _serializerOptions);
         }
         
         public static async Task<ApiListResponse> Get_Episodes(string seriesId)
@@ -54,8 +52,8 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.ApiClient
             for (long offset = 0; offset < episodeCount; offset += step)
             {
                 var queryString = $"?filter[mediaId]={seriesId}&page[limit]={step}&page[offset]={offset}";
-                var responseString = await _httpClient.GetStringAsync($"{_apiBaseUrl}/episodes{queryString}");
-                var response = JsonSerializer.Deserialize<ApiListResponse>(responseString, _serializerOptions);
+                var responseStream = await _httpClient.GetStreamAsync($"{_apiBaseUrl}/episodes{queryString}");
+                var response = await JsonSerializer.DeserializeAsync<ApiListResponse>(responseStream, _serializerOptions);
 
                 episodeCount = response.Meta.Count.Value;
                 result.Data.AddRange(response.Data);
@@ -67,9 +65,8 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.ApiClient
         public static async Task<ApiResponse> Get_Episode(string episodeId)
         {
             var filterString = $"/{episodeId}";
-            var responseString = await _httpClient.GetStringAsync($"{_apiBaseUrl}/episodes{filterString}");
-            var response = JsonSerializer.Deserialize<ApiResponse>(responseString, _serializerOptions);
-            return response;
+            var responseStream = await _httpClient.GetStreamAsync($"{_apiBaseUrl}/episodes{filterString}");
+            return await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream, _serializerOptions);
         }
     }
 }

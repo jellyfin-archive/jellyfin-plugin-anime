@@ -61,10 +61,11 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.ApiClient
 
         public bool Equal(string title)
         {
-            return En.Equals(title) ||
-                   EnUs.Equals(title) ||
-                   EnJp.Equals(title) ||
-                   JaJp.Equals(title);
+            return
+                (En?.Equals(title) ?? false) ||
+                (EnUs?.Equals(title) ?? false) ||
+                (EnJp?.Equals(title) ?? false) ||
+                (JaJp?.Equals(title) ?? false);
         }
     }
     
