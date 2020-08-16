@@ -44,8 +44,8 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
                     SearchProviderName = Name,
                     ImageUrl = series.Attributes.PosterImage.Medium.ToString(),
                     Overview = series.Attributes.Synopsis,
-                    ProductionYear = series.Attributes.StartDate.Year,
-                    PremiereDate = series.Attributes.StartDate.DateTime,
+                    ProductionYear = series.Attributes.StartDate?.Year,
+                    PremiereDate = series.Attributes.StartDate?.DateTime,
                 };
                 parsedSeries.SetProviderId(ProviderNames.KitsuIo, series.Id.ToString());
                 results.Add(parsedSeries);

@@ -27,7 +27,7 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.ApiClient
         public string Synopsis { get; set; }
         public Titles Titles { get; set; }
         public string AverageRating { get; set; }
-        public DateTimeOffset StartDate { get; set; }
+        public DateTimeOffset? StartDate { get; set; }
         public PosterImage PosterImage { get; set; }
 
         // Episode specific
