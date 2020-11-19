@@ -18,9 +18,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
         public string Name => "AniDB";
 
-        public AniDbMovieProvider(IApplicationPaths appPaths, IHttpClientFactory httpClientFactory, ILogger<AniDbMovieProvider> logger)
+        public AniDbMovieProvider(IApplicationPaths appPaths, ILogger<AniDbMovieProvider> logger)
         {
-            _seriesProvider = new AniDbSeriesProvider(appPaths, httpClientFactory);
+            _seriesProvider = new AniDbSeriesProvider(appPaths);
             _logger = logger;
         }
 

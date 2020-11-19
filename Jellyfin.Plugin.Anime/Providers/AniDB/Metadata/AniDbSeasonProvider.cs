@@ -15,9 +15,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
     {
         private readonly AniDbSeriesProvider _seriesProvider;
 
-        public AniDbSeasonProvider(IHttpClientFactory httpClientFactory, IApplicationPaths appPaths)
+        public AniDbSeasonProvider(IApplicationPaths appPaths)
         {
-            _seriesProvider = new AniDbSeriesProvider(appPaths, httpClientFactory);
+            _seriesProvider = new AniDbSeriesProvider(appPaths);
         }
 
         public async Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)

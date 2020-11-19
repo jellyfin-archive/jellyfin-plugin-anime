@@ -19,17 +19,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
 {
     public class AniListSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder
     {
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly IApplicationPaths _paths;
         private readonly ILogger<AniListSeriesProvider> _log;
         private readonly AniListApi _aniListApi;
         public int Order => -2;
         public string Name => "AniList";
 
-        public AniListSeriesProvider(IApplicationPaths appPaths, IHttpClientFactory httpClientFactory, ILogger<AniListSeriesProvider> logger)
+        public AniListSeriesProvider(IApplicationPaths appPaths, ILogger<AniListSeriesProvider> logger)
         {
             _log = logger;
-            _httpClientFactory = httpClientFactory;
             _aniListApi = new AniListApi();
             _paths = appPaths;
         }
@@ -103,7 +101,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
 
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            var httpClient = _httpClientFactory.CreateClient(Constants.PluginGuid);
+            var httpClient = Plugin.Instance.GetHttpClient();
 
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }

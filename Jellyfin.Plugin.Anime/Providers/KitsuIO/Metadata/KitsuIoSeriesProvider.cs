@@ -19,16 +19,14 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
     public class KitsuIoSeriesProvider : IRemoteMetadataProvider<MediaBrowser.Controller.Entities.TV.Series, SeriesInfo>, IHasOrder
     {
         private readonly ILogger<KitsuIoSeriesProvider> _log;
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly IApplicationPaths _paths;
         public int Order => -4;
         public string Name => ProviderNames.KitsuIo;
 
-        public KitsuIoSeriesProvider(ILogger<KitsuIoSeriesProvider> logger, IApplicationPaths paths, IHttpClientFactory httpClientFactory)
+        public KitsuIoSeriesProvider(ILogger<KitsuIoSeriesProvider> logger, IApplicationPaths paths)
         {
             _log = logger;
             _paths = paths;
-            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
@@ -92,7 +90,7 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
 
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            var httpClient = _httpClientFactory.CreateClient(Constants.PluginGuid);
+            var httpClient = Plugin.Instance.GetHttpClient();
 
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }

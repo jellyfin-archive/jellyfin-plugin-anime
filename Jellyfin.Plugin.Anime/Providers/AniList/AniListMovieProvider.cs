@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
@@ -19,17 +20,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
 {
     public class AniListMovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrder
     {
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly IApplicationPaths _paths;
         private readonly ILogger _log;
         private readonly AniListApi _aniListApi;
         public int Order => -2;
         public string Name => "AniList";
 
-        public AniListMovieProvider(IApplicationPaths appPaths, IHttpClientFactory httpClientFactory, ILogger<AniListMovieProvider> logger)
+        public AniListMovieProvider(IApplicationPaths appPaths, ILogger<AniListMovieProvider> logger)
         {
             _log = logger;
-            _httpClientFactory = httpClientFactory;
             _aniListApi = new AniListApi();
             _paths = appPaths;
         }
@@ -103,8 +102,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
 
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-
-            var httpClient = _httpClientFactory.CreateClient(Constants.PluginGuid);
+            var httpClient = Plugin.Instance.GetHttpClient();
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
     }

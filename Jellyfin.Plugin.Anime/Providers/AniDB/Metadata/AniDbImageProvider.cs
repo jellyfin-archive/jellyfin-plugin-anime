@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
@@ -19,19 +20,17 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
     public class AniDbImageProvider : IRemoteImageProvider
     {
         public string Name => "AniDB";
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly IApplicationPaths _appPaths;
 
-        public AniDbImageProvider(IHttpClientFactory httpClientFactory, IApplicationPaths appPaths)
+        public AniDbImageProvider(IApplicationPaths appPaths)
         {
-            _httpClientFactory = httpClientFactory;
             _appPaths = appPaths;
         }
 
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
-            var httpClient = _httpClientFactory.CreateClient(Constants.PluginGuid);
+            var httpClient = Plugin.Instance.GetHttpClient();
 
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
@@ -48,7 +47,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
             if (!string.IsNullOrEmpty(aniDbId))
             {
-                var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_appPaths, _httpClientFactory, aniDbId, cancellationToken);
+                var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_appPaths, aniDbId, cancellationToken);
                 var imageUrl = await FindImageUrl(seriesDataPath).ConfigureAwait(false);
 
                 if (!string.IsNullOrEmpty(imageUrl))

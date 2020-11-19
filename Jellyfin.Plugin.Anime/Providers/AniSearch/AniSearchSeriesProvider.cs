@@ -17,16 +17,14 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
 {
     public class AniSearchSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder
     {
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly IApplicationPaths _paths;
         private readonly ILogger<AniSearchSeriesProvider> _log;
         public int Order => -3;
         public string Name => "AniSearch";
 
-        public AniSearchSeriesProvider(IApplicationPaths appPaths, IHttpClientFactory httpClientFactory, ILogger<AniSearchSeriesProvider> logger)
+        public AniSearchSeriesProvider(IApplicationPaths appPaths, ILogger<AniSearchSeriesProvider> logger)
         {
             _log = logger;
-            _httpClientFactory = httpClientFactory;
             _paths = appPaths;
         }
 
@@ -98,7 +96,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
 
-            var httpClient = _httpClientFactory.CreateClient(Constants.PluginGuid);
+            var httpClient = Plugin.Instance.GetHttpClient();
 
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
@@ -106,11 +104,8 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
 
     public class AniSearchSeriesImageProvider : IRemoteImageProvider
     {
-        private readonly IHttpClientFactory _httpClientFactory;
-
-        public AniSearchSeriesImageProvider(IHttpClientFactory httpClientFactory)
+        public AniSearchSeriesImageProvider()
         {
-            _httpClientFactory = httpClientFactory;
         }
 
         public string Name => "AniSearch";
@@ -147,7 +142,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
 
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            var httpClient = _httpClientFactory.CreateClient(Constants.PluginGuid);
+            var httpClient = Plugin.Instance.GetHttpClient();
 
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }

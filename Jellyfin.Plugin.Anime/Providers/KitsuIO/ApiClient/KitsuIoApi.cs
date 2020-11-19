@@ -16,8 +16,7 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.ApiClient
 
         static KitsuIoApi()
         {
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", Constants.UserAgent);
+            _httpClient = Plugin.Instance.GetHttpClient();
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.api+json"));
 
             _serializerOptions = new JsonSerializerOptions

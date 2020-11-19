@@ -20,7 +20,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         /// </summary>
         private const string TitlesUrl = "https://anidb.net/api/anime-titles.xml.gz";
 
-        private static readonly HttpClient _httpClient;
         private readonly ILogger<AniDbTitleDownloader> _logger;
 
         public AniDbTitleDownloader(ILogger<AniDbTitleDownloader> logger, IApplicationPaths applicationPaths)
@@ -31,8 +30,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
 
         static AniDbTitleDownloader()
         {
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", Constants.UserAgent);
         }
 
         public static string Paths { get; private set; }
@@ -95,9 +92,10 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Identity
         /// <returns></returns>
         private static async Task DownloadTitles_static(string titlesFile)
         {
+            var httpClient = Plugin.Instance.GetHttpClient();
             await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
             await Task.Delay(Plugin.Instance.Configuration.AniDbRateLimit).ConfigureAwait(false);
-            using (var stream = await _httpClient.GetStreamAsync(TitlesUrl).ConfigureAwait(false))
+            using (var stream = await httpClient.GetStreamAsync(TitlesUrl).ConfigureAwait(false))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var writer = File.Open(titlesFile, FileMode.Create, FileAccess.Write))
             {

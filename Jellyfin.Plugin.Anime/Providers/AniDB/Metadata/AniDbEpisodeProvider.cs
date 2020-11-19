@@ -21,17 +21,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
     public class AniDbEpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
     {
         private readonly IServerConfigurationManager _configurationManager;
-        private readonly IHttpClientFactory _httpClientFactory;
 
         /// <summary>
         /// Creates a new instance of the <see cref="AniDbEpisodeProvider" /> class.
         /// </summary>
         /// <param name="configurationManager">The configuration manager.</param>
         /// <param name="httpClient">The HTTP client.</param>
-        public AniDbEpisodeProvider(IServerConfigurationManager configurationManager, IHttpClientFactory httpClientFactory)
+        public AniDbEpisodeProvider(IServerConfigurationManager configurationManager)
         {
             _configurationManager = configurationManager;
-            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
@@ -104,7 +102,6 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
             await AniDbSeriesProvider.GetSeriesData(
                 _configurationManager.ApplicationPaths,
-                _httpClientFactory,
                 id.Value.SeriesId,
                 cancellationToken).ConfigureAwait(false);
 
@@ -143,7 +140,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            var imageProvider = new AniDbImageProvider(_httpClientFactory, _configurationManager.ApplicationPaths);
+            var imageProvider = new AniDbImageProvider(_configurationManager.ApplicationPaths);
             return imageProvider.GetImageResponse(url, cancellationToken);
         }
 
@@ -212,7 +209,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
         private async Task<string> FindSeriesFolder(string seriesId, CancellationToken cancellationToken)
         {
-            var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, _httpClientFactory, seriesId, cancellationToken).ConfigureAwait(false);
+            var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, seriesId, cancellationToken).ConfigureAwait(false);
             return Path.GetDirectoryName(seriesDataPath);
         }
 

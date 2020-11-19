@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
@@ -58,13 +59,11 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
     public class AniDbPersonImageProvider : IRemoteImageProvider
     {
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly IApplicationPaths _paths;
 
-        public AniDbPersonImageProvider(IApplicationPaths paths, IHttpClientFactory httpClientFactory)
+        public AniDbPersonImageProvider(IApplicationPaths paths)
         {
             _paths = paths;
-            _httpClientFactory = httpClientFactory;
         }
 
         public bool Supports(BaseItem item)
@@ -100,7 +99,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
-            var httpClient = _httpClientFactory.CreateClient(Constants.PluginGuid);
+            var httpClient = Plugin.Instance.GetHttpClient();
 
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
