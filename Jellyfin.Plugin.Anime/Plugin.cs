@@ -27,10 +27,10 @@ namespace Jellyfin.Plugin.Anime
         }
 
         /// <inheritdoc />
-        public override string Name => "Anime";
+        public override string Name => Constants.PluginName;
 
         /// <inheritdoc />
-        public override Guid Id => Guid.Parse("a4df60c5-6ab4-412a-8f79-2cab93fb2bc5");
+        public override Guid Id => Guid.Parse(Constants.PluginGuid);
 
         public static Plugin Instance { get; private set; }
 

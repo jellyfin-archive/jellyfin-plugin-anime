@@ -117,7 +117,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            var httpClient = _httpClientFactory.CreateClient(Plugin.Instance.Id.ToString());
+            var httpClient = _httpClientFactory.CreateClient(Constants.PluginGuid);
 
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
@@ -521,7 +521,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
             DeleteXmlFiles(directory);
 
-            var httpClient = httpClientFactory.CreateClient(Plugin.Instance.Id.ToString());
+            var httpClient = httpClientFactory.CreateClient(Constants.PluginGuid);
             var url = string.Format(SeriesQueryUrl, ClientName, aid);
 
             await RequestLimiter.Tick().ConfigureAwait(false);

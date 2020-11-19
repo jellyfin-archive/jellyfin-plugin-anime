@@ -98,7 +98,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
 
-            var httpClient = _httpClientFactory.CreateClient(Plugin.Instance.Id.ToString());
+            var httpClient = _httpClientFactory.CreateClient(Constants.PluginGuid);
 
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
@@ -147,7 +147,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
 
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            var httpClient = _httpClientFactory.CreateClient(Plugin.Instance.Id.ToString());
+            var httpClient = _httpClientFactory.CreateClient(Constants.PluginGuid);
 
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }

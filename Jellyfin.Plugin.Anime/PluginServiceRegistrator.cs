@@ -12,29 +12,25 @@ namespace Jellyfin.Plugin.Anime
     public class PluginServiceRegistrator : IPluginServiceRegistrator
     {
 
-        private readonly IApplicationHost _appHost;
-
-        public PluginServiceRegistrator(IApplicationHost appHost)
-        {
-            _appHost = appHost;
-        }
-
         /// <inheritdoc />
-        public void RegisterServices(IServiceCollection services)
+        public void RegisterServices(IServiceCollection serviceCollection)
         {
+            var provider = serviceCollection.BuildServiceProvider();
+            var applicationHost = provider.GetRequiredService<IApplicationHost>();
+
             var productHeader = new ProductInfoHeaderValue(
-                _appHost.Name.Replace(' ', '-'),
-                _appHost.ApplicationVersionString);
+                applicationHost.Name.Replace(' ', '-'),
+                applicationHost.ApplicationVersionString);
 
             var pluginHeader = new ProductInfoHeaderValue(
-                Plugin.Instance.Name.Replace(' ', '-'),
-                Plugin.Instance.Version.ToString());
+                Constants.PluginName.Replace(' ', '-'),
+                "0.0.0"); // TODO: Plugin.Instance.Version.ToString()
 
-            services.AddHttpClient(Plugin.Instance.Id.ToString(), c =>
+            serviceCollection.AddHttpClient(Constants.PluginGuid, c =>
                 {
                     c.DefaultRequestHeaders.UserAgent.Add(productHeader);
                     c.DefaultRequestHeaders.UserAgent.Add(pluginHeader);
-                    c.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue($"({_appHost.ApplicationUserAgentAddress})"));
+                    c.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue($"({applicationHost.ApplicationUserAgentAddress})"));
                 })
                 .ConfigurePrimaryHttpMessageHandler(x => new DefaultHttpClientHandler());
 

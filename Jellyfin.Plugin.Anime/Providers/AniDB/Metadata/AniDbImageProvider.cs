@@ -31,7 +31,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
-            var httpClient = _httpClientFactory.CreateClient(Plugin.Instance.Id.ToString());
+            var httpClient = _httpClientFactory.CreateClient(Constants.PluginGuid);
 
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
