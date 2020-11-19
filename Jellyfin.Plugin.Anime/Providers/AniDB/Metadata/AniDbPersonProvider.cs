@@ -100,8 +100,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
-            var httpClient = _httpClientFactory.CreateClient(NamedClient.Default);
-            httpClient.DefaultRequestHeaders.Add("UserAgent", Constants.UserAgent); // TODO: Move to NamedClient.Anime
+            var httpClient = _httpClientFactory.CreateClient(Plugin.Instance.Id.ToString());
 
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }

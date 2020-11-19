@@ -73,8 +73,7 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
 
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            var httpClient = _httpClientFactory.CreateClient(NamedClient.Default);
-            httpClient.DefaultRequestHeaders.Add("UserAgent", Constants.UserAgent); // TODO: Move to NamedClient.Anime
+            var httpClient = _httpClientFactory.CreateClient(Plugin.Instance.Id.ToString());
 
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
