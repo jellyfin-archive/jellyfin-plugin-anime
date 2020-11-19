@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Reflection;
 using MediaBrowser.Common;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Common.Plugins;
@@ -24,7 +25,7 @@ namespace Jellyfin.Plugin.Anime
 
             var pluginHeader = new ProductInfoHeaderValue(
                 Constants.PluginName.Replace(' ', '-'),
-                "0.0.0"); // TODO: Plugin.Instance.Version.ToString()
+                Assembly.GetExecutingAssembly().GetName().Version.ToString());
 
             serviceCollection.AddHttpClient(Constants.PluginGuid, c =>
                 {
