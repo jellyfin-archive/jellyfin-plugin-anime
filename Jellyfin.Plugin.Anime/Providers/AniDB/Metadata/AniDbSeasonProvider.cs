@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net.Http;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities.TV;
@@ -14,9 +15,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
     {
         private readonly AniDbSeriesProvider _seriesProvider;
 
-        public AniDbSeasonProvider(IHttpClient httpClient, IApplicationPaths appPaths)
+        public AniDbSeasonProvider(IHttpClientFactory httpClientFactory, IApplicationPaths appPaths)
         {
-            _seriesProvider = new AniDbSeriesProvider(appPaths, httpClient);
+            _seriesProvider = new AniDbSeriesProvider(appPaths, httpClientFactory);
         }
 
         public async Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)
@@ -80,7 +81,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             return list;
         }
 
-        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

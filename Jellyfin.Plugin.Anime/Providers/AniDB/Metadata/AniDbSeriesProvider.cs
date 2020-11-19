@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using System.Net.Http;
 using Jellyfin.Plugin.Anime.Configuration;
 using Jellyfin.Plugin.Anime.Providers.AniDB.Identity;
 using MediaBrowser.Common.Configuration;
@@ -34,7 +35,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
         private static readonly int[] IgnoredTagIds = { 6, 22, 23, 60, 128, 129, 185, 216, 242, 255, 268, 269, 289 };
         private static readonly Regex AniDbUrlRegex = new Regex(@"https?://anidb.net/\w+ \[(?<name>[^\]]*)\]");
         private readonly IApplicationPaths _appPaths;
-        private readonly IHttpClient _httpClient;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         private readonly Dictionary<string, string> _typeMappings = new Dictionary<string, string>
         {
@@ -43,10 +44,10 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             {"Chief Animation Direction", PersonType.Director}
         };
 
-        public AniDbSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient)
+        public AniDbSeriesProvider(IApplicationPaths appPaths, IHttpClientFactory httpClientFactory)
         {
             _appPaths = appPaths;
-            _httpClient = httpClient;
+            _httpClientFactory = httpClientFactory;
 
             TitleMatcher = AniDbTitleMatcher.DefaultInstance;
 
@@ -78,7 +79,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
                 result.Item.ProviderIds.Add(ProviderNames.AniDb, aid);
 
-                var seriesDataPath = await GetSeriesData(_appPaths, _httpClient, aid, cancellationToken);
+                var seriesDataPath = await GetSeriesData(_appPaths, _httpClientFactory, aid, cancellationToken);
                 await FetchSeriesInfo(result, seriesDataPath, info.MetadataLanguage ?? "en").ConfigureAwait(false);
             }
 
@@ -96,7 +97,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             if (metadata.HasMetadata)
             {
                 var seriesId = metadata.Item.ProviderIds.GetOrDefault(ProviderNames.AniDb);
-                var imageProvider = new AniDbImageProvider(_httpClient, _appPaths);
+                var imageProvider = new AniDbImageProvider(_httpClientFactory, _appPaths);
                 var images = await imageProvider.GetImages(seriesId, cancellationToken);
                 var res = new RemoteSearchResult
                 {
@@ -114,17 +115,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             return list;
         }
 
-        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            return _httpClient.GetResponse(new HttpRequestOptions
-            {
-                UserAgent = Constants.UserAgent,
-                CancellationToken = cancellationToken,
-                Url = url
-            });
+            var httpClient = _httpClientFactory.CreateClient(NamedClient.Default);
+            httpClient.DefaultRequestHeaders.Add("UserAgent", Constants.UserAgent); // TODO: Move to NamedClient.Anime
+
+            return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
 
-        public static async Task<string> GetSeriesData(IApplicationPaths appPaths, IHttpClient httpClient, string seriesId, CancellationToken cancellationToken)
+        public static async Task<string> GetSeriesData(IApplicationPaths appPaths, IHttpClientFactory httpClientFactory, string seriesId, CancellationToken cancellationToken)
         {
             var dataPath = CalculateSeriesDataPath(appPaths, seriesId);
             var seriesDataPath = Path.Combine(dataPath, SeriesDataFile);
@@ -133,7 +132,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             // download series data if not present or out of date
             if (!fileInfo.Exists || DateTime.UtcNow - fileInfo.LastWriteTimeUtc > TimeSpan.FromDays(7))
             {
-                await DownloadSeriesData(seriesId, seriesDataPath, appPaths.CachePath, httpClient, cancellationToken).ConfigureAwait(false);
+                await DownloadSeriesData(seriesId, seriesDataPath, appPaths.CachePath, httpClientFactory, cancellationToken).ConfigureAwait(false);
             }
 
             return seriesDataPath;
@@ -513,7 +512,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             return name.Split(' ').Reverse().Aggregate(string.Empty, (n, part) => n + " " + part).Trim();
         }
 
-        private static async Task DownloadSeriesData(string aid, string seriesDataPath, string cachePath, IHttpClient httpClient, CancellationToken cancellationToken)
+        private static async Task DownloadSeriesData(string aid, string seriesDataPath, string cachePath, IHttpClientFactory httpClientFactory, CancellationToken cancellationToken)
         {
             var directory = Path.GetDirectoryName(seriesDataPath);
             if (directory != null)
@@ -523,17 +522,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
             DeleteXmlFiles(directory);
 
-            var requestOptions = new HttpRequestOptions
-            {
-                UserAgent = Constants.UserAgent,
-                Url = string.Format(SeriesQueryUrl, ClientName, aid),
-                CancellationToken = cancellationToken
-            };
+            var httpClient = httpClientFactory.CreateClient(NamedClient.Default);
+            httpClient.DefaultRequestHeaders.Add("UserAgent", Constants.UserAgent); // TODO: Move to NamedClient.Anime
+            var url = string.Format(SeriesQueryUrl, ClientName, aid);
 
             await RequestLimiter.Tick().ConfigureAwait(false);
             await Task.Delay(Plugin.Instance.Configuration.AniDbRateLimit).ConfigureAwait(false);
 
-            using (var stream = await httpClient.Get(requestOptions).ConfigureAwait(false))
+            using (var response = await httpClient.GetAsync(url).ConfigureAwait(false))
+            using (var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
             using (var unzipped = new GZipStream(stream, CompressionMode.Decompress))
             using (var reader = new StreamReader(unzipped, Encoding.UTF8, true))
             using (var file = File.Open(seriesDataPath, FileMode.Create, FileAccess.Write))

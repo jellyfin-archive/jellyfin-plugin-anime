@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Net.Http;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
@@ -18,25 +19,22 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
     public class AniDbImageProvider : IRemoteImageProvider
     {
         public string Name => "AniDB";
-        private readonly IHttpClient _httpClient;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly IApplicationPaths _appPaths;
 
-        public AniDbImageProvider(IHttpClient httpClient, IApplicationPaths appPaths)
+        public AniDbImageProvider(IHttpClientFactory httpClientFactory, IApplicationPaths appPaths)
         {
-            _httpClient = httpClient;
+            _httpClientFactory = httpClientFactory;
             _appPaths = appPaths;
         }
 
-        public async Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
+            var httpClient = _httpClientFactory.CreateClient(NamedClient.Default);
+            httpClient.DefaultRequestHeaders.Add("UserAgent", Constants.UserAgent); // TODO: Move to NamedClient.Anime
 
-            return await _httpClient.GetResponse(new HttpRequestOptions
-            {
-                UserAgent = Constants.UserAgent,
-                CancellationToken = cancellationToken,
-                Url = url
-            }).ConfigureAwait(false);
+            return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
 
         public Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
@@ -51,7 +49,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
             if (!string.IsNullOrEmpty(aniDbId))
             {
-                var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_appPaths, _httpClient, aniDbId, cancellationToken);
+                var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_appPaths, _httpClientFactory, aniDbId, cancellationToken);
                 var imageUrl = await FindImageUrl(seriesDataPath).ConfigureAwait(false);
 
                 if (!string.IsNullOrEmpty(imageUrl))
