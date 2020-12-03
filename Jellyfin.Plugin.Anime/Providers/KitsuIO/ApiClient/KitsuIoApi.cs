@@ -16,10 +16,9 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.ApiClient
 
         static KitsuIoApi()
         {
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", Constants.UserAgent);
+            _httpClient = Plugin.Instance.GetHttpClient();
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.api+json"));
-            
+
             _serializerOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -36,19 +35,19 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.ApiClient
             var responseStream = await _httpClient.GetStreamAsync($"{_apiBaseUrl}/anime?{filterString}&{pageString}");
             return await JsonSerializer.DeserializeAsync<ApiListResponse>(responseStream, _serializerOptions);
         }
-        
+
         public static async Task<ApiResponse> Get_Series(string seriesId)
         {
             var responseStream = await _httpClient.GetStreamAsync($"{_apiBaseUrl}/anime/{seriesId}?include=genres");
             return await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream, _serializerOptions);
         }
-        
+
         public static async Task<ApiListResponse> Get_Episodes(string seriesId)
         {
             var result = new ApiListResponse();
             long episodeCount = 10;
             var step = 10;
-            
+
             for (long offset = 0; offset < episodeCount; offset += step)
             {
                 var queryString = $"?filter[mediaId]={seriesId}&page[limit]={step}&page[offset]={offset}";
@@ -61,7 +60,7 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.ApiClient
 
             return result;
         }
-        
+
         public static async Task<ApiResponse> Get_Episode(string episodeId)
         {
             var filterString = $"/{episodeId}";

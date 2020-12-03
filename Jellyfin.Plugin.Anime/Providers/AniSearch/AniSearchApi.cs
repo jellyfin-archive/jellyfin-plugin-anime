@@ -20,12 +20,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         public static List<string> anime_search_ids = new List<string>();
         public static string SearchLink = "https://www.anisearch.com/anime/index/?char=all&page=1&text={0}&smode=2&sort=title&order=asc&view=2&title=de,en,fr,it,pl,ru,es,tr&titlex=1,2&hentai=yes";
         public static string AniSearch_anime_link = "https://www.anisearch.com/anime/";
-        public static readonly HttpClient _httpClient;
 
         static AniSearchApi()
         {
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", Constants.UserAgent);
         }
 
         /// <summary>
@@ -299,7 +296,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
         /// <summary>
         /// GET website content from the link
         /// </summary>
-        public static Task<string> WebRequestAPI(string link)
-            => _httpClient.GetStringAsync(link);
+        public static Task<string> WebRequestAPI(string link) {
+            var httpClient = Plugin.Instance.GetHttpClient();
+            return httpClient.GetStringAsync(link);
+        }
     }
 }

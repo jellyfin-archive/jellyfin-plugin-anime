@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using System.Net.Http;
 using Jellyfin.Plugin.Anime.Providers.KitsuIO.ApiClient;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
@@ -18,18 +19,16 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
     public class KitsuIoSeriesProvider : IRemoteMetadataProvider<MediaBrowser.Controller.Entities.TV.Series, SeriesInfo>, IHasOrder
     {
         private readonly ILogger<KitsuIoSeriesProvider> _log;
-        private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _paths;
         public int Order => -4;
         public string Name => ProviderNames.KitsuIo;
 
-        public KitsuIoSeriesProvider(ILogger<KitsuIoSeriesProvider> logger, IApplicationPaths paths, IHttpClient httpClient)
+        public KitsuIoSeriesProvider(ILogger<KitsuIoSeriesProvider> logger, IApplicationPaths paths)
         {
             _log = logger;
             _paths = paths;
-            _httpClient = httpClient;
         }
-        
+
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
         {
             var filters = GetFiltersFromSeriesInfo(searchInfo);
@@ -57,7 +56,7 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
         public async Task<MetadataResult<MediaBrowser.Controller.Entities.TV.Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<MediaBrowser.Controller.Entities.TV.Series>();
-            
+
             var kitsuId = info.ProviderIds.GetOrDefault(ProviderNames.KitsuIo);
             if (string.IsNullOrEmpty(kitsuId))
             {
@@ -88,24 +87,21 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
 
             return result;
         }
-        
-        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+
+        public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            return _httpClient.GetResponse(new HttpRequestOptions
-            {
-                UserAgent = Constants.UserAgent,
-                CancellationToken = cancellationToken,
-                Url = url,
-            });
+            var httpClient = Plugin.Instance.GetHttpClient();
+
+            return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
-        
+
         private Dictionary<string, string> GetFiltersFromSeriesInfo(SeriesInfo seriesInfo)
         {
             var filters = new Dictionary<string, string> {{"text", HttpUtility.UrlEncode(seriesInfo.Name)}};
             if(seriesInfo.Year.HasValue) filters.Add("seasonYear", HttpUtility.UrlEncode(seriesInfo.Year.ToString()));
             return filters;
         }
-        
+
         private void StoreImageUrl(string series, string url, string type)
         {
             var path = Path.Combine(_paths.CachePath, "kitsu", type, series + ".txt");

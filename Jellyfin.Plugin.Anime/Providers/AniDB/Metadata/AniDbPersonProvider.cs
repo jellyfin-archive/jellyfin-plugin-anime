@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
@@ -49,7 +51,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
         }
 
-        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
@@ -57,13 +59,11 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
     public class AniDbPersonImageProvider : IRemoteImageProvider
     {
-        private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _paths;
 
-        public AniDbPersonImageProvider(IApplicationPaths paths, IHttpClient httpClient)
+        public AniDbPersonImageProvider(IApplicationPaths paths)
         {
             _paths = paths;
-            _httpClient = httpClient;
         }
 
         public bool Supports(BaseItem item)
@@ -96,16 +96,12 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             return Task.FromResult<IEnumerable<RemoteImageInfo>>(infos);
         }
 
-        public async Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             await AniDbSeriesProvider.RequestLimiter.Tick().ConfigureAwait(false);
+            var httpClient = Plugin.Instance.GetHttpClient();
 
-            return await _httpClient.GetResponse(new HttpRequestOptions
-            {
-                UserAgent = Constants.UserAgent,
-                CancellationToken = cancellationToken,
-                Url = url
-            }).ConfigureAwait(false);
+            return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
     }
 }

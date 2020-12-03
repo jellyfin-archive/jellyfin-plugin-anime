@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net.Http;
 using Jellyfin.Plugin.Anime.Providers.KitsuIO.ApiClient;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities.TV;
@@ -13,14 +14,12 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
 {
     public class KitsuIoEpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
     {
-        private readonly IHttpClient _httpClient;
         public string Name => ProviderNames.KitsuIo;
 
-        public KitsuIoEpisodeProvider(IHttpClient httpClient)
+        public KitsuIoEpisodeProvider()
         {
-            _httpClient = httpClient;
         }
-        
+
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(EpisodeInfo searchInfo, CancellationToken cancellationToken)
         {
             var id = searchInfo.ProviderIds.GetOrDefault(ProviderNames.KitsuIo);
@@ -45,7 +44,7 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
         public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Episode>();
-            
+
             var id = info.ProviderIds.GetOrDefault(ProviderNames.KitsuIo);
             if (string.IsNullOrEmpty(id))
             {
@@ -53,7 +52,7 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
             }
 
             var episodeInfo = await KitsuIoApi.Get_Episode(id);
-            
+
             result.HasMetadata = true;
             result.Item = new Episode
             {
@@ -61,7 +60,7 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
                 ParentIndexNumber = info.ParentIndexNumber,
                 Name = episodeInfo.Data.Attributes.Titles.GetTitle,
             };
-            
+
             if (episodeInfo.Data.Attributes.Length != null)
             {
                 result.Item.RunTimeTicks = TimeSpan.FromMinutes(episodeInfo.Data.Attributes.Length.Value).Ticks;
@@ -70,14 +69,11 @@ namespace Jellyfin.Plugin.Anime.Providers.KitsuIO.Metadata
             return result;
         }
 
-        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            return _httpClient.GetResponse(new HttpRequestOptions
-            {
-                UserAgent = Constants.UserAgent,
-                CancellationToken = cancellationToken,
-                Url = url,
-            });
+            var httpClient = Plugin.Instance.GetHttpClient();
+
+            return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
     }
 }

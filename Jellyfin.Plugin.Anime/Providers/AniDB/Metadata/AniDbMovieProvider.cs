@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net.Http;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities.Movies;
@@ -17,9 +18,9 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
 
         public string Name => "AniDB";
 
-        public AniDbMovieProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogger<AniDbMovieProvider> logger)
+        public AniDbMovieProvider(IApplicationPaths appPaths, ILogger<AniDbMovieProvider> logger)
         {
-            _seriesProvider = new AniDbSeriesProvider(appPaths, httpClient);
+            _seriesProvider = new AniDbSeriesProvider(appPaths);
             _logger = logger;
         }
 
@@ -85,7 +86,7 @@ namespace Jellyfin.Plugin.Anime.Providers.AniDB.Metadata
             return await _seriesProvider.GetSearchResults(seriesInfo, cancellationToken);
         }
 
-        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _seriesProvider.GetImageResponse(url, cancellationToken);
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net.Http;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
@@ -16,16 +17,14 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
 {
     public class AniSearchSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder
     {
-        private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _paths;
         private readonly ILogger<AniSearchSeriesProvider> _log;
         public int Order => -3;
         public string Name => "AniSearch";
 
-        public AniSearchSeriesProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogger<AniSearchSeriesProvider> logger)
+        public AniSearchSeriesProvider(IApplicationPaths appPaths, ILogger<AniSearchSeriesProvider> logger)
         {
             _log = logger;
-            _httpClient = httpClient;
             _paths = appPaths;
         }
 
@@ -94,24 +93,19 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
             File.WriteAllText(path, url);
         }
 
-        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            return _httpClient.GetResponse(new HttpRequestOptions
-            {
-                UserAgent = Constants.UserAgent,
-                CancellationToken = cancellationToken,
-                Url = url
-            });
+
+            var httpClient = Plugin.Instance.GetHttpClient();
+
+            return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
     }
 
     public class AniSearchSeriesImageProvider : IRemoteImageProvider
     {
-        private readonly IHttpClient _httpClient;
-
-        public AniSearchSeriesImageProvider(IHttpClient httpClient)
+        public AniSearchSeriesImageProvider()
         {
-            _httpClient = httpClient;
         }
 
         public string Name => "AniSearch";
@@ -146,14 +140,11 @@ namespace Jellyfin.Plugin.Anime.Providers.AniSearch
             return list;
         }
 
-        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            return _httpClient.GetResponse(new HttpRequestOptions
-            {
-                UserAgent = Constants.UserAgent,
-                CancellationToken = cancellationToken,
-                Url = url
-            });
+            var httpClient = Plugin.Instance.GetHttpClient();
+
+            return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
     }
 }

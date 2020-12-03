@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
@@ -18,17 +20,15 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
 {
     public class AniListMovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrder
     {
-        private readonly IHttpClient _httpClient;
         private readonly IApplicationPaths _paths;
         private readonly ILogger _log;
         private readonly AniListApi _aniListApi;
         public int Order => -2;
         public string Name => "AniList";
 
-        public AniListMovieProvider(IApplicationPaths appPaths, IHttpClient httpClient, ILogger<AniListMovieProvider> logger)
+        public AniListMovieProvider(IApplicationPaths appPaths, ILogger<AniListMovieProvider> logger)
         {
             _log = logger;
-            _httpClient = httpClient;
             _aniListApi = new AniListApi();
             _paths = appPaths;
         }
@@ -100,14 +100,10 @@ namespace Jellyfin.Plugin.Anime.Providers.AniList
             File.WriteAllText(path, url);
         }
 
-        public Task<HttpResponseInfo> GetImageResponse(string url, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            return _httpClient.GetResponse(new HttpRequestOptions
-            {
-                UserAgent = Constants.UserAgent,
-                CancellationToken = cancellationToken,
-                Url = url
-            });
+            var httpClient = Plugin.Instance.GetHttpClient();
+            return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
     }
 }
