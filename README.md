@@ -7,6 +7,10 @@
 This plugin is built with .NET Core to download metadata for anime.
 </p>
 
+## Archived
+
+This plugin has been retired and split apart into their respective metadata plugins: [anilist](https://github.com/jellyfin/jellyfin-plugin-anilist), [anidb](https://github.com/jellyfin/jellyfin-plugin-anidb), [anisearch](https://github.com/jellyfin/jellyfin-plugin-anisearch), and [kitsu](https://github.com/jellyfin/jellyfin-plugin-kitsu).
+
 ## Build Process
 
 1. Clone or download this repository
