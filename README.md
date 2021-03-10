@@ -1,3 +1,5 @@
+**ARCHIVE NOTE**: Deprecated in favour of jellyfin-plugin-anidb, jellyfin-plugin-anisearch, jellyfin-plugin-anilist, and jellyfin-plugin-kitsu
+
 <h1 align="center">Jellyfin Anime Plugin</h1>
 <h3 align="center">Part of the <a href="https://jellyfin.media">Jellyfin Project</a></h3>
 
